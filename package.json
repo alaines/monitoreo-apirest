@@ -1,0 +1,50 @@
+{
+  "name": "monitoreo-apirest",
+  "version": "1.0.0",
+  "description": "Sistema de Gestión de Incidencias de Semáforos - Monorepo",
+  "private": true,
+  "workspaces": [
+    "apps/*",
+    "packages/*"
+  ],
+  "scripts": {
+    "dev": "npm run dev --workspaces --if-present",
+    "build": "npm run build --workspaces --if-present",
+    "test": "npm run test --workspaces --if-present",
+    "lint": "npm run lint --workspaces --if-present",
+    "format": "prettier --write \"**/*.{ts,tsx,js,jsx,json,md}\"",
+    "backend:dev": "npm run dev -w apps/backend",
+    "backend:build": "npm run build -w apps/backend",
+    "backend:start": "npm run start:prod -w apps/backend",
+    "frontend:dev": "npm run dev -w apps/frontend",
+    "frontend:build": "npm run build -w apps/frontend",
+    "frontend:preview": "npm run preview -w apps/frontend",
+    "prisma:generate": "npm run prisma:generate -w apps/backend",
+    "prisma:migrate": "npm run prisma:migrate -w apps/backend",
+    "prisma:studio": "npm run prisma:studio -w apps/backend",
+    "docker:up": "docker-compose up -d",
+    "docker:down": "docker-compose down",
+    "docker:logs": "docker-compose logs -f"
+  },
+  "keywords": [
+    "monitoreo",
+    "semaforos",
+    "incidencias",
+    "nestjs",
+    "react",
+    "postgresql",
+    "prisma",
+    "leaflet"
+  ],
+  "author": "EMC-GMU",
+  "license": "MIT",
+  "devDependencies": {
+    "@types/node": "^20.10.0",
+    "prettier": "^3.1.0",
+    "typescript": "^5.3.3"
+  },
+  "engines": {
+    "node": ">=18.0.0",
+    "npm": ">=9.0.0"
+  }
+}

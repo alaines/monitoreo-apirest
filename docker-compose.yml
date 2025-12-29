@@ -1,0 +1,103 @@
+version: '3.8'
+
+services:
+  # PostgreSQL con PostGIS
+  postgres:
+    image: postgis/postgis:13-3.1
+    container_name: monitoreo-db
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ${DATABASE_USER:-transito}
+      POSTGRES_PASSWORD: ${DATABASE_PASSWORD:-transito}
+      POSTGRES_DB: ${DATABASE_NAME:-monitoreo}
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./database/init.sql:/docker-entrypoint-initdb.d/init.sql
+    networks:
+      - monitoreo-network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${DATABASE_USER:-transito}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # Backend NestJS
+  backend:
+    build:
+      context: .
+      dockerfile: ./docker/backend/Dockerfile
+    container_name: monitoreo-backend
+    restart: unless-stopped
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      NODE_ENV: ${NODE_ENV:-development}
+      DATABASE_URL: postgresql://${DATABASE_USER:-transito}:${DATABASE_PASSWORD:-transito}@postgres:5432/${DATABASE_NAME:-monitoreo}?schema=public
+      JWT_SECRET: ${JWT_SECRET}
+      PORT: 3000
+    ports:
+      - "3000:3000"
+    volumes:
+      - ./apps/backend:/app/apps/backend
+      - ./packages:/app/packages
+      - backend_node_modules:/app/node_modules
+      - backend_app_node_modules:/app/apps/backend/node_modules
+    networks:
+      - monitoreo-network
+    command: npm run backend:dev
+
+  # Frontend React
+  frontend:
+    build:
+      context: .
+      dockerfile: ./docker/frontend/Dockerfile
+    container_name: monitoreo-frontend
+    restart: unless-stopped
+    depends_on:
+      - backend
+    environment:
+      NODE_ENV: ${NODE_ENV:-development}
+      VITE_API_URL: http://localhost:3000
+    ports:
+      - "5173:5173"
+    volumes:
+      - ./apps/frontend:/app/apps/frontend
+      - ./packages:/app/packages
+      - frontend_node_modules:/app/node_modules
+      - frontend_app_node_modules:/app/apps/frontend/node_modules
+    networks:
+      - monitoreo-network
+    command: npm run frontend:dev
+
+  # Nginx (Producción)
+  nginx:
+    image: nginx:alpine
+    container_name: monitoreo-nginx
+    restart: unless-stopped
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./docker/nginx/nginx.conf:/etc/nginx/nginx.conf:ro
+      - ./docker/nginx/ssl:/etc/nginx/ssl:ro
+    depends_on:
+      - backend
+      - frontend
+    networks:
+      - monitoreo-network
+    profiles:
+      - production
+
+volumes:
+  postgres_data:
+  backend_node_modules:
+  backend_app_node_modules:
+  frontend_node_modules:
+  frontend_app_node_modules:
+
+networks:
+  monitoreo-network:
+    driver: bridge

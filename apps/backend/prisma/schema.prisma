@@ -1,0 +1,411 @@
+generator client {
+  provider        = "prisma-client-js"
+  previewFeatures = ["postgresqlExtensions"]
+}
+
+datasource db {
+  provider   = "postgresql"
+  url        = env("DATABASE_URL")
+  extensions = [postgis]
+}
+
+model User {
+  id           Int       @id(map: "usuarios_pkey") @default(autoincrement())
+  personaId    Int?      @map("persona_id")
+  usuario      String    @unique @db.VarChar(16)
+  grupoId      Int?      @map("grupo_id")
+  clave        String?   @db.VarChar
+  areaId       Int?      @map("area_id")
+  estado       Boolean   @default(true)
+  createdAt    DateTime? @map("created") @db.Timestamp(6)
+  updatedAt    DateTime? @map("modified") @db.Timestamp(6)
+  online       Boolean?
+  passwordHash String?   @map("password_hash")
+  area         Area?     @relation(fields: [areaId], references: [id], onDelete: Cascade, map: "usuarios_areas")
+  grupo        Grupo?    @relation(fields: [grupoId], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "usuarios_grupos")
+  persona      Persona?  @relation(fields: [personaId], references: [id], onDelete: Cascade, map: "usuarios_personas")
+
+  @@map("users")
+}
+
+model Persona {
+  id            Int          @id @default(autoincrement())
+  tipoDocId     Int?         @map("tipo_doc_id")
+  num_doc       String?      @db.VarChar(10)
+  nacionalidad  Int?
+  ape_pat       String?      @db.VarChar
+  ape_mat       String?      @db.VarChar
+  nombres       String?      @db.VarChar
+  nomcomp       String?      @db.VarChar
+  direccion     Int?
+  genero        String?      @db.Char(1)
+  fecnac        DateTime?    @db.Date
+  movil1        String?      @db.VarChar(12)
+  movil2        String?      @db.VarChar(12)
+  email         String?      @db.VarChar(50)
+  estadoCivilId Int?         @map("estado_civil_id")
+  estado        Boolean      @default(true)
+  createdAt     DateTime?    @map("created") @db.Timestamp(6)
+  updatedAt     DateTime?    @map("modified") @db.Timestamp(6)
+  estadoCivil   EstadoCivil? @relation(fields: [estadoCivilId], references: [id], onDelete: Cascade, map: "personas_estado_civils")
+  tipoDoc       TipoDoc?     @relation(fields: [tipoDocId], references: [id], onDelete: Cascade, map: "personas_tipoDoc")
+  users         User[]
+
+  @@map("personas")
+}
+
+model Grupo {
+  id          Int         @id @default(autoincrement())
+  nombre      String?     @db.VarChar(16)
+  descripcion String?     @db.VarChar(100)
+  estado      Boolean     @default(true)
+  createdAt   DateTime?   @map("created") @db.Timestamp(6)
+  updatedAt   DateTime?   @map("modified") @db.Timestamp(6)
+  edicion     Boolean?
+  gruposMenus GrupoMenu[]
+  users       User[]
+
+  @@map("grupos")
+}
+
+model GrupoMenu {
+  id      Int   @id @default(autoincrement())
+  menuId  Int   @map("menu_id")
+  grupoId Int   @map("grupo_id")
+  grupo   Grupo @relation(fields: [grupoId], references: [id], onDelete: Cascade, map: "Ref_menus_has_grupos_to_grupos")
+
+  @@map("grupos_menus")
+}
+
+model Menu {
+  id       Int       @id @default(autoincrement())
+  parentId Int?      @map("parent_id")
+  lft      Int?
+  rght     Int?
+  name     String?   @db.VarChar
+  estado   Boolean?
+  url      String?   @db.VarChar
+  icono    String?   @db.VarChar
+  created  DateTime? @db.Timestamp(6)
+  modified DateTime? @db.Timestamp(6)
+
+  @@map("menus")
+}
+
+model Area {
+  id        Int       @id @default(autoincrement())
+  nombre    String?   @db.VarChar
+  estado    Boolean?
+  createdAt DateTime? @map("created") @db.Timestamp(6)
+  updatedAt DateTime? @map("modified") @db.Timestamp(6)
+  codigo    String?   @db.VarChar(10)
+  users     User[]
+
+  @@map("areas")
+}
+
+model TipoDoc {
+  id       Int       @id @default(autoincrement())
+  nombre   String?   @db.VarChar(50)
+  estado   Boolean?
+  created  DateTime? @db.Timestamp(6)
+  modified DateTime? @db.Timestamp(6)
+  personas Persona[]
+
+  @@map("tipo_doc")
+}
+
+model EstadoCivil {
+  id       Int       @id @default(autoincrement())
+  nombre   String?   @db.VarChar(20)
+  estado   Boolean?
+  created  DateTime? @db.Timestamp(6)
+  modified DateTime? @db.Timestamp(6)
+  personas Persona[]
+
+  @@map("estado_civils")
+}
+
+model Ticket {
+  id                     Int                      @id @default(autoincrement())
+  incidenciaId           Int                      @map("incidencia_id")
+  prioridadId            Int?                     @map("prioridade_id")
+  cruceId                Int?                     @map("cruce_id")
+  equipoId               Int?                     @map("equipo_id")
+  descripcion            String?
+  createdAt              DateTime?                @map("created") @db.Timestamp(6)
+  usuarioRegistra        String?                  @map("usuario_registra") @db.VarChar(255)
+  updatedAt              DateTime?                @map("modified") @db.Timestamp(6)
+  usuarioFinaliza        String?                  @map("usuario_finaliza") @db.VarChar(255)
+  estadoId               Int?                     @default(1) @map("estado_id")
+  reportadorId           Int?                     @map("reportadore_id")
+  reportadorNombres      String?                  @map("reportadore_nombres") @db.VarChar(255)
+  reportadorDatoContacto String?                  @map("reportadore_dato_contacto") @db.VarChar(255)
+  geom                   Unsupported("geometry")?
+  seguimientos           TicketSeguimiento[]
+  cruce                  Cruce?                   @relation(fields: [cruceId], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "Tickets_to_cruces")
+  equipo                 Equipo?                  @relation(fields: [equipoId], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "Tickets_to_equipos")
+  incidencia             Incidencia               @relation(fields: [incidenciaId], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "Tickets_to_incidencias")
+  reportador             Reportador?              @relation(fields: [reportadorId], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "Tickets_to_reportadores")
+
+  @@index([createdAt])
+  @@index([estadoId], map: "tickets_estado_idx")
+  @@index([geom], map: "tickets_geom_gix", type: Gist)
+  @@map("tickets")
+}
+
+model Incidencia {
+  id             Int        @id @default(autoincrement())
+  parentId       Int?       @map("parent_id")
+  tipo           String?    @db.VarChar
+  estado         Boolean    @default(true)
+  prioridadId    Int?       @map("prioridade_id")
+  caracteristica String?    @db.VarChar(2)
+  prioridad      Prioridad? @relation(fields: [prioridadId], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "incidencias_prioridades")
+  tickets        Ticket[]
+
+  @@map("incidencias")
+}
+
+model TicketSeguimiento {
+  id              Int          @id @default(autoincrement())
+  ticketId        Int?         @map("ticket_id")
+  equipoId        Int?         @map("equipo_id")
+  responsableId   Int?         @map("responsable_id")
+  reporte         String?
+  estadoId        Int?         @map("estado_id")
+  createdAt       DateTime?    @map("created") @db.Timestamp(6)
+  usuarioRegistra String?      @map("usuario_registra") @db.VarChar(255)
+  updatedAt       DateTime?    @map("modified") @db.Timestamp(6)
+  responsable     Responsable? @relation(fields: [responsableId], references: [id], onDelete: Cascade, map: "Ticket_seguimientos_to_reponsables")
+  ticket          Ticket?      @relation(fields: [ticketId], references: [id], onDelete: Cascade, map: "ticket_seguimientos_Tickets")
+  equipo          Equipo?      @relation(fields: [equipoId], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "ticket_seguimientos_to_equipos")
+  estado          Estado?      @relation(fields: [estadoId], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "ticket_seguimientos_to_estados")
+
+  @@map("ticket_seguimientos")
+}
+
+model Reportador {
+  id        Int       @id @default(autoincrement())
+  nombre    String    @db.VarChar
+  estado    Boolean?
+  createdAt DateTime? @map("created") @db.Timestamp(6)
+  updatedAt DateTime? @map("modified") @db.Timestamp(6)
+  tickets   Ticket[]
+
+  @@map("reportadores")
+}
+
+model Estado {
+  id           Int                 @id @default(autoincrement())
+  nombre       String?             @db.VarChar
+  estado       Boolean?
+  createdAt    DateTime?           @map("created") @db.Timestamp(6)
+  updatedAt    DateTime?           @map("modified") @db.Timestamp(6)
+  seguimientos TicketSeguimiento[]
+
+  @@map("estados")
+}
+
+model Prioridad {
+  id          Int          @id @default(autoincrement())
+  nombre      String?      @db.VarChar(20)
+  incidencias Incidencia[]
+
+  @@map("prioridades")
+}
+
+model Equipo {
+  id           Int                 @id @default(autoincrement())
+  nombre       String?             @db.VarChar(25)
+  estado       Boolean?
+  createdAt    DateTime?           @map("created") @db.Timestamp(6)
+  updatedAt    DateTime?           @map("modified") @db.Timestamp(6)
+  responsables Responsable[]
+  seguimientos TicketSeguimiento[]
+  tickets      Ticket[]
+
+  @@map("equipos")
+}
+
+model Responsable {
+  id           Int                 @id(map: "reponsables_pkey") @default(autoincrement())
+  equipoId     Int?                @map("equipo_id")
+  nombre       String?             @db.VarChar(30)
+  estado       Boolean             @default(true)
+  equipo       Equipo?             @relation(fields: [equipoId], references: [id], onDelete: Cascade, map: "Reponsables_to_equipos")
+  seguimientos TicketSeguimiento[]
+
+  @@map("responsables")
+}
+
+model Cruce {
+  id                  Int                      @id @default(autoincrement())
+  ubigeoId            String                   @map("ubigeo_id") @db.VarChar(9)
+  tipoGestion         Int                      @map("tipo_gestion")
+  administradorId     Int?                     @map("administradore_id")
+  proyectoId          Int                      @map("proyecto_id")
+  via1                Int
+  via2                Int
+  tipoComunicacion    Int?                     @map("tipo_comunicacion")
+  estado              Boolean?                 @default(true)
+  tipoCruce           Int?                     @map("tipo_cruce")
+  tipoEstructura      Int?                     @map("tipo_estructura")
+  planoPdf            String?                  @map("plano_pdf") @db.VarChar(255)
+  planoDwg            String?                  @map("plano_dwg") @db.VarChar(255)
+  tipoOperacion       String?                  @map("tipo_operacion") @db.VarChar(255)
+  anoImplementacion   Int?                     @map("ano_implementacion")
+  observaciones       String?
+  createdAt           DateTime?                @map("created") @db.Timestamptz(6)
+  updatedAt           DateTime?                @map("modified") @db.Timestamptz(6)
+  nombre              String?                  @db.VarChar(255)
+  latitud             Float?
+  longitud            Float?
+  codigo              String?                  @db.VarChar(7)
+  tipoControl         Int?                     @map("tipo_control")
+  codigoAnterior      String?                  @map("codigo_anterior") @db.VarChar(30)
+  usuarioRegistra     String?                  @map("usuario_registra") @db.VarChar(255)
+  electricoEmpresa    String?                  @map("electrico_empresa") @db.VarChar(255)
+  electricoSuministro String?                  @map("electrico_suministro") @db.VarChar(255)
+  geom                Unsupported("geometry")?
+  administrador       Administrador?           @relation(fields: [administradorId], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "fk_cruces_administradores_1")
+  proyecto            Proyecto                 @relation(fields: [proyectoId], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "fk_cruces_proyectos_1")
+  ubigeo              Ubigeo                   @relation(fields: [ubigeoId], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "fk_cruces_ubigeos_1")
+  crucesPerifericos   CrucePeriferico[]
+  tickets             Ticket[]
+
+  @@index([geom], map: "cruces_geom_gix", type: Gist)
+  @@map("cruces")
+}
+
+model Periferico {
+  id                Int                  @id @default(autoincrement())
+  tipoPeriferico    Int                  @map("tipo_periferico")
+  fabricante        String?              @db.VarChar(255)
+  modelo            String?              @db.VarChar(255)
+  ip                Unsupported("cidr")?
+  numeroSerie       String?              @map("numero_serie") @db.VarChar(255)
+  usuario           String?              @db.VarChar(255)
+  password          String?              @db.VarChar(255)
+  enGarantia        Boolean?             @map("en_garantia")
+  estado            String?              @db.VarChar(255)
+  observaciones     String?
+  createdAt         DateTime?            @map("created") @db.Timestamptz(0)
+  updatedAt         DateTime?            @map("modified") @db.Timestamptz(0)
+  usuario_registra  String?              @db.VarChar(255)
+  crucesPerifericos CrucePeriferico[]
+
+  @@map("perifericos")
+}
+
+model CrucePeriferico {
+  id           Int         @id @default(autoincrement())
+  cruceId      Int?        @map("cruce_id")
+  perifericoId Int?        @map("periferico_id")
+  createdAt    DateTime?   @map("created") @db.Timestamptz(6)
+  updatedAt    DateTime?   @map("modified") @db.Timestamptz(6)
+  cruce        Cruce?      @relation(fields: [cruceId], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "fk_cruces_perifericos_cruces_1")
+  periferico   Periferico? @relation(fields: [perifericoId], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "fk_cruces_perifericos_perifericos_1")
+
+  @@map("cruces_perifericos")
+}
+
+model Administrador {
+  id          Int       @id @default(autoincrement())
+  nombre      String?   @db.VarChar(255)
+  responsable String?   @db.VarChar(255)
+  telefono    Int?
+  email       String?   @db.VarChar(255)
+  createdAt   DateTime? @map("created") @db.Timestamptz(6)
+  updatedAt   DateTime? @map("modified") @db.Timestamptz(6)
+  estado      Boolean?  @default(true)
+  cruces      Cruce[]
+
+  @@map("administradores")
+}
+
+model Ubigeo {
+  id        String  @id @db.VarChar(9)
+  region    String? @db.VarChar(255)
+  provincia String? @db.VarChar(255)
+  distrito  String? @db.VarChar(255)
+  cruces    Cruce[]
+
+  @@map("ubigeos")
+}
+
+model Eje {
+  id            Int       @id @default(autoincrement())
+  nombreVia     String    @map("nombre_via") @db.VarChar(255)
+  tipoVia       Int?      @map("tipo_via")
+  nroCarriles   Int?      @map("nro_carriles") @db.SmallInt
+  ciclovia      Boolean?
+  observaciones String?
+  createdAt     DateTime? @map("created") @db.Timestamptz(6)
+  updatedAt     DateTime? @map("modified") @db.Timestamptz(6)
+
+  @@map("ejes")
+}
+
+model Proyecto {
+  id                  Int       @id @default(autoincrement())
+  siglas              String?   @db.VarChar(6)
+  nombre              String?   @db.VarChar
+  etapa               String?   @db.VarChar
+  ejecutado_x_empresa String?   @db.VarChar(255)
+  estado              Boolean   @default(true)
+  ano_proyecto        Int?
+  createdAt           DateTime? @map("created") @db.Timestamp(6)
+  usuario_registra    String?   @db.VarChar(255)
+  updatedAt           DateTime? @map("modified") @db.Timestamp(6)
+  usuario_modifica    String?   @db.VarChar(255)
+  red                 String?   @db.VarChar(255)
+  cruces              Cruce[]
+
+  @@map("proyectos")
+}
+
+model Tipo {
+  id        Int      @id @default(autoincrement())
+  parent_id Int?
+  name      String?  @db.VarChar(255)
+  estado    Boolean? @default(true)
+  lft       Int?
+  rght      Int?
+
+  @@map("tipos")
+}
+
+model Audit {
+  id          String   @id @db.VarChar(36)
+  event       String   @db.VarChar(255)
+  model       String   @db.VarChar(255)
+  entityId    String   @map("entity_id") @db.VarChar(36)
+  requestId   String   @map("request_id") @db.VarChar(36)
+  jsonObject  String   @map("json_object")
+  description String?
+  sourceId    String?  @map("source_id") @db.VarChar(255)
+  createdAt   DateTime @map("created") @db.Timestamp(6)
+
+  @@map("audits")
+}
+
+model AuditDelta {
+  id           String  @id @db.VarChar(36)
+  auditId      String  @map("audit_id") @db.VarChar(36)
+  propertyName String  @map("property_name") @db.VarChar(255)
+  oldValue     String? @map("old_value")
+  newValue     String? @map("new_value")
+
+  @@index([auditId], map: "audit_id")
+  @@map("audit_deltas")
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+model spatial_ref_sys {
+  srid      Int     @id
+  auth_name String? @db.VarChar(256)
+  auth_srid Int?
+  srtext    String? @db.VarChar(2048)
+  proj4text String? @db.VarChar(2048)
+}
