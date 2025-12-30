@@ -35,13 +35,13 @@ export class UsersService {
     }
 
     // Hash password
-    const passwordHash = await this.authService.hashPassword(createUserDto.password);
+    const clave = this.authService.hashPassword(createUserDto.password);
 
     // Create user
     const user = await this.prisma.user.create({
       data: {
         usuario: createUserDto.usuario,
-        passwordHash,
+        clave,
         grupoId: createUserDto.grupoId,
         personaId: createUserDto.personaId,
         estado: createUserDto.estado ?? true,
@@ -65,7 +65,7 @@ export class UsersService {
     });
 
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    const { passwordHash: _, ...result } = user;
+    const { passwordHash: _, clave: __, ...result } = user;
     return result;
   }
 
@@ -100,7 +100,7 @@ export class UsersService {
     ]);
 
     return {
-      data: users.map(({ passwordHash, ...user }) => user),
+      data: users.map(({ passwordHash, clave, ...user }) => user),
       meta: {
         total,
         page,
@@ -124,7 +124,7 @@ export class UsersService {
     }
 
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    const { passwordHash, ...result } = user;
+    const { passwordHash, clave, ...result } = user;
     return result;
   }
 
@@ -146,7 +146,7 @@ export class UsersService {
 
     // If password is being updated, hash it
     if (updateUserDto.password) {
-      dataToUpdate.passwordHash = await this.authService.hashPassword(updateUserDto.password);
+      dataToUpdate.clave = this.authService.hashPassword(updateUserDto.password);
       delete dataToUpdate.password;
     }
 
@@ -183,7 +183,7 @@ export class UsersService {
     });
 
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    const { passwordHash, ...result } = user;
+    const { passwordHash, clave, ...result } = user;
     return result;
   }
 

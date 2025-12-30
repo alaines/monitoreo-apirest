@@ -1,7 +1,7 @@
 import { Injectable, UnauthorizedException } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { ConfigService } from '@nestjs/config';
-import * as bcrypt from 'bcrypt';
+import { createHash, timingSafeEqual } from 'crypto';
 import { PrismaService } from '../prisma/prisma.service';
 import { LoginDto } from './dto/auth.dto';
 
@@ -30,14 +30,12 @@ export class AuthService {
       throw new UnauthorizedException('Credenciales inválidas');
     }
 
-    if (!user.passwordHash) {
+    if (!user.clave) {
       throw new UnauthorizedException('Usuario sin contraseña configurada');
     }
 
-    const isPasswordValid = await bcrypt.compare(
-      loginDto.password,
-      user.passwordHash,
-    );
+    const hashedPassword = this.hashPassword(loginDto.password);
+    const isPasswordValid = this.safeCompare(hashedPassword, user.clave);
 
     if (!isPasswordValid) {
       throw new UnauthorizedException('Credenciales inválidas');
@@ -100,7 +98,7 @@ export class AuthService {
     }
 
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    const { passwordHash, ...result } = user;
+    const { passwordHash, clave, ...result } = user;
     return result;
   }
 
@@ -121,8 +119,15 @@ export class AuthService {
     return { accessToken, refreshToken };
   }
 
-  async hashPassword(password: string): Promise<string> {
-    const rounds = this.configService.get('BCRYPT_ROUNDS') || 10;
-    return bcrypt.hash(password, Number(rounds));
+  hashPassword(password: string): string {
+    return createHash('md5').update(password).digest('hex');
+  }
+
+  private safeCompare(a: string, b: string): boolean {
+    if (a.length !== b.length) {
+      return false;
+    }
+
+    return timingSafeEqual(Buffer.from(a), Buffer.from(b));
   }
 }

@@ -1,5 +1,5 @@
 import { PrismaClient } from '@prisma/client';
-import * as bcrypt from 'bcrypt';
+import { createHash } from 'crypto';
 
 const prisma = new PrismaClient();
 
@@ -61,16 +61,16 @@ async function main() {
     }
     
     // Hash passwords
-    const adminPassword = await bcrypt.hash('admin123', 10);
-    const operadorPassword = await bcrypt.hash('operador123', 10);
-    const supervisorPassword = await bcrypt.hash('supervisor123', 10);
+    const adminPassword = createHash('md5').update('admin123').digest('hex');
+    const operadorPassword = createHash('md5').update('operador123').digest('hex');
+    const supervisorPassword = createHash('md5').update('supervisor123').digest('hex');
 
     // Crear usuarios
     const users = await Promise.all([
       prisma.user.create({
         data: {
           usuario: 'admin',
-          passwordHash: adminPassword,
+          clave: adminPassword,
           grupoId: adminGroup.id,
           estado: true,
         },
@@ -78,7 +78,7 @@ async function main() {
       prisma.user.create({
         data: {
           usuario: 'operador',
-          passwordHash: operadorPassword,
+          clave: operadorPassword,
           grupoId: operadorGroup.id,
           estado: true,
         },
@@ -86,7 +86,7 @@ async function main() {
       prisma.user.create({
         data: {
           usuario: 'supervisor',
-          passwordHash: supervisorPassword,
+          clave: supervisorPassword,
           grupoId: supervisorGroup.id,
           estado: true,
         },

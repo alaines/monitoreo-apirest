@@ -4,7 +4,7 @@ import { PrismaService } from '../prisma/prisma.service';
 import { JwtService } from '@nestjs/jwt';
 import { ConfigService } from '@nestjs/config';
 import { UnauthorizedException } from '@nestjs/common';
-import * as bcrypt from 'bcrypt';
+import { createHash } from 'crypto';
 
 describe('AuthService', () => {
   let service: AuthService;
@@ -14,7 +14,7 @@ describe('AuthService', () => {
   const mockUser = {
     id: 1,
     usuario: 'testuser',
-    passwordHash: '$2b$10$abcdefghijklmnopqrstuvwxyz',
+    clave: createHash('md5').update('password').digest('hex'),
     grupoId: 1,
     estado: true,
     grupo: {
@@ -49,7 +49,6 @@ describe('AuthService', () => {
               const config: Record<string, string> = {
                 JWT_SECRET: 'test-secret',
                 JWT_REFRESH_SECRET: 'test-refresh-secret',
-                BCRYPT_ROUNDS: '10',
               };
               return config[key];
             }),
@@ -78,8 +77,6 @@ describe('AuthService', () => {
 
     it('should throw UnauthorizedException if password is invalid', async () => {
       jest.spyOn(prismaService.user, 'findUnique').mockResolvedValue(mockUser as any);
-      jest.spyOn(bcrypt, 'compare').mockImplementation(() => Promise.resolve(false));
-
       await expect(
         service.login({ usuario: 'testuser', password: 'wrongpassword' }),
       ).rejects.toThrow(UnauthorizedException);
@@ -88,7 +85,6 @@ describe('AuthService', () => {
     it('should throw UnauthorizedException if user is inactive', async () => {
       const inactiveUser = { ...mockUser, estado: false };
       jest.spyOn(prismaService.user, 'findUnique').mockResolvedValue(inactiveUser as any);
-      jest.spyOn(bcrypt, 'compare').mockImplementation(() => Promise.resolve(true));
 
       await expect(
         service.login({ usuario: 'testuser', password: 'password' }),
@@ -97,7 +93,6 @@ describe('AuthService', () => {
 
     it('should return tokens and user data on successful login', async () => {
       jest.spyOn(prismaService.user, 'findUnique').mockResolvedValue(mockUser as any);
-      jest.spyOn(bcrypt, 'compare').mockImplementation(() => Promise.resolve(true));
       jest.spyOn(jwtService, 'signAsync').mockResolvedValue('mock-token');
 
       const result = await service.login({ usuario: 'testuser', password: 'password' });
@@ -134,6 +129,7 @@ describe('AuthService', () => {
 
       expect(result).toBeDefined();
       expect(result).not.toHaveProperty('passwordHash');
+      expect(result).not.toHaveProperty('clave');
       expect(result?.usuario).toBe('testuser');
     });
   });
@@ -141,11 +137,11 @@ describe('AuthService', () => {
   describe('hashPassword', () => {
     it('should hash password correctly', async () => {
       const password = 'testpassword';
-      const hashed = await service.hashPassword(password);
+      const hashed = service.hashPassword(password);
 
       expect(hashed).toBeDefined();
       expect(hashed).not.toBe(password);
-      expect(await bcrypt.compare(password, hashed)).toBe(true);
+      expect(hashed).toBe(createHash('md5').update(password).digest('hex'));
     });
   });
 });
