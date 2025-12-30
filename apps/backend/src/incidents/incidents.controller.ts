@@ -15,6 +15,7 @@ import { IncidentsService } from './incidents.service';
 import { CreateIncidentDto } from './dto/create-incident.dto';
 import { UpdateIncidentDto } from './dto/update-incident.dto';
 import { QueryIncidentsDto } from './dto/query-incidents.dto';
+import { CreateTrackingDto } from './dto/create-tracking.dto';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { CurrentUser } from '../common/decorators/current-user.decorator';
 
@@ -72,6 +73,33 @@ export class IncidentsController {
   @ApiResponse({ status: 200, description: 'Cruces' })
   async getCrucesCatalog() {
     return this.incidentsService.getCrucesCatalog();
+  }
+
+  @Get('catalogs/equipos')
+  @ApiOperation({ summary: 'Obtener catálogo de equipos' })
+  @ApiResponse({ status: 200, description: 'Equipos' })
+  async getEquiposCatalog() {
+    return this.incidentsService.getEquiposCatalog();
+  }
+
+  @Get(':id/trackings')
+  @ApiOperation({ summary: 'Obtener seguimientos de una incidencia' })
+  @ApiResponse({ status: 200, description: 'Lista de seguimientos' })
+  @ApiResponse({ status: 404, description: 'Incidencia no encontrada' })
+  getTrackings(@Param('id', ParseIntPipe) id: number) {
+    return this.incidentsService.getTrackings(id);
+  }
+
+  @Post(':id/trackings')
+  @ApiOperation({ summary: 'Crear seguimiento para una incidencia' })
+  @ApiResponse({ status: 201, description: 'Seguimiento creado exitosamente' })
+  @ApiResponse({ status: 404, description: 'Incidencia no encontrada' })
+  createTracking(
+    @Param('id', ParseIntPipe) id: number,
+    @Body() createTrackingDto: CreateTrackingDto,
+    @CurrentUser() user: any,
+  ) {
+    return this.incidentsService.createTracking(id, createTrackingDto, user.usuario);
   }
 
   @Get(':id')

@@ -19,6 +19,10 @@ export interface Incident {
   incidencia?: {
     id: number;
     tipo: string;
+    prioridad?: {
+      id: number;
+      nombre: string;
+    };
   };
   cruce?: {
     id: number;
@@ -40,12 +44,10 @@ export interface Incident {
 export interface CreateIncidentDto {
   incidenciaId: number;
   prioridadId?: number;
-  cruceId?: number;
+  cruceId: number; // Obligatorio - las coordenadas se heredan del cruce
   descripcion?: string;
   reportadorNombres?: string;
   reportadorDatoContacto?: string;
-  latitude: number;
-  longitude: number;
 }
 
 export interface UpdateIncidentDto extends Partial<CreateIncidentDto> {
@@ -101,6 +103,41 @@ export interface CruceCatalog {
   nombre: string;
 }
 
+export interface EquipoCatalog {
+  id: number;
+  nombre: string;
+}
+
+export interface IncidentTracking {
+  id: number;
+  ticketId: number;
+  equipoId?: number;
+  responsableId?: number;
+  reporte?: string;
+  estadoId?: number;
+  createdAt: string;
+  usuarioRegistra?: string;
+  estado?: {
+    id: number;
+    nombre: string;
+  };
+  equipo?: {
+    id: number;
+    nombre: string;
+  };
+  responsable?: {
+    id: number;
+    nombre: string;
+  };
+}
+
+export interface CreateTrackingDto {
+  equipoId?: number;
+  responsableId?: number;
+  reporte: string;
+  estadoId?: number;
+}
+
 class IncidentsService {
   async getIncidents(query?: QueryIncidentsDto): Promise<IncidentsResponse> {
     const response = await api.get('/incidents', { params: query });
@@ -148,6 +185,21 @@ class IncidentsService {
 
   async getCrucesCatalog(): Promise<CruceCatalog[]> {
     const response = await api.get('/incidents/catalogs/cruces');
+    return response.data;
+  }
+
+  async getEquiposCatalog(): Promise<EquipoCatalog[]> {
+    const response = await api.get('/incidents/catalogs/equipos');
+    return response.data;
+  }
+
+  async getTrackings(incidentId: number): Promise<IncidentTracking[]> {
+    const response = await api.get(`/incidents/${incidentId}/trackings`);
+    return response.data;
+  }
+
+  async createTracking(incidentId: number, data: CreateTrackingDto): Promise<IncidentTracking> {
+    const response = await api.post(`/incidents/${incidentId}/trackings`, data);
     return response.data;
   }
 }

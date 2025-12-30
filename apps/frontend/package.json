@@ -12,13 +12,10 @@
     "format": "prettier --write \"src/**/*.{ts,tsx,css}\""
   },
   "dependencies": {
-    "@emotion/react": "^11.14.0",
-    "@emotion/styled": "^11.14.1",
     "@hookform/resolvers": "^3.3.3",
-    "@mui/icons-material": "^7.3.6",
-    "@mui/material": "^7.3.6",
-    "@mui/x-data-grid": "^8.23.0",
+    "@popperjs/core": "^2.11.8",
     "axios": "^1.6.2",
+    "bootstrap": "^5.3.8",
     "clsx": "^2.0.0",
     "date-fns": "^3.0.6",
     "leaflet": "^1.9.4",

@@ -12,10 +12,10 @@ export class CreateIncidentDto {
   @IsOptional()
   prioridadId?: number;
 
-  @ApiPropertyOptional({ description: 'ID del cruce/semáforo' })
+  @ApiProperty({ description: 'ID del cruce/semáforo (obligatorio)' })
   @IsInt()
-  @IsOptional()
-  cruceId?: number;
+  @IsNotEmpty()
+  cruceId!: number;
 
   @ApiProperty({ description: 'Descripción de la incidencia' })
   @IsString()
@@ -36,18 +36,4 @@ export class CreateIncidentDto {
   @IsInt()
   @IsOptional()
   reportadorId?: number;
-
-  @ApiProperty({ description: 'Latitud de la ubicación', example: -12.046374 })
-  @IsNumber()
-  @Min(-90)
-  @Max(90)
-  @IsNotEmpty()
-  latitude!: number;
-
-  @ApiProperty({ description: 'Longitud de la ubicación', example: -77.042793 })
-  @IsNumber()
-  @Min(-180)
-  @Max(180)
-  @IsNotEmpty()
-  longitude!: number;
 }

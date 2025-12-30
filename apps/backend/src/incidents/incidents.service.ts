@@ -9,31 +9,27 @@ export class IncidentsService {
   constructor(private prisma: PrismaService) {}
 
   async create(createIncidentDto: CreateIncidentDto, usuario: string) {
-    const { latitude, longitude, ...data } = createIncidentDto;
-
-    // Crear el punto geográfico en formato WKT (Well-Known Text)
-    const point = `POINT(${longitude} ${latitude})`;
-
-    const ticket = await this.prisma.$executeRawUnsafe(
+    // Las incidencias siempre heredan coordenadas del cruce, no necesitan geom propio
+    const result = await this.prisma.$queryRawUnsafe<Array<{ id: number }>>(
       `INSERT INTO tickets (
         incidencia_id, prioridade_id, cruce_id, descripcion,
         reportadore_nombres, reportadore_dato_contacto, reportadore_id,
-        usuario_registra, created, modified, geom
-      ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, NOW(), NOW(), ST_GeomFromText($9, 4326))
-      RETURNING *`,
-      data.incidenciaId,
-      data.prioridadId || null,
-      data.cruceId || null,
-      data.descripcion,
-      data.reportadorNombres || null,
-      data.reportadorDatoContacto || null,
-      data.reportadorId || null,
+        usuario_registra, created, modified
+      ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, NOW(), NOW())
+      RETURNING id`,
+      createIncidentDto.incidenciaId,
+      createIncidentDto.prioridadId || null,
+      createIncidentDto.cruceId,
+      createIncidentDto.descripcion,
+      createIncidentDto.reportadorNombres || null,
+      createIncidentDto.reportadorDatoContacto || null,
+      createIncidentDto.reportadorId || null,
       usuario,
-      point,
     );
 
     // Obtener el ticket recién creado
-    return this.findOne(ticket as any);
+    const ticketId = result[0].id;
+    return this.findOne(ticketId);
   }
 
   async findAll(query: QueryIncidentsDto) {
@@ -60,7 +56,11 @@ export class IncidentsService {
         take: limit,
         orderBy: { createdAt: 'desc' },
         include: {
-          incidencia: true,
+          incidencia: {
+            include: {
+              prioridad: true,
+            },
+          },
           cruce: {
             select: {
               id: true,
@@ -85,17 +85,46 @@ export class IncidentsService {
       this.prisma.ticket.count({ where }),
     ]);
 
-    // Obtener coordenadas de cada ticket
-    const ticketsWithCoords = await Promise.all(
-      tickets.map(async (ticket) => {
-        const coords = await this.getCoordinates(ticket.id);
-        return {
-          ...ticket,
-          latitude: coords?.latitude,
-          longitude: coords?.longitude,
-        };
-      }),
+    // Obtener coordenadas de los tickets que las tengan en geom
+    const ticketIds = tickets.map(t => t.id);
+    const ticketCoords: any = await this.prisma.$queryRawUnsafe(
+      `SELECT id, ST_X(geom) as longitude, ST_Y(geom) as latitude 
+       FROM tickets 
+       WHERE id = ANY($1) AND geom IS NOT NULL`,
+      ticketIds,
     );
+    
+    const coordsMap = new Map();
+    ticketCoords.forEach((tc: any) => {
+      coordsMap.set(tc.id, {
+        latitude: parseFloat(tc.latitude),
+        longitude: parseFloat(tc.longitude),
+      });
+    });
+    
+    // Asignar coordenadas a cada ticket (del ticket o del cruce)
+    const ticketsWithCoords = tickets.map((ticket) => {
+      let latitude = null;
+      let longitude = null;
+      
+      // Si tiene coordenadas propias, usarlas
+      if (coordsMap.has(ticket.id)) {
+        const coords = coordsMap.get(ticket.id);
+        latitude = coords.latitude;
+        longitude = coords.longitude;
+      }
+      // Si no, usar las del cruce si existe
+      else if (ticket.cruce?.latitud && ticket.cruce?.longitud) {
+        latitude = ticket.cruce.latitud;
+        longitude = ticket.cruce.longitud;
+      }
+      
+      return {
+        ...ticket,
+        latitude,
+        longitude,
+      };
+    });
 
     return {
       data: ticketsWithCoords,
@@ -112,7 +141,11 @@ export class IncidentsService {
     const ticket = await this.prisma.ticket.findUnique({
       where: { id },
       include: {
-        incidencia: true,
+        incidencia: {
+          include: {
+            prioridad: true,
+          },
+        },
         cruce: {
           select: {
             id: true,
@@ -151,7 +184,7 @@ export class IncidentsService {
   async update(id: number, updateIncidentDto: UpdateIncidentDto, usuario: string) {
     await this.findOne(id); // Verificar que existe
 
-    const { latitude, longitude, estadoId, ...data } = updateIncidentDto;
+    const { estadoId, ...data } = updateIncidentDto;
 
     // Si hay cambio de estado, crear seguimiento
     if (estadoId) {
@@ -178,15 +211,7 @@ export class IncidentsService {
       updatedAt: new Date(),
     };
 
-    // Si hay coordenadas nuevas
-    if (latitude && longitude) {
-      const point = `POINT(${longitude} ${latitude})`;
-      await this.prisma.$executeRawUnsafe(
-        `UPDATE tickets SET geom = ST_GeomFromText($1, 4326) WHERE id = $2`,
-        point,
-        id,
-      );
-    }
+    // Las incidencias siempre usan coordenadas del cruce, no se actualiza geom
 
     await this.prisma.ticket.update({
       where: { id },
@@ -305,7 +330,90 @@ export class IncidentsService {
     });
   }
 
+  async getEquiposCatalog() {
+    return this.prisma.equipo.findMany({
+      where: { estado: true },
+      select: {
+        id: true,
+        nombre: true,
+      },
+      orderBy: { nombre: 'asc' },
+    });
+  }
+
+  async getTrackings(ticketId: number) {
+    await this.findOne(ticketId); // Verificar que existe
+
+    return this.prisma.ticketSeguimiento.findMany({
+      where: { ticketId },
+      orderBy: { createdAt: 'desc' },
+      include: {
+        estado: true,
+        equipo: true,
+        responsable: {
+          select: {
+            id: true,
+            nombre: true,
+          },
+        },
+      },
+    });
+  }
+
+  async createTracking(ticketId: number, createTrackingDto: any, usuario: string) {
+    await this.findOne(ticketId); // Verificar que existe
+
+    const { equipoId, responsableId, reporte, estadoId } = createTrackingDto;
+
+    // Preparar datos para crear el seguimiento
+    const trackingData: any = {
+      ticketId,
+      reporte,
+      usuarioRegistra: usuario,
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    };
+
+    // Solo agregar campos opcionales si tienen valor
+    if (equipoId) trackingData.equipoId = equipoId;
+    if (responsableId) trackingData.responsableId = responsableId;
+    if (estadoId) trackingData.estadoId = estadoId;
+
+    // Crear el seguimiento
+    const seguimiento = await this.prisma.ticketSeguimiento.create({
+      data: trackingData,
+      include: {
+        estado: true,
+        equipo: true,
+        responsable: {
+          select: {
+            id: true,
+            nombre: true,
+          },
+        },
+      },
+    });
+
+    // Si hay cambio de estado, actualizar el ticket
+    if (estadoId) {
+      const updateData: any = {
+        estadoId,
+        updatedAt: new Date(),
+      };
+      
+      if (equipoId) updateData.equipoId = equipoId;
+
+      await this.prisma.ticket.update({
+        where: { id: ticketId },
+        data: updateData,
+      });
+    }
+
+    return seguimiento;
+  }
+
   private async getCoordinates(ticketId: number): Promise<{ latitude: number; longitude: number } | null> {
+    // Primero intentar obtener las coordenadas del ticket
     const result: any = await this.prisma.$queryRawUnsafe(
       `SELECT ST_X(geom) as longitude, ST_Y(geom) as latitude FROM tickets WHERE id = $1`,
       ticketId,
@@ -315,6 +423,26 @@ export class IncidentsService {
       return {
         latitude: parseFloat(result[0].latitude),
         longitude: parseFloat(result[0].longitude),
+      };
+    }
+
+    // Si no tiene coordenadas propias, obtener las del cruce asociado
+    const ticket = await this.prisma.ticket.findUnique({
+      where: { id: ticketId },
+      include: {
+        cruce: {
+          select: {
+            latitud: true,
+            longitud: true,
+          },
+        },
+      },
+    });
+
+    if (ticket?.cruce?.latitud && ticket?.cruce?.longitud) {
+      return {
+        latitude: ticket.cruce.latitud,
+        longitude: ticket.cruce.longitud,
       };
     }
 

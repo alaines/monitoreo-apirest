@@ -1,50 +1,83 @@
-# Monitoreo API REST
+# Sistema de Monitoreo de Incidencias
 
-[![CI Pipeline](https://github.com/YOUR_USERNAME/monitoreo-apirest/actions/workflows/ci.yml/badge.svg)](https://github.com/YOUR_USERNAME/monitoreo-apirest/actions/workflows/ci.yml)
-[![CD Pipeline](https://github.com/YOUR_USERNAME/monitoreo-apirest/actions/workflows/cd.yml/badge.svg)](https://github.com/YOUR_USERNAME/monitoreo-apirest/actions/workflows/cd.yml)
-[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
-[![Node.js Version](https://img.shields.io/badge/node-%3E%3D18.0.0-brightgreen)](https://nodejs.org)
+Sistema integral de gestión y monitoreo de incidencias de tráfico en tiempo real. Monorepo fullstack desarrollado con NestJS, React, PostgreSQL y PostGIS.
 
-Sistema de Gestión de Incidencias de Semáforos - Monorepo con NestJS + React + PostgreSQL + Prisma.
+## Descripción
 
-## ✅ Estado Actual
+Aplicación web para la gestión, seguimiento y análisis de incidencias de tráfico y semáforos en la ciudad. Permite el registro de reportes ciudadanos, asignación de equipos técnicos, seguimiento del ciclo de vida de las incidencias, y visualización en tiempo real mediante mapas interactivos con priorización por nivel de urgencia.
 
-🎉 **Sprint 1 - Autenticación y Gestión de Usuarios: COMPLETADO 100%**
+## Características Principales
 
-**Backend API**: http://192.168.18.230:3001/api  
-**Swagger Docs**: http://192.168.18.230:3001/api/docs  
-**Estado**: ✅ Funcional y probado
+### Gestión de Incidencias
+- Registro y catalogación de incidencias de tráfico
+- Sistema de prioridades (Alta, Media, Baja)
+- Asignación automática a equipos técnicos
+- Seguimiento del ciclo de vida (Asignado, En Proceso, Resuelto, Cancelado, Reasignado)
+- Heredamiento de coordenadas geográficas desde cruces semaforizados
+- Cálculo automático de días sin atención
 
-### Funcionalidades Implementadas
-- ✅ Sistema de autenticación JWT completo
-- ✅ Login con usuario/contraseña
-- ✅ Gestión de usuarios con roles (ADMIN, OPERADOR, SUPERVISOR)
-- ✅ Endpoints protegidos con guards JWT
-- ✅ CRUD completo de usuarios
-- ✅ Documentación Swagger generada
-- ✅ Tests unitarios y E2E
+### Dashboard Analítico
+- Visualización de estadísticas en tiempo real
+- Filtros por período (Hoy, Semana, Mes, Año, Todas)
+- Indicadores de incidencias activas, pendientes, en progreso y tiempo promedio de resolución
+- Mapa interactivo con múltiples capas (OpenStreetMap, Satélite, Topográfico)
+- Marcadores con código de colores según prioridad
+- Información contextual en popups (tipo, cruce, ticket, días sin atención)
 
-Ver documentación completa en [docs/sprint-1-COMPLETADO.md](docs/sprint-1-COMPLETADO.md)
+### Sistema de Seguimiento
+- Timeline visual de seguimientos por incidencia
+- Registro de estados, equipos asignados y responsables
+- Reportes detallados con timestamps
+- Restricción de modificaciones en incidencias finalizadas
+- Historial completo de cambios
 
----
+### Autenticación y Permisos
+- Sistema de autenticación JWT
+- Roles de usuario (Administrador, Supervisor, Operador)
+- Control de acceso basado en roles
+- Gestión de usuarios con interfaz administrativa
 
-## 🏗️ Arquitectura
+### Interfaz de Usuario
+- Diseño responsive con Bootstrap 5
+- Sidebar lateral colapsable
+- Formularios con validación y conversión automática a mayúsculas
+- Autocomplete para búsqueda de cruces
+- Filtros avanzados con ordenamiento y paginación
+- Modales para visualización de detalles
 
-- **Backend**: NestJS 10.x con Prisma ORM
-- **Frontend**: React 18.x con Vite y TypeScript
-- **Base de Datos**: PostgreSQL 13+ con PostGIS
-- **Mapas**: Leaflet + OpenStreetMap
-- **WebSockets**: Socket.io para actualizaciones en tiempo real
-- **Monorepo**: npm workspaces
+## Arquitectura Técnica
 
-## 📋 Requisitos Previos
+### Backend
+- Framework: NestJS 10.x
+- ORM: Prisma
+- Base de Datos: PostgreSQL 13+ con extensión PostGIS
+- Autenticación: JWT (Passport.js)
+- Documentación: Swagger/OpenAPI
+- Validación: class-validator + class-transformer
+
+### Frontend
+- Framework: React 18.x
+- Build Tool: Vite
+- Lenguaje: TypeScript
+- UI Framework: Bootstrap 5.3.8
+- Gestión de Estado: Zustand
+- Mapas: Leaflet + React Leaflet
+- Enrutamiento: React Router v6
+
+### Base de Datos
+- Motor: PostgreSQL 13+
+- Extensión Espacial: PostGIS
+- Esquema: Normalizado con relaciones FK
+- Funcionalidad Geoespacial: Coordenadas geográficas, geometrías
+
+## Requisitos del Sistema
 
 - Node.js >= 18.0.0
 - npm >= 9.0.0
-- PostgreSQL 13+ con PostGIS (o Docker)
+- PostgreSQL 13+ con PostGIS
 - Git
 
-## 🚀 Inicio Rápido
+## Instalación
 
 ### 1. Clonar el repositorio
 
@@ -53,191 +86,181 @@ git clone <repository-url>
 cd monitoreo-apirest
 ```
 
-### 2. Configurar variables de entorno
-
-```bash
-cp .env.example .env
-# Editar .env con tus configuraciones
-```
-
-### 3. Instalar dependencias
+### 2. Instalar dependencias
 
 ```bash
 npm install
 ```
 
-### 4. Configurar base de datos
+### 3. Configurar variables de entorno
 
-#### Opción A: Usar Docker
+Crear archivo `.env` en la raíz del proyecto:
 
-```bash
-npm run docker:up
+```env
+# Base de Datos
+DATABASE_HOST=192.168.18.230
+DATABASE_PORT=5432
+DATABASE_USER=transito
+DATABASE_PASSWORD=transito
+DATABASE_NAME=monitoreo
+
+# Backend
+PORT=3001
+JWT_SECRET=your-secret-key-here
+NODE_ENV=development
+
+# Frontend
+VITE_API_URL=http://localhost:3001/api
 ```
 
-#### Opción B: PostgreSQL existente
+### 4. Generar Prisma Client
 
 ```bash
-# Asegúrate de que PostgreSQL esté corriendo
-# Actualiza DATABASE_URL en .env
-
-# Generar Prisma Client
-npm run prisma:generate
-
-# Ejecutar migraciones
-npm run prisma:migrate
+cd apps/backend
+npx prisma generate
 ```
 
-### 5. Iniciar aplicaciones
+### 5. Iniciar la aplicación
 
 ```bash
-# Desarrollo (backend + frontend)
-npm run dev
+# Desde la raíz del proyecto
 
-# Solo backend
+# Backend (puerto 3001)
 npm run backend:dev
 
-# Solo frontend
+# Frontend (puerto 5173)
 npm run frontend:dev
 ```
 
-## 📁 Estructura del Proyecto
+## Estructura del Proyecto
 
 ```
 monitoreo-apirest/
 ├── apps/
-│   ├── backend/          # API REST con NestJS
-│   └── frontend/         # Aplicación React
-├── packages/
-│   ├── shared-types/     # Types compartidos
-│   └── shared-utils/     # Utilidades compartidas
-├── database/
-│   ├── current-schema.sql    # Esquema actual
-│   └── README.md
-├── docker/              # Configuraciones Docker
-├── docs/                # Documentación
-└── scripts/             # Scripts de utilidad
+│   ├── backend/                 # API REST NestJS
+│   │   ├── src/
+│   │   │   ├── auth/           # Autenticación JWT
+│   │   │   ├── users/          # Gestión de usuarios
+│   │   │   ├── incidents/      # Gestión de incidencias
+│   │   │   ├── cruces/         # Catálogo de cruces
+│   │   │   └── prisma/         # Servicio Prisma
+│   │   └── prisma/
+│   │       └── schema.prisma   # Esquema de base de datos
+│   │
+│   └── frontend/                # Aplicación React
+│       ├── src/
+│       │   ├── components/     # Componentes reutilizables
+│       │   ├── features/       # Funcionalidades por módulo
+│       │   │   ├── auth/       # Login y gestión de sesión
+│       │   │   ├── incidents/  # Listado, detalle, formularios
+│       │   │   └── users/      # Administración de usuarios
+│       │   ├── pages/          # Páginas principales
+│       │   ├── services/       # Clientes API
+│       │   └── lib/            # Utilidades y configuración
+│       │
+├── database/                    # Scripts SQL y migraciones
+└── docs/                        # Documentación del proyecto
 ```
 
-## 🛠️ Scripts Disponibles
-
-### General
-
-- `npm run dev` - Iniciar todo en modo desarrollo
-- `npm run build` - Build de todas las apps
-- `npm run lint` - Linting de todo el proyecto
-- `npm run format` - Formatear código
+## Scripts Disponibles
 
 ### Backend
-
-- `npm run backend:dev` - Desarrollo
-- `npm run backend:build` - Build
-- `npm run backend:start` - Producción
-- `npm run prisma:generate` - Generar Prisma Client
-- `npm run prisma:migrate` - Ejecutar migraciones
-- `npm run prisma:studio` - Abrir Prisma Studio
+```bash
+npm run backend:dev          # Desarrollo con hot-reload
+npm run backend:build        # Build para producción
+npm run backend:start        # Ejecutar build de producción
+npx prisma studio            # Abrir Prisma Studio
+```
 
 ### Frontend
-
-- `npm run frontend:dev` - Desarrollo
-- `npm run frontend:build` - Build
-- `npm run frontend:preview` - Preview de build
-
-### Docker
-
-- `npm run docker:up` - Levantar contenedores
-- `npm run docker:down` - Detener contenedores
-- `npm run docker:logs` - Ver logs
-
-## 🔑 Variables de Entorno
-
-Ver `.env.example` para la lista completa de variables requeridas.
-
-Principales:
-- `DATABASE_URL` - URL de conexión a PostgreSQL
-- `JWT_SECRET` - Secret para JWT
-- `PORT` - Puerto del backend (default: 3000)
-- `FRONTEND_URL` - URL del frontend (default: http://localhost:5173)
-
-## 📚 Documentación
-
-- [Backend README](apps/backend/README.md)
-- [Frontend README](apps/frontend/README.md)
-- [Base de Datos](database/README.md)
-- [Planificación de Sprints](docs/sprints/)
-
-## 🎯 Características Principales
-
-- ✅ Autenticación JWT + Google OAuth
-- ✅ Gestión de incidencias de semáforos
-- ✅ Notificaciones en tiempo real (WebSockets)
-- ✅ Mapas interactivos con Leaflet
-- ✅ Integración con Waze for Cities
-- ✅ Integración con WhatsApp
-- ✅ Sistema de roles (Público, Operador, Supervisor, Administrador)
-- ✅ Reportes y estadísticas
-- ✅ Auditoría de cambios
-- ✅ Soporte PostGIS para datos geoespaciales
-
-## 🧪 Testing
-
 ```bash
-# Backend tests
-npm run test -w apps/backend
-
-# Frontend tests
-npm run test -w apps/frontend
-
-# E2E tests
-npm run test:e2e -w apps/backend
+npm run frontend:dev         # Desarrollo con Vite
+npm run frontend:build       # Build optimizado
+npm run frontend:preview     # Preview del build
 ```
 
-## 📦 Despliegue
+## Endpoints Principales
 
-Ver `docker-compose.yml` para configuración de producción.
+### Autenticación
+- POST `/api/auth/login` - Inicio de sesión
+- GET `/api/auth/profile` - Perfil del usuario autenticado
 
-```bash
-# Build para producción
-npm run build
+### Incidencias
+- GET `/api/incidents` - Listar incidencias (paginado, filtros, ordenamiento)
+- GET `/api/incidents/:id` - Detalle de incidencia
+- POST `/api/incidents` - Crear incidencia
+- PATCH `/api/incidents/:id` - Actualizar incidencia
+- DELETE `/api/incidents/:id` - Eliminar incidencia
+- GET `/api/incidents/:id/trackings` - Seguimientos de incidencia
+- POST `/api/incidents/:id/trackings` - Crear seguimiento
 
-# Desplegar con Docker
-docker-compose -f docker-compose.prod.yml up -d
-```
+### Catálogos
+- GET `/api/incidents/catalogs/tipos` - Tipos de incidencia
+- GET `/api/incidents/catalogs/estados` - Estados
+- GET `/api/incidents/catalogs/equipos` - Equipos técnicos
+- GET `/api/cruces/catalog` - Cruces semaforizados
 
-## 🤝 Contribuir
+### Usuarios
+- GET `/api/users` - Listar usuarios
+- POST `/api/users` - Crear usuario
+- PATCH `/api/users/:id` - Actualizar usuario
+- DELETE `/api/users/:id` - Eliminar usuario
 
-1. Fork el proyecto
-2. Crea tu rama de feature (`git checkout -b feature/AmazingFeature`)
-3. Commit tus cambios (`git commit -m 'Add some AmazingFeature'`)
-4. Push a la rama (`git push origin feature/AmazingFeature`)
-5. Abre un Pull Request
+Documentación completa disponible en: http://localhost:3001/api/docs
 
-### CI/CD Pipeline
+## Funcionalidades Destacadas
 
-El proyecto utiliza GitHub Actions para integración y despliegue continuo:
+### Mapas con Priorización
+Los marcadores en el mapa utilizan código de colores para identificación visual rápida:
+- Rojo: Prioridad Alta
+- Naranja: Prioridad Media
+- Verde: Prioridad Baja
 
-- **CI Pipeline** (`.github/workflows/ci.yml`):
-  - ✅ Lint con Prettier y ESLint
-  - ✅ Tests unitarios (Jest)
-  - ✅ Tests E2E con base de datos PostgreSQL
-  - ✅ Build de frontend y backend
-  - ✅ Security audit
+### Conversión Automática a Mayúsculas
+Todos los campos de texto se convierten automáticamente a mayúsculas para mantener consistencia en los datos.
 
-- **CD Pipeline** (`.github/workflows/cd.yml`):
-  - 🚀 Deploy automático a staging en push a `main`
-  - 🚀 Deploy a producción en tags `v*`
+### Herencia de Coordenadas
+Las incidencias heredan automáticamente las coordenadas geográficas del cruce seleccionado, eliminando la necesidad de captura manual.
 
-**Variables de entorno requeridas en GitHub Secrets:**
-```
-JWT_SECRET              # Secret para firma JWT
-STAGING_API_URL         # URL del API en staging
-PROD_API_URL            # URL del API en producción
-PROD_DATABASE_URL       # Connection string de producción
-```
+### Sistema de Seguimientos
+Cada incidencia mantiene un historial completo de seguimientos con:
+- Cambios de estado
+- Asignación de equipos y responsables
+- Reportes detallados
+- Timestamps automáticos
+- Usuario que registra cada acción
 
-## 📝 Licencia
+### Validaciones de Negocio
+- Prevención de seguimientos en incidencias finalizadas
+- Actualización automática de estado de incidencia al crear seguimiento
+- Validación de campos requeridos
+- Restricción de edición de ubicación geográfica
 
-MIT
+## Tecnologías Utilizadas
 
-## 👥 Equipo
+**Backend:**
+- NestJS 10.4.4
+- Prisma 5.14.0
+- PostgreSQL + PostGIS
+- Passport JWT
+- class-validator
+- Swagger
 
-EMC-GMU - Gestión Municipal Urbana
+**Frontend:**
+- React 18.3.1
+- TypeScript 5.5.3
+- Vite 5.3.1
+- Bootstrap 5.3.8
+- Leaflet 1.9.4
+- React Router 6.23.1
+- Zustand 4.5.2
+- Axios 1.7.2
+
+## Licencia
+
+MIT License
+
+## Autor
+
+Aland Laines Calonge
+

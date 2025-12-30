@@ -1,16 +1,5 @@
-import { useState, FormEvent } from 'react';
+import { useState, FormEvent, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import {
-  Box,
-  Container,
-  Paper,
-  TextField,
-  Button,
-  Typography,
-  Alert,
-  CircularProgress,
-} from '@mui/material';
-import { Lock as LockIcon } from '@mui/icons-material';
 import { useAuthStore } from '../authStore';
 
 export function LoginPage() {
@@ -18,6 +7,18 @@ export function LoginPage() {
   const { login, isLoading, error, clearError } = useAuthStore();
   const [usuario, setUsuario] = useState('');
   const [password, setPassword] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
+  const [rememberMe, setRememberMe] = useState(false);
+
+  useEffect(() => {
+    const savedUsername = localStorage.getItem('rememberedUsername');
+    const savedPassword = localStorage.getItem('rememberedPassword');
+    if (savedUsername && savedPassword) {
+      setUsuario(savedUsername);
+      setPassword(savedPassword);
+      setRememberMe(true);
+    }
+  }, []);
 
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
@@ -25,117 +26,245 @@ export function LoginPage() {
 
     try {
       await login({ usuario, password });
+      
+      if (rememberMe) {
+        localStorage.setItem('rememberedUsername', usuario);
+        localStorage.setItem('rememberedPassword', password);
+      } else {
+        localStorage.removeItem('rememberedUsername');
+        localStorage.removeItem('rememberedPassword');
+      }
+      
       navigate('/');
-    } catch (error) {
+    } catch (err) {
       // Error is handled in the store
     }
   };
 
   return (
-    <Box
-      sx={{
+    <div
+      style={{
         minHeight: '100vh',
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'center',
-        background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+        backgroundImage: 'url(/images/login/background.jpg)',
+        backgroundSize: 'cover',
+        backgroundPosition: 'center',
+        backgroundRepeat: 'no-repeat',
+        position: 'relative',
       }}
     >
-      <Container maxWidth="sm">
-        <Paper
-          elevation={10}
-          sx={{
-            p: 4,
-            borderRadius: 3,
-          }}
-        >
-          <Box sx={{ textAlign: 'center', mb: 4 }}>
-            <Box
-              sx={{
-                display: 'inline-flex',
+      {/* Overlay oscuro */}
+      <div
+        style={{
+          position: 'absolute',
+          top: 0,
+          left: 0,
+          right: 0,
+          bottom: 0,
+          backgroundColor: 'rgba(0, 0, 0, 0.5)',
+          zIndex: 1,
+        }}
+      />
+
+      {/* Formulario con efecto glassmorphism */}
+      <div
+        className="card"
+        style={{
+          width: '100%',
+          maxWidth: '420px',
+          borderRadius: '16px',
+          zIndex: 2,
+          margin: '20px',
+          backgroundColor: 'rgba(255, 255, 255, 0.15)',
+          backdropFilter: 'blur(15px)',
+          border: '1px solid rgba(255, 255, 255, 0.3)',
+          boxShadow: '0 8px 32px 0 rgba(0, 0, 0, 0.37)',
+        }}
+      >
+        <div className="card-body p-4 p-sm-5">
+          {/* Logo y Título */}
+          <div className="text-center mb-4">
+            <div
+              style={{
+                width: '80px',
+                height: '80px',
+                margin: '0 auto 20px',
+                backgroundColor: 'rgba(255, 255, 255, 0.9)',
+                borderRadius: '50%',
+                display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
-                width: 64,
-                height: 64,
-                borderRadius: '50%',
-                bgcolor: 'primary.main',
-                mb: 2,
+                border: '3px solid rgba(255, 255, 255, 0.5)',
               }}
             >
-              <LockIcon sx={{ fontSize: 32, color: 'white' }} />
-            </Box>
-            <Typography variant="h4" component="h1" fontWeight="bold" gutterBottom>
-              Monitoreo
-            </Typography>
-            <Typography variant="body1" color="text.secondary">
-              Sistema de Gestión de Incidencias
-            </Typography>
-          </Box>
+              <i className="fas fa-map-marker-alt" style={{ fontSize: '40px', color: '#0056b3' }}></i>
+            </div>
+            <h1
+              className="h4 fw-bold text-white mb-2"
+              style={{
+                textShadow: '2px 2px 4px rgba(0,0,0,0.8)',
+              }}
+            >
+              Sistema de Monitoreo
+            </h1>
+            <p
+              className="text-white"
+              style={{
+                textShadow: '1px 1px 2px rgba(0,0,0,0.8)',
+              }}
+            >
+              Ingresa tus credenciales para continuar
+            </p>
+          </div>
 
-          <Box component="form" onSubmit={handleSubmit} sx={{ mt: 3 }}>
+          {/* Formulario */}
+          <form onSubmit={handleSubmit}>
+            {/* Error Message */}
             {error && (
-              <Alert severity="error" sx={{ mb: 3 }}>
+              <div className="alert alert-danger py-2 mb-3" role="alert">
                 {error}
-              </Alert>
+              </div>
             )}
 
-            <TextField
-              fullWidth
-              id="usuario"
-              label="Usuario"
-              type="text"
-              value={usuario}
-              onChange={(e) => setUsuario(e.target.value)}
-              placeholder="Ingrese su usuario"
-              required
-              autoFocus
-              sx={{ mb: 2 }}
-            />
+            {/* Username */}
+            <div className="mb-3">
+              <label
+                className="form-label fw-semibold text-white"
+                style={{
+                  textShadow: '1px 1px 2px rgba(0,0,0,0.8)',
+                }}
+              >
+                <i className="fas fa-user me-1"></i>
+                Usuario
+              </label>
+              <input
+                type="text"
+                className="form-control"
+                placeholder="admin"
+                value={usuario}
+                onChange={(e) => setUsuario(e.target.value)}
+                required
+                autoFocus
+                autoComplete="username"
+                style={{
+                  borderRadius: '8px',
+                }}
+              />
+            </div>
 
-            <TextField
-              fullWidth
-              id="password"
-              label="Contraseña"
-              type="password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              placeholder="Ingrese su contraseña"
-              required
-              sx={{ mb: 3 }}
-            />
+            {/* Contraseña */}
+            <div className="mb-3">
+              <label
+                className="form-label fw-semibold text-white"
+                style={{
+                  textShadow: '1px 1px 2px rgba(0,0,0,0.8)',
+                }}
+              >
+                <i className="fas fa-lock me-1"></i>
+                Contraseña
+              </label>
+              <div className="input-group">
+                <input
+                  type={showPassword ? 'text' : 'password'}
+                  className="form-control"
+                  placeholder="Ingresa tu contraseña"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  required
+                  autoComplete="current-password"
+                  style={{
+                    borderRadius: '8px 0 0 8px',
+                  }}
+                />
+                <button
+                  className="btn btn-outline-secondary"
+                  type="button"
+                  onClick={() => setShowPassword(!showPassword)}
+                  style={{
+                    borderRadius: '0 8px 8px 0',
+                    backgroundColor: 'white',
+                  }}
+                >
+                  <i className={`fas fa-eye${showPassword ? '-slash' : ''}`}></i>
+                </button>
+              </div>
+            </div>
 
-            <Button
-              fullWidth
+            {/* Recordar contraseña y Olvidaste */}
+            <div className="d-flex justify-content-between align-items-center mb-3">
+              <div className="form-check">
+                <input
+                  className="form-check-input"
+                  type="checkbox"
+                  id="rememberMe"
+                  checked={rememberMe}
+                  onChange={(e) => setRememberMe(e.target.checked)}
+                />
+                <label
+                  className="form-check-label text-white"
+                  htmlFor="rememberMe"
+                  style={{
+                    textShadow: '1px 1px 2px rgba(0,0,0,0.8)',
+                  }}
+                >
+                  Recordar contraseña
+                </label>
+              </div>
+              <a
+                href="#"
+                className="text-white text-decoration-none fw-medium"
+                onClick={(e) => {
+                  e.preventDefault();
+                }}
+                style={{
+                  textShadow: '1px 1px 2px rgba(0,0,0,0.8)',
+                }}
+              >
+                ¿Olvidaste tu contraseña?
+              </a>
+            </div>
+
+            {/* Botón Ingresar */}
+            <button
               type="submit"
-              variant="contained"
-              size="large"
+              className="btn btn-primary w-100 py-2 fw-semibold"
               disabled={isLoading}
-              sx={{
-                py: 1.5,
-                fontSize: '1rem',
+              style={{
+                borderRadius: '8px',
+                fontSize: '16px',
               }}
             >
               {isLoading ? (
                 <>
-                  <CircularProgress size={20} sx={{ mr: 1 }} color="inherit" />
-                  Iniciando sesión...
+                  <span className="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
+                  Ingresando...
                 </>
               ) : (
-                'Iniciar Sesión'
+                <>
+                  <i className="fas fa-sign-in-alt me-2"></i>
+                  Ingresar
+                </>
               )}
-            </Button>
-          </Box>
+            </button>
+          </form>
 
-          <Box sx={{ mt: 3, textAlign: 'center' }}>
-            <Typography variant="body2" color="text.secondary">
-              Credenciales de prueba:
-            </Typography>
-            <Typography variant="body2" color="text.secondary" sx={{ mt: 0.5 }}>
-              <strong>admin_test</strong> / admin123
-            </Typography>
-          </Box>
-        </Paper>
-      </Container>
-    </Box>
+          {/* Footer */}
+          <div className="text-center mt-4 pt-3" style={{ borderTop: '1px solid rgba(255, 255, 255, 0.3)' }}>
+            <p
+              className="small text-white mb-0"
+              style={{
+                textShadow: '1px 1px 2px rgba(0,0,0,0.8)',
+              }}
+            >
+              © {new Date().getFullYear()} Sistema de Monitoreo
+              <br />
+              Todos los derechos reservados
+            </p>
+          </div>
+        </div>
+      </div>
+    </div>
   );
 }

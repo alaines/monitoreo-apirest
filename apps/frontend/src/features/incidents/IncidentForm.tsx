@@ -1,57 +1,14 @@
 import { useState, useEffect } from 'react';
 import {
-  Box,
-  Button,
-  Card,
-  CardContent,
-  TextField,
-  Typography,
-  Grid,
-  Alert,
-  MenuItem,
-} from '@mui/material';
-import SaveIcon from '@mui/icons-material/Save';
-import CancelIcon from '@mui/icons-material/Cancel';
-import { MapContainer, TileLayer, Marker, useMapEvents } from 'react-leaflet';
-import L from 'leaflet';
-import 'leaflet/dist/leaflet.css';
-import {
   incidentsService,
   CreateIncidentDto,
   UpdateIncidentDto,
   IncidenciaCatalog,
   PrioridadCatalog,
   EstadoCatalog,
+  CruceCatalog,
+  EquipoCatalog,
 } from '../../services/incidents.service';
-
-// Fix Leaflet icon issue
-try {
-  // @ts-ignore
-  delete L.Icon.Default.prototype._getIconUrl;
-  // @ts-ignore
-  L.Icon.Default.mergeOptions({
-    iconRetinaUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-icon-2x.png',
-    iconUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-icon.png',
-    shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-shadow.png',
-  });
-} catch (e) {
-  // Ignore error
-}
-
-interface LocationMarkerProps {
-  position: [number, number] | null;
-  setPosition: (position: [number, number]) => void;
-}
-
-function LocationMarker({ position, setPosition }: LocationMarkerProps) {
-  useMapEvents({
-    click(e) {
-      setPosition([e.latlng.lat, e.latlng.lng]);
-    },
-  });
-
-  return position ? <Marker position={position} /> : null;
-}
 
 interface IncidentFormProps {
   incidentId: number | null;
@@ -64,10 +21,19 @@ export function IncidentForm({ incidentId, onClose, onSave }: IncidentFormProps)
 
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [position, setPosition] = useState<[number, number] | null>(null);
   const [incidencias, setIncidencias] = useState<IncidenciaCatalog[]>([]);
   const [prioridades, setPrioridades] = useState<PrioridadCatalog[]>([]);
   const [estados, setEstados] = useState<EstadoCatalog[]>([]);
+  const [cruces, setCruces] = useState<CruceCatalog[]>([]);
+  const [equipos, setEquipos] = useState<EquipoCatalog[]>([]);
+  const [incidentLocation, setIncidentLocation] = useState<{ latitude: number; longitude: number } | null>(null);
+  
+  // Para autocomplete de cruces
+  const [cruceSearch, setCruceSearch] = useState('');
+  const [filteredCruces, setFilteredCruces] = useState<CruceCatalog[]>([]);
+  const [showCruceDropdown, setShowCruceDropdown] = useState(false);
+  const [selectedCruce, setSelectedCruce] = useState<CruceCatalog | null>(null);
+  
   const [formData, setFormData] = useState({
     incidenciaId: '',
     prioridadId: '',
@@ -84,18 +50,45 @@ export function IncidentForm({ incidentId, onClose, onSave }: IncidentFormProps)
     if (isEditing && incidentId) {
       loadIncident(incidentId);
     }
+    
+    // Cerrar dropdown de cruces al hacer clic fuera
+    const handleClickOutside = (e: MouseEvent) => {
+      const target = e.target as HTMLElement;
+      if (!target.closest('.cruce-autocomplete')) {
+        setShowCruceDropdown(false);
+      }
+    };
+    document.addEventListener('click', handleClickOutside);
+    return () => document.removeEventListener('click', handleClickOutside);
   }, [incidentId, isEditing]);
+
+  useEffect(() => {
+    // Filtrar cruces basado en búsqueda
+    if (cruceSearch.trim() === '') {
+      setFilteredCruces(cruces.slice(0, 20));
+    } else {
+      const filtered = cruces.filter(cruce => 
+        cruce.nombre.toLowerCase().includes(cruceSearch.toLowerCase())
+      ).slice(0, 20);
+      setFilteredCruces(filtered);
+    }
+  }, [cruceSearch, cruces]);
 
   const loadCatalogs = async () => {
     try {
-      const [incidenciasData, prioridadesData, estadosData] = await Promise.all([
+      const [incidenciasData, prioridadesData, estadosData, crucesData, equiposData] = await Promise.all([
         incidentsService.getIncidenciasCatalog(),
         incidentsService.getPrioridadesCatalog(),
         incidentsService.getEstadosCatalog(),
+        incidentsService.getCrucesCatalog(),
+        incidentsService.getEquiposCatalog(),
       ]);
       setIncidencias(incidenciasData);
       setPrioridades(prioridadesData);
       setEstados(estadosData);
+      setCruces(crucesData);
+      setEquipos(equiposData);
+      setFilteredCruces(crucesData.slice(0, 20));
     } catch (error) {
       console.error('Error loading catalogs:', error);
     }
@@ -114,8 +107,15 @@ export function IncidentForm({ incidentId, onClose, onSave }: IncidentFormProps)
         reportadorNombres: incident.reportadorNombres || '',
         reportadorDatoContacto: incident.reportadorDatoContacto || '',
       });
+      
+      // Cargar cruce seleccionado
+      if (incident.cruce) {
+        setSelectedCruce({ id: incident.cruce.id, nombre: incident.cruce.nombre || '' });
+        setCruceSearch(incident.cruce.nombre || '');
+      }
+      
       if (incident.latitude && incident.longitude) {
-        setPosition([incident.latitude, incident.longitude]);
+        setIncidentLocation({ latitude: incident.latitude, longitude: incident.longitude });
       }
     } catch (error) {
       console.error('Error loading incident:', error);
@@ -123,24 +123,40 @@ export function IncidentForm({ incidentId, onClose, onSave }: IncidentFormProps)
     }
   };
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
     setFormData({
       ...formData,
       [e.target.name]: e.target.value,
     });
   };
 
+  const handleCruceSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setCruceSearch(e.target.value);
+    setShowCruceDropdown(true);
+    if (!e.target.value.trim()) {
+      setSelectedCruce(null);
+      setFormData({ ...formData, cruceId: '' });
+    }
+  };
+
+  const handleCruceSelect = (cruce: CruceCatalog) => {
+    setSelectedCruce(cruce);
+    setCruceSearch(cruce.nombre);
+    setFormData({ ...formData, cruceId: cruce.id.toString() });
+    setShowCruceDropdown(false);
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError(null);
 
-    if (!position) {
-      setError('Por favor, seleccione una ubicación en el mapa');
+    if (!formData.incidenciaId) {
+      setError('El tipo de incidencia es requerido');
       return;
     }
 
-    if (!formData.incidenciaId) {
-      setError('El tipo de incidencia es requerido');
+    if (!formData.cruceId) {
+      setError('Debe seleccionar un cruce/semáforo');
       return;
     }
 
@@ -150,12 +166,10 @@ export function IncidentForm({ incidentId, onClose, onSave }: IncidentFormProps)
       const data: CreateIncidentDto | UpdateIncidentDto = {
         incidenciaId: parseInt(formData.incidenciaId),
         prioridadId: formData.prioridadId ? parseInt(formData.prioridadId) : undefined,
-        cruceId: formData.cruceId ? parseInt(formData.cruceId) : undefined,
+        cruceId: parseInt(formData.cruceId),
         descripcion: formData.descripcion,
         reportadorNombres: formData.reportadorNombres,
         reportadorDatoContacto: formData.reportadorDatoContacto,
-        latitude: position[0],
-        longitude: position[1],
       };
 
       if (isEditing && incidentId) {
@@ -177,203 +191,212 @@ export function IncidentForm({ incidentId, onClose, onSave }: IncidentFormProps)
     }
   };
 
-  // Lima, Peru coordinates as default
-  const center: [number, number] = position || [-12.0464, -77.0428];
-
   return (
-    <Box sx={{ pt: 2 }}>
+    <div className="pt-2">
       {error && (
-        <Alert severity="error" sx={{ mb: 2 }}>
+        <div className="alert alert-danger mb-3" role="alert">
           {error}
-        </Alert>
+        </div>
       )}
 
       <form onSubmit={handleSubmit}>
-        {/* @ts-ignore */}
-        <Grid container spacing={3}>
-          {/* @ts-ignore */}
-          <Grid item xs={12} md={6}>
-            <Card>
-              <CardContent>
-                <Typography variant="h6" gutterBottom>
-                  Información de la Incidencia
-                </Typography>
+        <div className="card">
+          <div className="card-body">
+            <h6 className="card-title mb-3">Información de la Incidencia</h6>
 
-                <Grid container spacing={2}>
-                  <Grid item xs={12}>
-                    <TextField
-                      fullWidth
-                      select
-                      label="Tipo de Incidencia *"
-                      name="incidenciaId"
-                      value={formData.incidenciaId}
-                      onChange={handleChange}
-                      required
-                    >
-                      {incidencias.map((inc) => (
-                        <MenuItem key={inc.id} value={inc.id}>
-                          {inc.tipo}
-                        </MenuItem>
-                      ))}
-                    </TextField>
-                  </Grid>
+            <div className="mb-3">
+              <label className="form-label">Tipo de Incidencia *</label>
+                  <select
+                    className="form-select"
+                    name="incidenciaId"
+                    value={formData.incidenciaId}
+                    onChange={handleChange}
+                    required
+                  >
+                    <option value="">Seleccionar...</option>
+                    {incidencias.map((inc) => (
+                      <option key={inc.id} value={inc.id}>
+                        {inc.tipo}
+                      </option>
+                    ))}
+                  </select>
+                </div>
 
-                  <Grid item xs={12} sm={6}>
-                    <TextField
-                      fullWidth
-                      select
-                      label="Prioridad"
+                <div className="row">
+                  <div className="col-md-6 mb-3">
+                    <label className="form-label">Prioridad</label>
+                    <select
+                      className="form-select"
                       name="prioridadId"
                       value={formData.prioridadId}
                       onChange={handleChange}
                     >
-                      <MenuItem value="">Sin prioridad</MenuItem>
+                      <option value="">Sin prioridad</option>
                       {prioridades.map((prio) => (
-                        <MenuItem key={prio.id} value={prio.id}>
+                        <option key={prio.id} value={prio.id}>
                           {prio.nombre}
-                        </MenuItem>
+                        </option>
                       ))}
-                    </TextField>
-                  </Grid>
+                    </select>
+                  </div>
 
-                  <Grid item xs={12} sm={6}>
-                    <TextField
-                      fullWidth
-                      label="Cruce ID"
-                      name="cruceId"
-                      type="number"
-                      value={formData.cruceId}
-                      onChange={handleChange}
-                    />
-                  </Grid>
-
-                  {isEditing && (
-                    <>
-                      <Grid item xs={12} sm={6}>
-                        <TextField
-                          fullWidth
-                          label="Equipo ID"
-                          name="equipoId"
-                          type="number"
-                          value={formData.equipoId}
-                          onChange={handleChange}
-                        />
-                      </Grid>
-
-                      <Grid item xs={12} sm={6}>
-                        <TextField
-                          fullWidth
-                          select
-                          label="Estado"
-                          name="estadoId"
-                          value={formData.estadoId}
-                          onChange={handleChange}
+                  <div className="col-md-6 mb-3 cruce-autocomplete">
+                    <label className="form-label">Cruce/Semáforo *</label>
+                    <div className="position-relative">
+                      <input
+                        type="text"
+                        className="form-control"
+                        placeholder="Buscar cruce..."
+                        value={cruceSearch}
+                        onChange={handleCruceSearchChange}
+                        onFocus={() => setShowCruceDropdown(true)}
+                        required
+                      />
+                      {showCruceDropdown && filteredCruces.length > 0 && (
+                        <div 
+                          className="position-absolute w-100 bg-white border rounded shadow-sm mt-1" 
+                          style={{ maxHeight: '200px', overflowY: 'auto', zIndex: 1000 }}
                         >
-                          <MenuItem value="">Sin cambio</MenuItem>
-                          {estados.map((estado) => (
-                            <MenuItem key={estado.id} value={estado.id}>
-                              {estado.nombre}
-                            </MenuItem>
+                          {filteredCruces.map((cruce) => (
+                            <div
+                              key={cruce.id}
+                              className="p-2 cursor-pointer hover-bg-light"
+                              style={{ cursor: 'pointer' }}
+                              onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#f8f9fa'}
+                              onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'white'}
+                              onClick={() => handleCruceSelect(cruce)}
+                            >
+                              <small>{cruce.nombre}</small>
+                            </div>
                           ))}
-                        </TextField>
-                      </Grid>
-                    </>
-                  )}
+                        </div>
+                      )}
+                    </div>
+                    {selectedCruce && (
+                      <small className="text-success">
+                        <i className="fas fa-check-circle me-1"></i>
+                        Seleccionado: {selectedCruce.nombre}
+                      </small>
+                    )}
+                  </div>
+                </div>
 
-                  <Grid item xs={12}>
-                    <TextField
-                      fullWidth
-                      label="Descripción"
-                      name="descripcion"
-                      multiline
-                      rows={4}
-                      value={formData.descripcion}
-                      onChange={handleChange}
-                    />
-                  </Grid>
+                {isEditing && (
+                  <div className="row">
+                    <div className="col-md-6 mb-3">
+                      <label className="form-label">Equipo Asignado</label>
+                      <select
+                        className="form-select"
+                        name="equipoId"
+                        value={formData.equipoId}
+                        onChange={handleChange}
+                      >
+                        <option value="">Sin equipo asignado</option>
+                        {equipos.map((equipo) => (
+                          <option key={equipo.id} value={equipo.id}>
+                            {equipo.nombre}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
 
-                  <Grid item xs={12} sm={6}>
-                    <TextField
-                      fullWidth
-                      label="Nombre del Reportador"
+                    <div className="col-md-6 mb-3">
+                      <label className="form-label">Estado</label>
+                      <select
+                        className="form-select"
+                        name="estadoId"
+                        value={formData.estadoId}
+                        onChange={handleChange}
+                      >
+                        <option value="">Sin cambio</option>
+                        {estados.map((estado) => (
+                          <option key={estado.id} value={estado.id}>
+                            {estado.nombre}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+                  </div>
+                )}
+
+                <div className="mb-3">
+                  <label className="form-label">Descripción</label>
+                  <textarea
+                    className="form-control"
+                    name="descripcion"
+                    rows={4}
+                    value={formData.descripcion}
+                    onChange={(e) => {
+                      e.target.value = e.target.value.toUpperCase();
+                      handleChange(e);
+                    }}
+                    style={{ textTransform: 'uppercase' }}
+                  />
+                </div>
+
+                <div className="row">
+                  <div className="col-md-6 mb-3">
+                    <label className="form-label">Nombre del Reportador</label>
+                    <input
+                      type="text"
+                      className="form-control"
                       name="reportadorNombres"
                       value={formData.reportadorNombres}
-                      onChange={handleChange}
+                      onChange={(e) => {
+                        e.target.value = e.target.value.toUpperCase();
+                        handleChange(e);
+                      }}
+                      style={{ textTransform: 'uppercase' }}
                     />
-                  </Grid>
+                  </div>
 
-                  <Grid item xs={12} sm={6}>
-                    <TextField
-                      fullWidth
-                      label="Contacto del Reportador"
+                  <div className="col-md-6 mb-3">
+                    <label className="form-label">Contacto del Reportador</label>
+                    <input
+                      type="text"
+                      className="form-control"
                       name="reportadorDatoContacto"
                       value={formData.reportadorDatoContacto}
-                      onChange={handleChange}
+                      onChange={(e) => {
+                        e.target.value = e.target.value.toUpperCase();
+                        handleChange(e);
+                      }}
+                      style={{ textTransform: 'uppercase' }}
                     />
-                  </Grid>
+                  </div>
+                </div>
 
-                  {position && (
-                    <Grid item xs={12}>
-                      <Alert severity="info">
-                        Coordenadas: {position[0].toFixed(6)}, {position[1].toFixed(6)}
-                      </Alert>
-                    </Grid>
-                  )}
-                </Grid>
-              </CardContent>
-            </Card>
-          </Grid>
+                {incidentLocation && (
+              <div className="alert alert-info mb-0">
+                <strong><i className="fas fa-map-marker-alt me-2"></i>Ubicación heredada del cruce:</strong>
+                <div className="mt-2">
+                  <small>Latitud: {incidentLocation.latitude.toFixed(6)}</small><br />
+                  <small>Longitud: {incidentLocation.longitude.toFixed(6)}</small>
+                </div>
+              </div>
+            )}
+          </div>
+        </div>
 
-          <Grid item xs={12} md={6}>
-            <Card>
-              <CardContent>
-                <Typography variant="h6" gutterBottom>
-                  Ubicación en el Mapa *
-                </Typography>
-                <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
-                  Haga clic en el mapa para seleccionar la ubicación
-                </Typography>
-
-                <Box sx={{ height: 400, border: '1px solid #ddd', borderRadius: 1 }}>
-                  {/* @ts-ignore */}
-                  <MapContainer
-                    center={center}
-                    zoom={13}
-                    style={{ height: '100%', width: '100%' }}
-                  >
-                    {/* @ts-ignore */}
-                    <TileLayer
-                      attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
-                      url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-                    />
-                    <LocationMarker position={position} setPosition={setPosition} />
-                  </MapContainer>
-                </Box>
-              </CardContent>
-            </Card>
-          </Grid>
-
-          <Grid item xs={12}>
-            <Box sx={{ display: 'flex', gap: 2, justifyContent: 'flex-end' }}>
-              <Button
-                variant="outlined"
-                startIcon={<CancelIcon />}
-                onClick={onClose}
-              >
-                Cancelar
-              </Button>
-              <Button
-                type="submit"
-                variant="contained"
-                startIcon={<SaveIcon />}
-                disabled={loading}
-              >
-                {loading ? 'Guardando...' : 'Guardar'}
-              </Button>
-            </Box>
-          </Grid>
-        </Grid>
+        <div className="d-flex gap-2 justify-content-end mt-3">
+          <button
+            type="button"
+            className="btn btn-outline-secondary"
+            onClick={onClose}
+          >
+            <i className="fas fa-times me-2"></i>
+            Cancelar
+          </button>
+          <button
+            type="submit"
+            className="btn btn-primary"
+            disabled={loading}
+          >
+            <i className="fas fa-save me-2"></i>
+            {loading ? 'Guardando...' : 'Guardar'}
+          </button>
+        </div>
       </form>
-    </Box>
+    </div>
   );
 }
