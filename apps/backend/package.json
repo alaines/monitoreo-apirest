@@ -31,7 +31,7 @@
     "@nestjs/swagger": "^7.1.17",
     "@nestjs/websockets": "^10.3.0",
     "@nestjs/platform-socket.io": "^10.3.0",
-    "@prisma/client": "^5.7.1",
+    "@prisma/client": "^7.2.0",
     "passport": "^0.7.0",
     "passport-jwt": "^4.0.1",
     "passport-google-oauth20": "^2.0.0",
