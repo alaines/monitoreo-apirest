@@ -16,7 +16,12 @@ export class AuthService {
   async login(loginDto: LoginDto) {
     const user = await this.prisma.user.findUnique({
       where: { usuario: loginDto.usuario },
-      include: {
+      select: {
+        id: true,
+        usuario: true,
+        grupoId: true,
+        clave: true,
+        estado: true,
         grupo: {
           select: {
             id: true,
@@ -67,6 +72,12 @@ export class AuthService {
 
       const user = await this.prisma.user.findUnique({
         where: { id: payload.sub },
+        select: {
+          id: true,
+          usuario: true,
+          grupoId: true,
+          estado: true,
+        },
       });
 
       if (!user || !user.estado) {
@@ -87,7 +98,15 @@ export class AuthService {
   async validateUser(userId: number) {
     const user = await this.prisma.user.findUnique({
       where: { id: userId },
-      include: {
+      select: {
+        id: true,
+        usuario: true,
+        grupoId: true,
+        personaId: true,
+        estado: true,
+        createdAt: true,
+        updatedAt: true,
+        online: true,
         grupo: true,
         persona: true,
       },
