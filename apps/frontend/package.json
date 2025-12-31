@@ -17,7 +17,7 @@
     "axios": "^1.6.2",
     "bootstrap": "^5.3.8",
     "clsx": "^2.0.0",
-    "date-fns": "^3.0.6",
+    "date-fns": "^4.1.0",
     "jspdf": "^3.0.4",
     "jspdf-autotable": "^5.0.2",
     "leaflet": "^1.9.4",
