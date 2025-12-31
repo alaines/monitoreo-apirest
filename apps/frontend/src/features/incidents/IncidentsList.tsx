@@ -20,7 +20,7 @@ export function IncidentsList() {
   const [incidents, setIncidents] = useState<Incident[]>([]);
   const [loading, setLoading] = useState(true);
   const [currentPage, setCurrentPage] = useState(1);
-  const [pageSize, setPageSize] = useState(20);
+  const [pageSize, setPageSize] = useState(10);
   const [totalPages, setTotalPages] = useState(1);
   const [totalItems, setTotalItems] = useState(0);
   const [detailModalOpen, setDetailModalOpen] = useState(false);
@@ -371,7 +371,6 @@ export function IncidentsList() {
                 <option value="10">10</option>
                 <option value="20">20</option>
                 <option value="50">50</option>
-                <option value="100">100</option>
               </select>
             </div>
           </div>
