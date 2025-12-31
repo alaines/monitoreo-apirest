@@ -15,6 +15,7 @@ export function CrucesList() {
   const [totalPages, setTotalPages] = useState(0);
   const [sortField, setSortField] = useState<SortField>('codigo');
   const [sortOrder, setSortOrder] = useState<SortOrder>('asc');
+  const [showFilters, setShowFilters] = useState(false);
   const [filters, setFilters] = useState({
     search: '',
     codigo: '',
@@ -127,54 +128,65 @@ export function CrucesList() {
 
       {/* Filtros */}
       <div className="card border-0 shadow-sm mb-3">
-        <div className="card-body">
-          <div className="row g-3">
-            <div className="col-md-4">
-              <label className="form-label">Buscar por nombre</label>
-              <input
-                type="text"
-                className="form-control"
-                placeholder="Buscar..."
-                value={filters.search}
-                onChange={(e) => handleFilterChange('search', e.target.value)}
-              />
-            </div>
-            <div className="col-md-3">
-              <label className="form-label">Código</label>
-              <input
-                type="text"
-                className="form-control"
-                placeholder="Código..."
-                value={filters.codigo}
-                onChange={(e) => handleFilterChange('codigo', e.target.value)}
-              />
-            </div>
-            <div className="col-md-3">
-              <label className="form-label">Estado</label>
-              <select
-                className="form-select"
-                value={filters.estado}
-                onChange={(e) => handleFilterChange('estado', e.target.value)}
-              >
-                <option value="">Todos</option>
-                <option value="true">Activos</option>
-                <option value="false">Inactivos</option>
-              </select>
-            </div>
-            <div className="col-md-2 d-flex align-items-end">
-              <button 
-                className="btn btn-secondary w-100"
-                onClick={() => {
-                  setFilters({ search: '', codigo: '', estado: '' });
-                  setPage(1);
-                }}
-              >
-                <i className="fas fa-times me-2"></i>
-                Limpiar
-              </button>
+        <div className="card-header bg-white border-bottom">
+          <button 
+            className="btn btn-sm btn-outline-secondary"
+            onClick={() => setShowFilters(!showFilters)}
+          >
+            <i className="fas fa-filter me-2"></i>
+            {showFilters ? 'Ocultar Filtros' : 'Mostrar Filtros'}
+          </button>
+        </div>
+        {showFilters && (
+          <div className="card-body">
+            <div className="row g-3">
+              <div className="col-md-4">
+                <label className="form-label small">Buscar por nombre</label>
+                <input
+                  type="text"
+                  className="form-control form-control-sm"
+                  placeholder="Buscar..."
+                  value={filters.search}
+                  onChange={(e) => handleFilterChange('search', e.target.value)}
+                />
+              </div>
+              <div className="col-md-3">
+                <label className="form-label small">Código</label>
+                <input
+                  type="text"
+                  className="form-control form-control-sm"
+                  placeholder="Código..."
+                  value={filters.codigo}
+                  onChange={(e) => handleFilterChange('codigo', e.target.value)}
+                />
+              </div>
+              <div className="col-md-3">
+                <label className="form-label small">Estado</label>
+                <select
+                  className="form-select form-select-sm"
+                  value={filters.estado}
+                  onChange={(e) => handleFilterChange('estado', e.target.value)}
+                >
+                  <option value="">Todos</option>
+                  <option value="true">Activos</option>
+                  <option value="false">Inactivos</option>
+                </select>
+              </div>
+              <div className="col-md-2 d-flex align-items-end">
+                <button 
+                  className="btn btn-sm btn-outline-danger w-100"
+                  onClick={() => {
+                    setFilters({ search: '', codigo: '', estado: '' });
+                    setPage(1);
+                  }}
+                >
+                  <i className="fas fa-times me-1"></i>
+                  Limpiar
+                </button>
+              </div>
             </div>
           </div>
-        </div>
+        )}
       </div>
 
       {/* Tabla */}
