@@ -14,7 +14,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
   const isActive = (path: string) => location.pathname === path;
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', height: '100vh', backgroundColor: '#f8f9fa', overflow: 'hidden' }}>
+    <div style={{ display: 'flex', flexDirection: 'column', height: '100vh', backgroundColor: 'var(--gray-100)', overflow: 'hidden' }}>
       {/* Header */}
       <header className="bg-white border-bottom" style={{
         display: 'flex',
@@ -34,7 +34,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
             <i className="fas fa-bars"></i>
           </button>
           
-          <div style={{ fontSize: '20px', fontWeight: 'bold', color: '#0056b3', display: 'flex', alignItems: 'center', gap: '8px' }}>
+          <div style={{ fontSize: '20px', fontWeight: 'bold', color: 'var(--primary)', display: 'flex', alignItems: 'center', gap: '8px' }}>
             <i className="fas fa-map-marker-alt" style={{ fontSize: '24px' }}></i>
             SISTEMA DE MONITOREO
           </div>
@@ -56,7 +56,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
         <aside 
           style={{ 
             width: sidebarOpen ? '250px' : '0',
-            backgroundColor: '#2c3e50',
+            backgroundColor: 'var(--primary-dark)',
             transition: 'width 0.3s ease',
             overflow: 'hidden',
             flexShrink: 0,
@@ -81,7 +81,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
               gap: '12px',
               fontSize: '14px',
               transition: 'background 0.2s',
-              borderLeft: isActive('/') ? '4px solid #3498db' : '4px solid transparent'
+              borderLeft: isActive('/') ? '4px solid var(--primary)' : '4px solid transparent'
             }}
             onMouseEnter={(e) => !isActive('/') && (e.currentTarget.style.background = 'rgba(255,255,255,0.05)')}
             onMouseLeave={(e) => !isActive('/') && (e.currentTarget.style.background = 'transparent')}
@@ -105,7 +105,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
               gap: '12px',
               fontSize: '14px',
               transition: 'background 0.2s',
-              borderLeft: isActive('/incidents') ? '4px solid #3498db' : '4px solid transparent'
+              borderLeft: isActive('/incidents') ? '4px solid var(--primary)' : '4px solid transparent'
             }}
             onMouseEnter={(e) => !isActive('/incidents') && (e.currentTarget.style.background = 'rgba(255,255,255,0.05)')}
             onMouseLeave={(e) => !isActive('/incidents') && (e.currentTarget.style.background = 'transparent')}
@@ -129,7 +129,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
               gap: '12px',
               fontSize: '14px',
               transition: 'background 0.2s',
-              borderLeft: isActive('/cruces') ? '4px solid #3498db' : '4px solid transparent'
+              borderLeft: isActive('/cruces') ? '4px solid var(--primary)' : '4px solid transparent'
             }}
             onMouseEnter={(e) => !isActive('/cruces') && (e.currentTarget.style.background = 'rgba(255,255,255,0.05)')}
             onMouseLeave={(e) => !isActive('/cruces') && (e.currentTarget.style.background = 'transparent')}
@@ -177,7 +177,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
                 gap: '12px',
                 fontSize: '14px',
                 transition: 'background 0.2s',
-                borderLeft: isActive('/users') ? '4px solid #3498db' : '4px solid transparent'
+                borderLeft: isActive('/users') ? '4px solid var(--primary)' : '4px solid transparent'
               }}
               onMouseEnter={(e) => !isActive('/users') && (e.currentTarget.style.background = 'rgba(255,255,255,0.05)')}
               onMouseLeave={(e) => !isActive('/users') && (e.currentTarget.style.background = 'transparent')}
@@ -210,7 +210,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
               width: '32px', 
               height: '32px', 
               borderRadius: '50%', 
-              backgroundColor: '#3498db', 
+              backgroundColor: 'var(--primary)', 
               display: 'flex', 
               alignItems: 'center', 
               justifyContent: 'center',
@@ -260,7 +260,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
               <a
                 href="#"
                 className="d-block p-3 text-decoration-none"
-                style={{ fontSize: '14px', color: '#dc3545' }}
+                style={{ fontSize: '14px', color: 'var(--danger)' }}
                 onClick={(e) => {
                   e.preventDefault();
                   logout();
