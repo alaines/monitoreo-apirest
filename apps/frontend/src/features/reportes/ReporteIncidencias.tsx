@@ -84,6 +84,10 @@ export function ReporteIncidencias() {
   };
 
   const handleExportarExcel = async () => {
+    try {
+      setExporting(true);
+      const filtros = buildFiltros();
+      await reportesService.exportarExcel(filtros);
       alert('Excel descargado exitosamente');
     } catch (error: any) {
       console.error('Error exporting to Excel:', error);
@@ -101,11 +105,7 @@ export function ReporteIncidencias() {
       alert('PDF descargado exitosamente');
     } catch (error: any) {
       console.error('Error exporting to PDF:', error);
-      alert(`Error al exportar a PDF: ${error.response?.data?.message || error.message}`
-      await reportesService.exportarPDF(filtros);
-    } catch (error) {
-      console.error('Error exporting to PDF:', error);
-      alert('Error al exportar a PDF');
+      alert(`Error al exportar a PDF: ${error.response?.data?.message || error.message}`);
     } finally {
       setExporting(false);
     }
@@ -520,6 +520,8 @@ export function ReporteIncidencias() {
                   </div>
                 </div>
               </div>
+            </div>
+          </div>
 
           {/* Listado de Incidencias */}
           <div className="row mt-4">
@@ -636,8 +638,6 @@ export function ReporteIncidencias() {
                   </div>
                 </div>
               </div>
-            </div>
-          </div>
             </div>
           </div>
         </>
