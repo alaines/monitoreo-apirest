@@ -9,6 +9,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
   const [showUserMenu, setShowUserMenu] = useState(false);
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const [crucesSubmenuOpen, setCrucesSubmenuOpen] = useState(false);
+  const [reportesSubmenuOpen, setReportesSubmenuOpen] = useState(false);
 
   const canManageUsers = user?.grupo?.nombre === 'ADMINISTRADOR' || user?.grupo?.nombre === 'SUPERVISOR';
 
@@ -19,6 +20,9 @@ export function Layout({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     if (isActivePath('/cruces')) {
       setCrucesSubmenuOpen(true);
+    }
+    if (isActivePath('/reportes')) {
+      setReportesSubmenuOpen(true);
     }
   }, [location.pathname]);
 
@@ -53,6 +57,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
           {isActive('/') && 'Inicio'}
           {isActive('/incidents') && 'Gestión de Incidencias'}
           {isActivePath('/cruces') && 'Cruces'}
+          {isActivePath('/reportes') && 'Reportes'}
           {isActive('/users') && 'Gestión de Usuarios'}
         </div>
 
@@ -204,28 +209,62 @@ export function Layout({ children }: { children: React.ReactNode }) {
             )}
           </div>
 
-          <button
-            style={{
-              width: '100%',
-              padding: '12px 20px',
-              border: 'none',
-              background: 'transparent',
-              color: 'white',
-              textAlign: 'left',
-              cursor: 'pointer',
-              display: 'flex',
-              alignItems: 'center',
-              gap: '12px',
-              fontSize: '14px',
-              transition: 'background 0.2s',
-              borderLeft: '4px solid transparent'
-            }}
-            onMouseEnter={(e) => (e.currentTarget.style.background = 'rgba(255,255,255,0.05)')}
-            onMouseLeave={(e) => (e.currentTarget.style.background = 'transparent')}
-          >
-            <i className="fas fa-file-alt" style={{ width: '20px' }}></i>
-            Reportes
-          </button>
+          {/* Reportes con submenú */}
+          <div>
+            <button
+              onClick={() => setReportesSubmenuOpen(!reportesSubmenuOpen)}
+              style={{
+                width: '100%',
+                padding: '12px 20px',
+                border: 'none',
+                background: isActivePath('/reportes') ? 'rgba(95, 149, 152, 0.2)' : 'transparent',
+                color: 'white',
+                textAlign: 'left',
+                cursor: 'pointer',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '12px',
+                fontSize: '14px',
+                transition: 'background 0.2s',
+                borderLeft: isActivePath('/reportes') ? '4px solid var(--primary-light)' : '4px solid transparent'
+              }}
+              onMouseEnter={(e) => !isActivePath('/reportes') && (e.currentTarget.style.background = 'rgba(255,255,255,0.05)')}
+              onMouseLeave={(e) => !isActivePath('/reportes') && (e.currentTarget.style.background = 'transparent')}
+            >
+              <i className="fas fa-file-alt" style={{ width: '20px' }}></i>
+              <span style={{ flex: 1 }}>Reportes</span>
+              <i className={`fas fa-chevron-${reportesSubmenuOpen ? 'down' : 'right'}`} style={{ fontSize: '12px' }}></i>
+            </button>
+
+            {/* Submenú de Reportes */}
+            {reportesSubmenuOpen && (
+              <div style={{ backgroundColor: 'rgba(0,0,0,0.2)' }}>
+                <button
+                  onClick={() => navigate('/reportes/incidencias')}
+                  style={{
+                    width: '100%',
+                    padding: '10px 20px 10px 52px',
+                    border: 'none',
+                    background: isActive('/reportes/incidencias') ? 'rgba(95, 149, 152, 0.3)' : 'transparent',
+                    color: 'white',
+                    textAlign: 'left',
+                    cursor: 'pointer',
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '10px',
+                    fontSize: '13px',
+                    transition: 'background 0.2s',
+                    borderLeft: isActive('/reportes/incidencias') ? '4px solid var(--primary)' : '4px solid transparent'
+                  }}
+                  onMouseEnter={(e) => !isActive('/reportes/incidencias') && (e.currentTarget.style.background = 'rgba(255,255,255,0.05)')}
+                  onMouseLeave={(e) => !isActive('/reportes/incidencias') && (e.currentTarget.style.background = 'transparent')}
+                >
+                  <i className="fas fa-ticket-alt" style={{ width: '16px', fontSize: '12px' }}></i>
+                  Incidencias
+                </button>
+              </div>
+            )}
+          </div>
 
           {canManageUsers && (
             <button

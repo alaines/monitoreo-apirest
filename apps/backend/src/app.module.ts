@@ -10,6 +10,7 @@ import { TiposModule } from './tipos/tipos.module';
 import { UbigeosModule } from './ubigeos/ubigeos.module';
 import { AdministradoresModule } from './administradores/administradores.module';
 import { EjesModule } from './ejes/ejes.module';
+import { ReportesModule } from './reportes/reportes.module';
 
 @Module({
   imports: [
@@ -26,6 +27,7 @@ import { EjesModule } from './ejes/ejes.module';
     UbigeosModule,
     AdministradoresModule,
     EjesModule,
+    ReportesModule,
   ],
 })
 export class AppModule {}
