@@ -4,6 +4,8 @@ import { AuthModule } from './auth/auth.module';
 import { UsersModule } from './users/users.module';
 import { PrismaModule } from './prisma/prisma.module';
 import { IncidentsModule } from './incidents/incidents.module';
+import { CrucesModule } from './cruces/cruces.module';
+import { PerifericosModule } from './perifericos/perifericos.module';
 
 @Module({
   imports: [
@@ -14,6 +16,8 @@ import { IncidentsModule } from './incidents/incidents.module';
     AuthModule,
     UsersModule,
     IncidentsModule,
+    CrucesModule,
+    PerifericosModule,
   ],
 })
 export class AppModule {}

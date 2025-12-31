@@ -8,6 +8,9 @@ import { Dashboard } from './pages/Dashboard';
 import { IncidentsList } from './features/incidents/IncidentsList';
 import { IncidentForm } from './features/incidents/IncidentForm';
 import { IncidentDetail } from './features/incidents/IncidentDetail';
+import { CrucesList } from './features/cruces/CrucesList';
+import { CruceForm } from './features/cruces/CruceForm';
+import { CruceDetail } from './features/cruces/CruceDetail';
 
 function App() {
   const { initialize, isAuthenticated } = useAuthStore();
@@ -69,6 +72,46 @@ function App() {
             <ProtectedRoute>
               <Layout>
                 <IncidentDetail incidentId={0} onClose={() => {}} />
+              </Layout>
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/cruces"
+          element={
+            <ProtectedRoute>
+              <Layout>
+                <CrucesList />
+              </Layout>
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/cruces/new"
+          element={
+            <ProtectedRoute>
+              <Layout>
+                <CruceForm />
+              </Layout>
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/cruces/:id/edit"
+          element={
+            <ProtectedRoute>
+              <Layout>
+                <CruceForm />
+              </Layout>
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/cruces/:id"
+          element={
+            <ProtectedRoute>
+              <Layout>
+                <CruceDetail />
               </Layout>
             </ProtectedRoute>
           }

@@ -43,6 +43,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
         <div style={{ fontSize: '16px', fontWeight: '500', color: '#6c757d' }}>
           {isActive('/') && 'Dashboard'}
           {isActive('/incidents') && 'Gestión de Incidencias'}
+          {isActive('/cruces') && 'Gestión de Cruces'}
           {isActive('/users') && 'Gestión de Usuarios'}
         </div>
 
@@ -111,6 +112,30 @@ export function Layout({ children }: { children: React.ReactNode }) {
           >
             <i className="fas fa-ticket-alt" style={{ width: '20px' }}></i>
             Incidencias
+          </button>
+
+          <button
+            onClick={() => navigate('/cruces')}
+            style={{
+              width: '100%',
+              padding: '12px 20px',
+              border: 'none',
+              background: isActive('/cruces') ? 'rgba(52, 152, 219, 0.2)' : 'transparent',
+              color: 'white',
+              textAlign: 'left',
+              cursor: 'pointer',
+              display: 'flex',
+              alignItems: 'center',
+              gap: '12px',
+              fontSize: '14px',
+              transition: 'background 0.2s',
+              borderLeft: isActive('/cruces') ? '4px solid #3498db' : '4px solid transparent'
+            }}
+            onMouseEnter={(e) => !isActive('/cruces') && (e.currentTarget.style.background = 'rgba(255,255,255,0.05)')}
+            onMouseLeave={(e) => !isActive('/cruces') && (e.currentTarget.style.background = 'transparent')}
+          >
+            <i className="fas fa-traffic-light" style={{ width: '20px' }}></i>
+            Cruces
           </button>
 
           <button
