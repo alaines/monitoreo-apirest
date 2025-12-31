@@ -56,7 +56,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
         <aside 
           style={{ 
             width: sidebarOpen ? '250px' : '0',
-            backgroundColor: 'var(--primary-dark)',
+            backgroundColor: 'var(--primary-darkest)',
             transition: 'width 0.3s ease',
             overflow: 'hidden',
             flexShrink: 0,
@@ -72,7 +72,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
               width: '100%',
               padding: '12px 20px',
               border: 'none',
-              background: isActive('/') ? 'rgba(52, 152, 219, 0.2)' : 'transparent',
+              background: isActive('/') ? 'rgba(95, 149, 152, 0.2)' : 'transparent',
               color: 'white',
               textAlign: 'left',
               cursor: 'pointer',
@@ -81,7 +81,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
               gap: '12px',
               fontSize: '14px',
               transition: 'background 0.2s',
-              borderLeft: isActive('/') ? '4px solid var(--primary)' : '4px solid transparent'
+              borderLeft: isActive('/') ? '4px solid var(--primary-light)' : '4px solid transparent'
             }}
             onMouseEnter={(e) => !isActive('/') && (e.currentTarget.style.background = 'rgba(255,255,255,0.05)')}
             onMouseLeave={(e) => !isActive('/') && (e.currentTarget.style.background = 'transparent')}
@@ -96,7 +96,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
               width: '100%',
               padding: '12px 20px',
               border: 'none',
-              background: isActive('/incidents') ? 'rgba(52, 152, 219, 0.2)' : 'transparent',
+              background: isActive('/incidents') ? 'rgba(95, 149, 152, 0.2)' : 'transparent',
               color: 'white',
               textAlign: 'left',
               cursor: 'pointer',
@@ -105,7 +105,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
               gap: '12px',
               fontSize: '14px',
               transition: 'background 0.2s',
-              borderLeft: isActive('/incidents') ? '4px solid var(--primary)' : '4px solid transparent'
+              borderLeft: isActive('/incidents') ? '4px solid var(--primary-light)' : '4px solid transparent'
             }}
             onMouseEnter={(e) => !isActive('/incidents') && (e.currentTarget.style.background = 'rgba(255,255,255,0.05)')}
             onMouseLeave={(e) => !isActive('/incidents') && (e.currentTarget.style.background = 'transparent')}
@@ -120,7 +120,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
               width: '100%',
               padding: '12px 20px',
               border: 'none',
-              background: isActive('/cruces') ? 'rgba(52, 152, 219, 0.2)' : 'transparent',
+              background: isActive('/cruces') ? 'rgba(95, 149, 152, 0.2)' : 'transparent',
               color: 'white',
               textAlign: 'left',
               cursor: 'pointer',
@@ -168,7 +168,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
                 width: '100%',
                 padding: '12px 20px',
                 border: 'none',
-                background: isActive('/users') ? 'rgba(52, 152, 219, 0.2)' : 'transparent',
+                background: isActive('/users') ? 'rgba(95, 149, 152, 0.2)' : 'transparent',
                 color: 'white',
                 textAlign: 'left',
                 cursor: 'pointer',

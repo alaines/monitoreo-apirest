@@ -1,47 +1,53 @@
 /* ============================================
    TEMA PERSONALIZADO - Sistema de Monitoreo
-   Basado en el color del sidebar: #2c3e50
+   Paleta personalizada del cliente
    ============================================ */
 
 :root {
-  /* Colores principales del tema */
-  --primary-dark: #2c3e50;      /* Color del sidebar */
-  --primary: #3498db;            /* Azul acento del sidebar */
-  --primary-light: #5dade2;      /* Azul claro para hover */
-  --primary-lighter: #aed6f1;    /* Azul muy claro para backgrounds */
+  /* Colores principales del tema (proporcionados por el cliente) */
+  --primary-darkest: #061E29;    /* Azul muy oscuro - Sidebar, fondos principales */
+  --primary-dark: #1D546D;       /* Azul oscuro - Headers, botones principales */
+  --primary: #1D546D;            /* Color primario principal */
+  --primary-light: #5F9598;      /* Azul/verde claro - Hover, accents */
+  --primary-lighter: rgba(95, 149, 152, 0.2); /* Versión transparente para backgrounds */
   
-  /* Colores secundarios */
-  --secondary: #34495e;          /* Gris azulado oscuro */
-  --secondary-light: #7f8c8d;    /* Gris medio */
+  /* Colores secundarios derivados */
+  --secondary: #5F9598;          /* Azul claro como secundario */
+  --secondary-light: #8fb5b7;    /* Más claro para hover */
+  --secondary-dark: #4a7a7d;     /* Más oscuro para contraste */
   
-  /* Colores de estado */
+  /* Colores de estado (manteniendo estándares web) */
   --success: #27ae60;            /* Verde */
   --success-light: #2ecc71;
+  --success-dark: #1e8449;
   --warning: #f39c12;            /* Naranja/Amarillo */
   --warning-light: #f1c40f;
+  --warning-dark: #d68910;
   --danger: #c0392b;             /* Rojo */
   --danger-light: #e74c3c;
-  --info: #16a085;               /* Turquesa */
-  --info-light: #1abc9c;
+  --danger-dark: #922b21;
+  --info: #5F9598;               /* Usando el azul claro como info */
+  --info-light: #8fb5b7;
+  --info-dark: #4a7a7d;
   
   /* Colores neutros */
-  --light: #ecf0f1;              /* Gris muy claro */
-  --dark: #2c3e50;               /* Igual al primary-dark */
+  --light: #F3F4F4;              /* Gris muy claro del cliente */
+  --dark: #061E29;               /* Azul muy oscuro del cliente */
   --white: #ffffff;
-  --gray-100: #f8f9fa;
-  --gray-200: #e9ecef;
-  --gray-300: #dee2e6;
-  --gray-400: #ced4da;
-  --gray-500: #95a5a6;
-  --gray-600: #7f8c8d;
-  --gray-700: #34495e;
-  --gray-800: #2c3e50;
-  --gray-900: #212529;
+  --gray-100: #F3F4F4;           /* Usando el color claro del cliente */
+  --gray-200: #e8eaeb;
+  --gray-300: #d4d7d8;
+  --gray-400: #b8bcbe;
+  --gray-500: #8d9295;
+  --gray-600: #6d7275;
+  --gray-700: #1D546D;           /* Azul medio oscuro */
+  --gray-800: #061E29;           /* Azul muy oscuro */
+  --gray-900: #000000;
   
   /* Sombras consistentes */
-  --shadow-sm: 0 0.125rem 0.25rem rgba(44, 62, 80, 0.075);
-  --shadow: 0 0.5rem 1rem rgba(44, 62, 80, 0.15);
-  --shadow-lg: 0 1rem 3rem rgba(44, 62, 80, 0.175);
+  --shadow-sm: 0 0.125rem 0.25rem rgba(6, 30, 41, 0.075);
+  --shadow: 0 0.5rem 1rem rgba(6, 30, 41, 0.15);
+  --shadow-lg: 0 1rem 3rem rgba(6, 30, 41, 0.175);
   
   /* Border radius */
   --border-radius: 0.375rem;
@@ -234,7 +240,7 @@
 .form-control:focus,
 .form-select:focus {
   border-color: var(--primary-light);
-  box-shadow: 0 0 0 0.25rem rgba(52, 152, 219, 0.25);
+  box-shadow: 0 0 0 0.25rem rgba(95, 149, 152, 0.25);
 }
 
 .form-check-input:checked {
@@ -244,7 +250,7 @@
 
 /* Tables */
 .table-hover tbody tr:hover {
-  background-color: rgba(52, 152, 219, 0.05);
+  background-color: rgba(95, 149, 152, 0.05);
 }
 
 /* Links */
@@ -339,7 +345,7 @@ a:hover {
 /* Dropdown */
 .dropdown-item:hover,
 .dropdown-item:focus {
-  background-color: rgba(52, 152, 219, 0.1);
+  background-color: rgba(95, 149, 152, 0.1);
   color: var(--primary-dark);
 }
 
@@ -366,7 +372,7 @@ a:hover {
 }
 
 .list-group-item:hover {
-  background-color: rgba(52, 152, 219, 0.05);
+  background-color: rgba(95, 149, 152, 0.05);
 }
 
 /* ============================================
@@ -412,14 +418,14 @@ a:hover {
 
 /* Hover effects consistentes */
 .hover-primary:hover {
-  background-color: rgba(52, 152, 219, 0.1);
+  background-color: rgba(95, 149, 152, 0.1);
   cursor: pointer;
 }
 
 /* Sidebar effect (para mantener consistencia con el layout existente) */
 .sidebar-active {
-  background-color: rgba(52, 152, 219, 0.2);
-  border-left: 4px solid var(--primary);
+  background-color: rgba(95, 149, 152, 0.2);
+  border-left: 4px solid var(--primary-light);
 }
 
 /* Card hover effect */
