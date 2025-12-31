@@ -2,14 +2,19 @@ import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { crucesService, Cruce } from '../../services/cruces.service';
 
+type SortField = 'codigo' | 'nombre' | 'distrito' | 'estado';
+type SortOrder = 'asc' | 'desc';
+
 export function CrucesList() {
   const navigate = useNavigate();
   const [cruces, setCruces] = useState<Cruce[]>([]);
   const [loading, setLoading] = useState(true);
   const [page, setPage] = useState(1);
-  const [limit] = useState(10);
+  const [limit, setLimit] = useState(10);
   const [total, setTotal] = useState(0);
   const [totalPages, setTotalPages] = useState(0);
+  const [sortField, setSortField] = useState<SortField>('codigo');
+  const [sortOrder, setSortOrder] = useState<SortOrder>('asc');
   const [filters, setFilters] = useState({
     search: '',
     codigo: '',
@@ -46,6 +51,51 @@ export function CrucesList() {
     setPage(1);
   };
 
+  const handleSort = (field: SortField) => {
+    if (sortField === field) {
+      setSortOrder(sortOrder === 'asc' ? 'desc' : 'asc');
+    } else {
+      setSortField(field);
+      setSortOrder('asc');
+    }
+  };
+
+  const getSortIcon = (field: SortField) => {
+    if (sortField !== field) return <i className="fas fa-sort text-muted ms-1"></i>;
+    return sortOrder === 'asc' 
+      ? <i className="fas fa-sort-up ms-1"></i>
+      : <i className="fas fa-sort-down ms-1"></i>;
+  };
+
+  const sortedCruces = [...cruces].sort((a, b) => {
+    let aVal: any, bVal: any;
+    
+    switch (sortField) {
+      case 'codigo':
+        aVal = a.codigo || '';
+        bVal = b.codigo || '';
+        break;
+      case 'nombre':
+        aVal = a.nombre || '';
+        bVal = b.nombre || '';
+        break;
+      case 'distrito':
+        aVal = a.ubigeo?.distrito || '';
+        bVal = b.ubigeo?.distrito || '';
+        break;
+      case 'estado':
+        aVal = a.estado ? 1 : 0;
+        bVal = b.estado ? 1 : 0;
+        break;
+      default:
+        return 0;
+    }
+
+    if (aVal < bVal) return sortOrder === 'asc' ? -1 : 1;
+    if (aVal > bVal) return sortOrder === 'asc' ? 1 : -1;
+    return 0;
+  });
+
   const handleDelete = async (id: number) => {
     if (!confirm('¿Está seguro de desactivar este cruce?')) return;
 
@@ -60,7 +110,7 @@ export function CrucesList() {
   };
 
   return (
-    <div className="container-fluid py-4">
+    <div className="container-fluid p-4">
       <div className="d-flex justify-content-between align-items-center mb-4">
         <h2>
           <i className="fas fa-traffic-light me-2"></i>
@@ -76,7 +126,7 @@ export function CrucesList() {
       </div>
 
       {/* Filtros */}
-      <div className="card mb-4">
+      <div className="card border-0 shadow-sm mb-3">
         <div className="card-body">
           <div className="row g-3">
             <div className="col-md-4">
@@ -128,8 +178,31 @@ export function CrucesList() {
       </div>
 
       {/* Tabla */}
-      <div className="card">
-        <div className="card-body">
+      <div className="card border-0 shadow-sm">
+        <div className="card-header bg-white border-bottom">
+          <div className="d-flex justify-content-between align-items-center">
+            <div className="text-muted small">
+              Mostrando {cruces.length} de {total} cruces
+            </div>
+            <div className="d-flex align-items-center">
+              <label className="me-2 small mb-0">Filas por página:</label>
+              <select 
+                className="form-select form-select-sm" 
+                style={{ width: 'auto' }}
+                value={limit}
+                onChange={(e) => {
+                  setLimit(parseInt(e.target.value));
+                  setPage(1);
+                }}
+              >
+                <option value="10">10</option>
+                <option value="20">20</option>
+                <option value="50">50</option>
+              </select>
+            </div>
+          </div>
+        </div>
+        <div className="card-body p-0">
           {loading ? (
             <div className="text-center py-5">
               <div className="spinner-border text-primary" role="status">
@@ -144,30 +217,38 @@ export function CrucesList() {
           ) : (
             <>
               <div className="table-responsive">
-                <table className="table table-hover align-middle">
-                  <thead className="table-light">
+                <table className="table table-hover mb-0">
+                  <thead className="bg-light">
                     <tr>
-                      <th>Código</th>
-                      <th>Nombre</th>
-                      <th>Ubicación</th>
-                      <th>Estado</th>
-                      <th>Periféricos</th>
-                      <th className="text-end">Acciones</th>
+                      <th className="px-4 py-3" style={{ cursor: 'pointer' }} onClick={() => handleSort('codigo')}>
+                        Código {getSortIcon('codigo')}
+                      </th>
+                      <th className="py-3" style={{ cursor: 'pointer' }} onClick={() => handleSort('nombre')}>
+                        Nombre {getSortIcon('nombre')}
+                      </th>
+                      <th className="py-3" style={{ cursor: 'pointer' }} onClick={() => handleSort('distrito')}>
+                        Distrito {getSortIcon('distrito')}
+                      </th>
+                      <th className="py-3" style={{ cursor: 'pointer' }} onClick={() => handleSort('estado')}>
+                        Estado {getSortIcon('estado')}
+                      </th>
+                      <th className="py-3">Periféricos</th>
+                      <th className="py-3 text-center">Acciones</th>
                     </tr>
                   </thead>
                   <tbody>
-                    {cruces.map((cruce) => (
+                    {sortedCruces.map((cruce) => (
                       <tr key={cruce.id}>
-                        <td>
+                        <td className="px-4">
                           <span className="badge bg-secondary">{cruce.codigo || 'N/A'}</span>
                         </td>
                         <td>
-                          <strong>{cruce.nombre}</strong>
+                          {cruce.nombre}
                         </td>
                         <td>
                           <small className="text-muted">
-                            <i className="fas fa-map-marker-alt me-1"></i>
-                            {cruce.latitud?.toFixed(6)}, {cruce.longitud?.toFixed(6)}
+                            <i className="fas fa-map-pin me-1"></i>
+                            {cruce.ubigeo?.distrito || 'N/A'}
                           </small>
                         </td>
                         <td>
@@ -180,7 +261,7 @@ export function CrucesList() {
                             {cruce.crucesPerifericos?.length || 0} dispositivos
                           </span>
                         </td>
-                        <td className="text-end">
+                        <td className="text-center">
                           <button
                             className="btn btn-sm btn-outline-primary me-2"
                             onClick={() => navigate(`/cruces/${cruce.id}`)}
@@ -211,42 +292,55 @@ export function CrucesList() {
               </div>
 
               {/* Paginación */}
-              <div className="d-flex justify-content-between align-items-center mt-3">
-                <div className="text-muted">
-                  Mostrando {((page - 1) * limit) + 1} - {Math.min(page * limit, total)} de {total} cruces
-                </div>
-                <nav>
-                  <ul className="pagination mb-0">
-                    <li className={`page-item ${page === 1 ? 'disabled' : ''}`}>
-                      <button 
-                        className="page-link" 
-                        onClick={() => setPage(page - 1)}
-                        disabled={page === 1}
-                      >
-                        Anterior
-                      </button>
-                    </li>
-                    {Array.from({ length: totalPages }, (_, i) => i + 1).map(p => (
-                      <li key={p} className={`page-item ${page === p ? 'active' : ''}`}>
+              <div className="card-footer bg-white border-top">
+                <div className="d-flex justify-content-between align-items-center">
+                  <div className="text-muted small">
+                    Página {page} de {totalPages}
+                  </div>
+                  <nav>
+                    <ul className="pagination pagination-sm mb-0">
+                      <li className={`page-item ${page === 1 ? 'disabled' : ''}`}>
                         <button 
                           className="page-link" 
-                          onClick={() => setPage(p)}
+                          onClick={() => setPage(1)}
+                          disabled={page === 1}
                         >
-                          {p}
+                          <i className="fas fa-angle-double-left"></i>
                         </button>
                       </li>
-                    ))}
-                    <li className={`page-item ${page === totalPages ? 'disabled' : ''}`}>
-                      <button 
-                        className="page-link" 
-                        onClick={() => setPage(page + 1)}
-                        disabled={page === totalPages}
-                      >
-                        Siguiente
-                      </button>
-                    </li>
-                  </ul>
-                </nav>
+                      <li className={`page-item ${page === 1 ? 'disabled' : ''}`}>
+                        <button 
+                          className="page-link" 
+                          onClick={() => setPage(page - 1)}
+                          disabled={page === 1}
+                        >
+                          <i className="fas fa-angle-left"></i>
+                        </button>
+                      </li>
+                      <li className="page-item active">
+                        <span className="page-link">{page}</span>
+                      </li>
+                      <li className={`page-item ${page === totalPages ? 'disabled' : ''}`}>
+                        <button 
+                          className="page-link" 
+                          onClick={() => setPage(page + 1)}
+                          disabled={page === totalPages}
+                        >
+                          <i className="fas fa-angle-right"></i>
+                        </button>
+                      </li>
+                      <li className={`page-item ${page === totalPages ? 'disabled' : ''}`}>
+                        <button 
+                          className="page-link" 
+                          onClick={() => setPage(totalPages)}
+                          disabled={page === totalPages}
+                        >
+                          <i className="fas fa-angle-double-right"></i>
+                        </button>
+                      </li>
+                    </ul>
+                  </nav>
+                </div>
               </div>
             </>
           )}
