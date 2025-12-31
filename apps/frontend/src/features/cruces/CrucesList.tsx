@@ -24,7 +24,7 @@ export function CrucesList() {
 
   useEffect(() => {
     loadCruces();
-  }, [page, filters]);
+  }, [page, limit, filters]);
 
   const loadCruces = async () => {
     try {
