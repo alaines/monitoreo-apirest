@@ -162,7 +162,7 @@ export function IncidentDetail({ incidentId, onClose }: IncidentDetailProps) {
           <div className="modal-header bg-primary text-white">
             <h5 className="modal-title">
               <i className="fas fa-eye me-2"></i>
-              Detalle de Incidencia #{incident.id}
+              Ver Incidencia
             </h5>
             <button type="button" className="btn-close btn-close-white" onClick={onClose}></button>
           </div>
@@ -423,7 +423,7 @@ export function IncidentDetail({ incidentId, onClose }: IncidentDetailProps) {
                 <div className="timeline">
                   {trackings.map((tracking, index) => (
                     <div key={tracking.id} className="mb-3">
-                      <div className="card border-start border-primary border-4">
+                      <div className="card border-start border-4" style={{ borderLeftColor: 'var(--primary)' }}>
                         <div className="card-body">
                           <div className="d-flex justify-content-between align-items-start mb-2">
                             <div>

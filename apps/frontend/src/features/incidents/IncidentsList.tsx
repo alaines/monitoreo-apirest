@@ -497,9 +497,12 @@ export function IncidentsList() {
         <div className="modal show d-block" style={{ backgroundColor: 'rgba(0,0,0,0.5)' }}>
           <div className="modal-dialog modal-lg modal-dialog-scrollable">
             <div className="modal-content">
-              <div className="modal-header">
-                <h5 className="modal-title">Detalle de Incidencia</h5>
-                <button type="button" className="btn-close" onClick={() => setDetailModalOpen(false)}></button>
+              <div className="modal-header bg-primary text-white">
+                <h5 className="modal-title">
+                  <i className="fas fa-eye me-2"></i>
+                  Ver Incidencia
+                </h5>
+                <button type="button" className="btn-close btn-close-white" onClick={() => setDetailModalOpen(false)}></button>
               </div>
               <div className="modal-body">
                 <IncidentDetail
@@ -517,11 +520,12 @@ export function IncidentsList() {
         <div className="modal show d-block" style={{ backgroundColor: 'rgba(0,0,0,0.5)' }}>
           <div className="modal-dialog modal-lg modal-dialog-scrollable">
             <div className="modal-content">
-              <div className="modal-header">
+              <div className="modal-header bg-primary text-white">
                 <h5 className="modal-title">
+                  <i className={`fas ${formMode === 'create' ? 'fa-plus-circle' : 'fa-edit'} me-2`}></i>
                   {formMode === 'create' ? 'Nueva Incidencia' : 'Editar Incidencia'}
                 </h5>
-                <button type="button" className="btn-close" onClick={() => setFormModalOpen(false)}></button>
+                <button type="button" className="btn-close btn-close-white" onClick={() => setFormModalOpen(false)}></button>
               </div>
               <div className="modal-body">
                 <IncidentForm
