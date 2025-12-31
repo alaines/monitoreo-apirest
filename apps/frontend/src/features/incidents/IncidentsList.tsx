@@ -459,34 +459,52 @@ export function IncidentsList() {
         {totalPages > 1 && (
           <div className="card-footer bg-white border-top">
             <div className="d-flex justify-content-between align-items-center">
-              <button
-                className="btn btn-sm btn-outline-primary"
-                onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
-                disabled={currentPage === 1}
-              >
-                <i className="fas fa-chevron-left me-2"></i>Anterior
-              </button>
-              <div className="d-flex align-items-center gap-2">
-                <span className="text-muted small">Página</span>
-                <select 
-                  className="form-select form-select-sm"
-                  style={{ width: 'auto' }}
-                  value={currentPage}
-                  onChange={(e) => setCurrentPage(parseInt(e.target.value))}
-                >
-                  {Array.from({ length: totalPages }, (_, i) => i + 1).map(page => (
-                    <option key={page} value={page}>{page}</option>
-                  ))}
-                </select>
-                <span className="text-muted small">de {totalPages}</span>
+              <div className="text-muted small">
+                Página {currentPage} de {totalPages}
               </div>
-              <button
-                className="btn btn-sm btn-outline-primary"
-                onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
-                disabled={currentPage === totalPages}
-              >
-                Siguiente<i className="fas fa-chevron-right ms-2"></i>
-              </button>
+              <nav>
+                <ul className="pagination pagination-sm mb-0">
+                  <li className={`page-item ${currentPage === 1 ? 'disabled' : ''}`}>
+                    <button 
+                      className="page-link" 
+                      onClick={() => setCurrentPage(1)}
+                      disabled={currentPage === 1}
+                    >
+                      <i className="fas fa-angle-double-left"></i>
+                    </button>
+                  </li>
+                  <li className={`page-item ${currentPage === 1 ? 'disabled' : ''}`}>
+                    <button 
+                      className="page-link" 
+                      onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
+                      disabled={currentPage === 1}
+                    >
+                      <i className="fas fa-angle-left"></i>
+                    </button>
+                  </li>
+                  <li className="page-item active">
+                    <span className="page-link">{currentPage}</span>
+                  </li>
+                  <li className={`page-item ${currentPage === totalPages ? 'disabled' : ''}`}>
+                    <button 
+                      className="page-link" 
+                      onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
+                      disabled={currentPage === totalPages}
+                    >
+                      <i className="fas fa-angle-right"></i>
+                    </button>
+                  </li>
+                  <li className={`page-item ${currentPage === totalPages ? 'disabled' : ''}`}>
+                    <button 
+                      className="page-link" 
+                      onClick={() => setCurrentPage(totalPages)}
+                      disabled={currentPage === totalPages}
+                    >
+                      <i className="fas fa-angle-double-right"></i>
+                    </button>
+                  </li>
+                </ul>
+              </nav>
             </div>
           </div>
         )}
