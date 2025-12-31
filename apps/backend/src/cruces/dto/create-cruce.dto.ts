@@ -5,11 +5,11 @@ export class CreateCruceDto {
   @ApiProperty({ description: 'Código de ubigeo', example: '150101' })
   @IsString()
   @IsNotEmpty()
-  ubigeoId: string;
+  ubigeoId!: string;
 
   @ApiProperty({ description: 'Tipo de gestión', example: 1 })
   @IsNumber()
-  tipoGestion: number;
+  tipoGestion!: number;
 
   @ApiPropertyOptional({ description: 'ID del administrador' })
   @IsOptional()
@@ -18,15 +18,15 @@ export class CreateCruceDto {
 
   @ApiProperty({ description: 'ID del proyecto', example: 1 })
   @IsNumber()
-  proyectoId: number;
+  proyectoId!: number;
 
   @ApiProperty({ description: 'ID de vía 1', example: 1 })
   @IsNumber()
-  via1: number;
+  via1!: number;
 
   @ApiProperty({ description: 'ID de vía 2', example: 2 })
   @IsNumber()
-  via2: number;
+  via2!: number;
 
   @ApiPropertyOptional({ description: 'Tipo de comunicación' })
   @IsOptional()
@@ -78,19 +78,19 @@ export class CreateCruceDto {
   @ApiProperty({ description: 'Nombre del cruce', example: 'AV. AREQUIPA CON AV. BENAVIDES' })
   @IsString()
   @IsNotEmpty()
-  nombre: string;
+  nombre!: string;
 
   @ApiProperty({ description: 'Latitud', example: -12.0464 })
   @IsNumber()
   @Min(-90)
   @Max(90)
-  latitud: number;
+  latitud!: number;
 
   @ApiProperty({ description: 'Longitud', example: -77.0428 })
   @IsNumber()
   @Min(-180)
   @Max(180)
-  longitud: number;
+  longitud!: number;
 
   @ApiPropertyOptional({ description: 'Código del cruce', example: 'C001' })
   @IsOptional()

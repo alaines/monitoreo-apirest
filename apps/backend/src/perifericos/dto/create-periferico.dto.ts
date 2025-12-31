@@ -5,7 +5,7 @@ export class CreatePerifericoDto {
   @ApiProperty({ description: 'Tipo de periférico', example: 1 })
   @IsNumber()
   @IsNotEmpty()
-  tipoPeriferico: number;
+  tipoPeriferico!: number;
 
   @ApiPropertyOptional({ description: 'Fabricante', example: 'SIEMENS' })
   @IsOptional()
