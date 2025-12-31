@@ -30,6 +30,12 @@ export interface Incident {
     codigo?: string;
     latitud?: number;
     longitud?: number;
+    electricoEmpresa?: string;
+    electricoSuministro?: string;
+    administrador?: {
+      id: number;
+      nombre: string;
+    };
   };
   equipo?: {
     id: number;

@@ -1,103 +1,185 @@
-# Product Backlog - Sistema de Gestión de Incidencias de Semáforos
+# Product Backlog - Sistema de Monitoreo de Semaforos e Incidencias
 
-## 🎯 Visión del Producto
+## Vision del Producto
 
-Sistema moderno de gestión de incidencias para el monitoreo y mantenimiento de semáforos urbanos, con capacidad de integración con múltiples fuentes de reporte (Waze, WhatsApp, llamadas, personal de campo) y notificaciones en tiempo real.
+Sistema integral de gestion de cruces semaforizados, perifericos e incidencias para el monitoreo y mantenimiento de infraestructura vial urbana. Incluye capacidad de integracion con multiples fuentes de reporte y visualizacion geografica en tiempo real.
 
 ---
 
-## 📊 Épicas Principales
+## Epicas Principales
 
-### 1. **Autenticación y Gestión de Usuarios** 
-- Sistema de autenticación JWT
-- Login con Google OAuth (opcional)
-- Gestión de usuarios por roles (PUBLICO, OPERADOR, SUPERVISOR, ADMINISTRADOR)
+### 1. Autenticacion y Gestion de Usuarios
+- Sistema de autenticacion JWT
+- Gestion de usuarios por roles (PUBLICO, OPERADOR, SUPERVISOR, ADMINISTRADOR)
 - Control de permisos RBAC
 
-### 2. **Gestión de Incidencias (Core)**
-- Registro de tickets/incidencias
-- Seguimiento de estados
-- Asignación a equipos de mantenimiento
-- Sistema de prioridades
-- Múltiples fuentes de reporte
-
-### 3. **Gestión de Semáforos e Intersecciones**
-- Catálogo de intersecciones
+### 2. Gestion de Cruces Semaforizados
+- Catalogo completo de cruces
 - Datos geoespaciales (PostGIS)
-- Inventario de semáforos y equipos
-- Historial de mantenimiento
+- Informacion tecnica y operacional
+- Planos y documentacion tecnica
+- Visualizacion en mapa interactivo
 
-### 4. **Visualización en Mapas**
+### 3. Inventario de Perifericos
+- Gestion de dispositivos tecnicos (controladores, camaras, detectores)
+- Asociacion multiple periferico-cruce
+- Control de garantias y estados
+- Configuracion de red y credenciales
+
+### 4. Inventario de Estructuras
+- Catalogacion de estructuras fisicas (postes, columnas, gabinetes)
+- Asociacion estructura-cruce
+- Control de altura, material, fabricante
+- Estado y garantias de estructuras
+
+### 5. Sistema de Reportes
+- Reportes de incidencias por periodo
+- Reportes de cruces por administrador
+- Reportes de inventario de perifericos y estructuras
+- Graficos estadisticos interactivos
+- Exportacion a Excel y PDF con formato
+- Analisis de desempeno de equipos tecnicos
+- Reporte de garantias proximas a vencer
+
+### 6. Modulo de Administracion
+- Mantenimiento de catalogos (tabla tipos)
+- Gestion avanzada de usuarios
+- Creacion y gestion de perfiles
+- Sistema de permisos granulares por modulo y accion
+- Auditoria de cambios administrativos
+- Configuracion general del sistema
+
+### 7. Gestion de Incidencias (Core)
+- Registro de tickets/incidencias
+- Seguimiento de estados con timeline
+- Asignacion a equipos de mantenimiento
+- Sistema de prioridades
+- Heredamiento de coordenadas desde cruces
+
+### 8. Visualizacion en Mapas
 - Mapa interactivo con Leaflet
-- Marcadores de incidencias
-- Marcadores de semáforos
-- Filtros y capas
+- Mapa de cruces con filtros avanzados
+- Mapa de incidencias con codigo de colores por prioridad
+- Multiples capas (OpenStreetMap, Satelite, Topografico)
 
-### 5. **Reportes y Estadísticas**
-- Reportes por fecha
-- Reportes por estado
-- Reportes por equipo
-- Exportación a Excel
-- Dashboard con métricas
+### 9. Dashboard Analitico
+- Dashboard analitico con KPIs
+- Filtros por periodo temporal
+- Metricas de resolucion
+- Visualizacion de incidencias activas en mapa
 
-### 6. **Integraciones Externas**
-- Waze for Cities (alertas)
-- WhatsApp Business API
-- Sistema de notificaciones
-
-### 7. **Tiempo Real y Notificaciones**
-- WebSockets para actualizaciones
-- Notificaciones push
-- Estado online de operadores
+### 10. Integraciones Externas (Futuro)
+- Sistema de notificaciones en tiempo real
+- Integracion con fuentes externas
 
 ---
 
-## 📋 Backlog Priorizado
+## Backlog Priorizado
 
-### Prioridad ALTA (Must Have - Sprint 0-3)
+### Prioridad ALTA (Must Have - Sprints 0-4)
 
-| ID | Historia de Usuario | Estimación | Sprint | Notas |
-|----|-------------------|------------|--------|-------|
-| US-001 | Como operador, necesito autenticarme con usuario y contraseña | 5 | 1 | Core - Autenticación |
-| US-002 | Como administrador, necesito crear y gestionar usuarios | 8 | 1 | CRUD básico |
-| US-003 | Como operador, necesito registrar una nueva incidencia | 13 | 2 | Core funcionalidad |
-| US-004 | Como operador, necesito ver la lista de incidencias pendientes | 8 | 2 | Lista con filtros |
-| US-005 | Como operador, necesito asignar una incidencia a un equipo | 5 | 2 | Asignación básica |
-| US-006 | Como operador, necesito registrar el seguimiento de una incidencia | 8 | 2 | Tracking |
-| US-007 | Como supervisor, necesito ver incidencias en un mapa | 13 | 3 | Leaflet + PostGIS |
-| US-008 | Como operador, necesito consultar el catálogo de semáforos | 5 | 3 | Lista básica |
-| US-009 | Como operador, necesito ver el detalle completo de una incidencia | 5 | 2 | Vista detalle |
-| US-010 | Como sistema, necesito migrar datos desde CakePHP a Prisma | 13 | 0 | Migración inicial |
+| ID | Historia de Usuario | Estimacion | Sprint | Estado |
+|----|-------------------|------------|--------|--------|
+| US-001 | Como operador, necesito autenticarme con usuario y password | 5 | 1 | COMPLETADO |
+| US-002 | Como administrador, necesito crear y gestionar usuarios | 8 | 1 | COMPLETADO |
+| US-003 | Como operador, necesito registrar una nueva incidencia | 13 | 2 | COMPLETADO |
+| US-004 | Como operador, necesito ver la lista de incidencias pendientes | 8 | 2 | COMPLETADO |
+| US-005 | Como operador, necesito asignar una incidencia a un equipo | 5 | 2 | COMPLETADO |
+| US-006 | Como operador, necesito registrar el seguimiento de una incidencia | 8 | 2 | COMPLETADO |
+| US-007 | Como operador, necesito consultar el catalogo de cruces semaforizados | 5 | 4 | COMPLETADO |
+| US-008 | Como operador, necesito ver el detalle completo de una incidencia | 5 | 2 | COMPLETADO |
+| US-009 | Como administrador, necesito gestionar cruces semaforizados | 13 | 4 | COMPLETADO |
+| US-010 | Como administrador, necesito gestionar perifericos de cruces | 13 | 4 | COMPLETADO |
+| US-011 | Como usuario, necesito ver cruces en un mapa interactivo | 8 | 4 | COMPLETADO |
+| US-012 | Como supervisor, necesito ver dashboard con estadisticas de incidencias | 13 | 3 | COMPLETADO |
+| US-013 | Como usuario, necesito ver incidencias en un mapa con codigo de colores | 8 | 3 | COMPLETADO |
 
-### Prioridad MEDIA (Should Have - Sprint 4-6)
+### Prioridad MEDIA (Should Have - Sprints 5-7)
 
-| ID | Historia de Usuario | Estimación | Sprint | Notas |
-|----|-------------------|------------|--------|-------|
-| US-011 | Como operador, necesito recibir notificaciones en tiempo real | 13 | 4 | WebSockets |
-| US-012 | Como supervisor, necesito generar reportes por fecha | 8 | 4 | Reporte básico |
-| US-013 | Como operador, necesito exportar reportes a Excel | 5 | 4 | Exportación |
-| US-014 | Como usuario, necesito iniciar sesión con Google | 8 | 5 | OAuth Google |
-| US-015 | Como sistema, necesito integrar alertas de Waze | 13 | 5 | API Waze |
-| US-016 | Como operador, necesito filtrar incidencias por múltiples criterios | 8 | 4 | Filtros avanzados |
-| US-017 | Como administrador, necesito ver dashboard con estadísticas | 13 | 6 | Dashboard |
-| US-018 | Como supervisor, necesito ver historial de cambios (auditoría) | 8 | 6 | Auditoría |
+| ID | Historia de Usuario | Estimacion | Sprint | Estado |
+|----|-------------------|------------|--------|--------|
+| US-014 | Como administrador, necesito gestionar inventario de estructuras | 21 | 5 | PLANIFICADO |
+| US-015 | Como administrador, necesito asociar estructuras a cruces | 8 | 5 | PLANIFICADO |
+| US-016 | Como supervisor, necesito generar reportes de incidencias por periodo | 13 | 6 | PLANIFICADO |
+| US-017 | Como administrador, necesito reportes de cruces por administrador | 8 | 6 | PLANIFICADO |
+| US-018 | Como administrador, necesito reportes de inventario de perifericos | 8 | 6 | PLANIFICADO |
+| US-019 | Como supervisor, necesito ver graficos estadisticos de incidencias | 8 | 6 | PLANIFICADO |
+| US-020 | Como usuario, necesito exportar reportes a Excel con formato | 5 | 6 | PLANIFICADO |
+| US-021 | Como usuario, necesito exportar reportes a PDF con formato | 5 | 6 | PLANIFICADO |
+| US-022 | Como supervisor, necesito analizar tiempos de atencion por equipo | 8 | 6 | PLANIFICADO |
+| US-023 | Como administrador, necesito gestionar catalogos (tabla tipos) | 13 | 7 | PLANIFICADO |
+| US-024 | Como administrador, necesito gestion avanzada de usuarios | 13 | 7 | PLANIFICADO |
+| US-025 | Como administrador, necesito crear y gestionar perfiles de usuario | 13 | 7 | PLANIFICADO |
+| US-026 | Como administrador, necesito asignar permisos granulares por modulo | 13 | 7 | PLANIFICADO |
+| US-027 | Como sistema, necesito proteger rutas segun permisos del usuario | 8 | 7 | PLANIFICADO |
+| US-028 | Como administrador, necesito ver auditoria de cambios administrativos | 8 | 7 | PLANIFICADO |
+| US-029 | Como operador, necesito adjuntar fotos a las incidencias | 8 | 8 | PENDIENTE |
+| US-030 | Como tecnico, necesito ver perifericos montados en estructuras | 13 | 8 | PENDIENTE |
 
-### Prioridad BAJA (Nice to Have - Sprint 7+)
+### Prioridad BAJA (Nice to Have - Sprints 8+)
 
-| ID | Historia de Usuario | Estimación | Sprint | Notas |
-|----|-------------------|------------|--------|-------|
-| US-019 | Como sistema, necesito integración con WhatsApp | 21 | 7 | WhatsApp API |
-| US-020 | Como técnico, necesito una app móvil para reportar desde campo | 34 | 8-9 | React Native |
-| US-021 | Como operador, necesito sistema de notificaciones push | 13 | 7 | Push notifications |
-| US-022 | Como supervisor, necesito reportes gráficos avanzados | 13 | 7 | Charts |
-| US-023 | Como operador, necesito adjuntar fotos a las incidencias | 8 | 7 | Upload files |
+| ID | Historia de Usuario | Estimacion | Sprint | Estado |
+|----|-------------------|------------|--------|--------|
+| US-031 | Como operador, necesito recibir notificaciones en tiempo real | 13 | 8 | PENDIENTE |
+| US-032 | Como administrador, necesito programar reportes automaticos | 13 | 8 | PENDIENTE |
+| US-033 | Como sistema, necesito integracion con fuentes externas | 21 | 9 | PENDIENTE |
+| US-034 | Como tecnico, necesito una app movil para reportar desde campo | 34 | 10+ | PENDIENTE |
 
 ---
 
-## 🎯 Criterios de Aceptación Generales
+## Criterios de Aceptacion Generales
 
 ### Funcionales
-- ✅ Todas las operaciones CRUD funcionan correctamente
+- Todas las operaciones CRUD funcionan correctamente
+- Validaciones en frontend y backend
+- Mensajes de error claros en espanol
+- Respuestas API siguen estandar REST
+- Datos persistidos correctamente en PostgreSQL
+- Conversion automatica a mayusculas en campos de texto
+
+### No Funcionales
+- Tiempo de respuesta menor a 2 segundos
+- UI responsive (movil, tablet, desktop)
+- Codigo sin console.log en produccion
+- Sin errores en consola del navegador
+- Uso de TypeScript con tipado estricto
+
+### Seguridad
+- Autenticacion requerida para todas las rutas (excepto login)
+- Autorizacion por roles
+- Validacion de inputs (XSS, SQL Injection)
+- Passwords encriptados (bcrypt)
+- Tokens JWT seguros
+- Credenciales protegidas con opcion de mostrar/ocultar
+
+---
+
+## Estimacion Total
+
+- **Total Story Points (Completados)**: ~110 puntos
+- **Total Story Points (Planificados - Sprints 5-7)**: ~140 puntos
+- **Total Story Points (Pendientes)**: ~80 puntos
+- **Velocidad promedio**: 25-30 puntos por sprint (2 semanas)
+- **Duracion estimada restante**: 7-9 sprints
+
+---
+
+## Definicion de Done (DoD)
+
+Para que una historia se considere completa debe cumplir:
+
+1. Codigo implementado y funcional
+2. Validaciones en frontend y backend
+3. Documentacion actualizada (README, comentarios)
+4. Sin errores en consola
+5. Codigo limpio sin console.log
+6. Cumple criterios de aceptacion
+7. Probado manualmente en todos los flujos
+8. Integrado en rama principal
+
+---
+
+## Notas
 - ✅ Validaciones en frontend y backend
 - ✅ Mensajes de error claros y traducidos al español
 - ✅ Respuestas API siguen estándar REST
@@ -146,5 +228,22 @@ Para que una historia se considere completa debe cumplir:
 
 - Los Story Points usan escala Fibonacci (1, 2, 3, 5, 8, 13, 21, 34)
 - Sprints de 2 semanas
-- Revisión y retrospectiva al final de cada sprint
-- Planning meeting al inicio de cada sprint
+- Revision y retrospectiva al final de cada sprint
+
+### Sprints Planificados
+- **Sprint 5** - Inventario de Estructuras: tabla estructuras, cruces_estructuras, tipos de estructuras
+- **Sprint 6** - Sistema de Reportes: reportes con graficos, exportacion Excel/PDF, dashboard de reportes
+- **Sprint 7** - Modulo de Administracion: catalogos, usuarios avanzado, perfiles, permisos granulares, auditoria
+
+### Notas Tecnicas
+- Tipos jerarquicos: tabla tipos usa parent_id para relaciones padre-hijo
+- Coordenadas heredadas: incidencias y estructuras pueden heredar coords de cruces
+- Conversion a mayusculas: todos los campos de texto se convierten automaticamente
+- Password management: sistema de mostrar/ocultar en UI, almacenado encriptado
+- Sistema de permisos: validacion doble en backend (guards) y frontend (componentes protegidos)ente
+- Password management: sistema de mostrar/ocultar en UI, almacenado encriptado
+
+---
+
+Ultima actualizacion: 2024 - Alexander Laines
+

@@ -18,6 +18,8 @@
     "bootstrap": "^5.3.8",
     "clsx": "^2.0.0",
     "date-fns": "^3.0.6",
+    "jspdf": "^3.0.4",
+    "jspdf-autotable": "^5.0.2",
     "leaflet": "^1.9.4",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
@@ -26,6 +28,8 @@
     "react-router-dom": "^6.20.1",
     "socket.io-client": "^4.6.0",
     "tailwind-merge": "^2.2.0",
+    "three": "^0.160.0",
+    "three-dxf-loader": "^5.2.0",
     "zod": "^3.22.4",
     "zustand": "^4.4.7"
   },

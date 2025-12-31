@@ -1,83 +1,117 @@
-# Sistema de Monitoreo de Incidencias
+# Sistema de Monitoreo de Semaforos e Incidencias
 
-Sistema integral de gestión y monitoreo de incidencias de tráfico en tiempo real. Monorepo fullstack desarrollado con NestJS, React, PostgreSQL y PostGIS.
+Sistema integral de gestion y monitoreo de cruces semaforizados e incidencias de trafico en tiempo real. Monorepo fullstack desarrollado con NestJS, React, PostgreSQL y PostGIS.
 
-## Descripción
+## Autor
 
-Aplicación web para la gestión, seguimiento y análisis de incidencias de tráfico y semáforos en la ciudad. Permite el registro de reportes ciudadanos, asignación de equipos técnicos, seguimiento del ciclo de vida de las incidencias, y visualización en tiempo real mediante mapas interactivos con priorización por nivel de urgencia.
+Alexander Laines
 
-## Características Principales
+## Descripcion
 
-### Gestión de Incidencias
-- Registro y catalogación de incidencias de tráfico
+Aplicacion web profesional para la gestion, seguimiento y analisis de cruces semaforizados, perifericos asociados e incidencias de trafico. Permite el registro completo de infraestructura vial, gestion de perifericos tecnicos, seguimiento de incidencias ciudadanas, y visualizacion geografica mediante mapas interactivos con priorizacion por nivel de urgencia.
+
+## Caracteristicas Principales
+
+### Gestion de Cruces Semaforizados
+- Registro completo de intersecciones viales con informacion tecnica
+- Catalogacion jerarquica por tipo de cruce, gestion, operacion, control y comunicacion
+- Ubicacion geografica mediante coordenadas (latitud/longitud)
+- Administracion por entidades responsables (municipalidad, region, etc.)
+- Asociacion con distritos y ejes viales (avenidas, calles)
+- Carga de planos tecnicos en formatos PDF y DWG
+- Visualizacion geografica en mapa interactivo con filtros avanzados
+- Exportacion de fichas tecnicas a PDF
+- Informacion detallada de infraestructura electrica
+
+### Gestion de Perifericos
+- Inventario completo de dispositivos tecnicos asociados a cruces
+- Clasificacion por tipo (controladores, camaras, detectores, GPS, UPS, etc.)
+- Registro de fabricante, modelo y numero de serie
+- Configuracion de red (IP, credenciales de acceso)
+- Control de garantias y estados operacionales
+- Asociacion multiple periferico-cruce
+- Visualizacion de detalles con proteccion de credenciales sensibles
+- Sistema de gestion de passwords con opcion de mostrar/ocultar
+
+### Gestion de Incidencias
+- Registro y catalogacion de incidencias de trafico y fallas en cruces
 - Sistema de prioridades (Alta, Media, Baja)
-- Asignación automática a equipos técnicos
-- Seguimiento del ciclo de vida (Asignado, En Proceso, Resuelto, Cancelado, Reasignado)
-- Heredamiento de coordenadas geográficas desde cruces semaforizados
-- Cálculo automático de días sin atención
+- Asignacion a equipos tecnicos especializados
+- Seguimiento del ciclo de vida completo
+- Heredamiento automatico de coordenadas desde cruces
+- Calculo automatico de dias sin atencion
+- Sistema de tracking con timeline visual y historial completo
+- Restriccion de modificaciones en incidencias finalizadas
 
-### Dashboard Analítico
-- Visualización de estadísticas en tiempo real
-- Filtros por período (Hoy, Semana, Mes, Año, Todas)
-- Indicadores de incidencias activas, pendientes, en progreso y tiempo promedio de resolución
-- Mapa interactivo con múltiples capas (OpenStreetMap, Satélite, Topográfico)
-- Marcadores con código de colores según prioridad
-- Información contextual en popups (tipo, cruce, ticket, días sin atención)
+### Mapas Interactivos
+- Mapa de cruces con marcadores diferenciados por administrador
+- Mapa de incidencias con codigo de colores segun prioridad
+- Filtros geograficos avanzados (tipo gestion, comunicacion, administrador)
+- Capas personalizables (OpenStreetMap, Satelite, Topografico)
+- Popups informativos con datos contextuales y enlaces a detalles
+- Iconos personalizados tipo pin con semaforos internos
+- Vista responsiva adaptada a diferentes resoluciones
 
-### Sistema de Seguimiento
-- Timeline visual de seguimientos por incidencia
-- Registro de estados, equipos asignados y responsables
-- Reportes detallados con timestamps
-- Restricción de modificaciones en incidencias finalizadas
-- Historial completo de cambios
+### Dashboard Analitico
+- Estadisticas en tiempo real de incidencias
+- Filtros por periodo temporal (Hoy, Semana, Mes, Ano, Todas)
+- Indicadores de rendimiento (KPIs): activas, pendientes, en progreso
+- Metricas de tiempo promedio de resolucion
+- Integracion con mapas para analisis espacial
 
-### Autenticación y Permisos
-- Sistema de autenticación JWT
-- Roles de usuario (Administrador, Supervisor, Operador)
-- Control de acceso basado en roles
-- Gestión de usuarios con interfaz administrativa
+### Sistema de Autenticacion
+- Autenticacion JWT segura con tokens de larga duracion
+- Control de acceso basado en roles (RBAC)
+- Gestion de usuarios con permisos granulares
+- Sesiones persistentes y proteccion de rutas
 
 ### Interfaz de Usuario
-- Diseño responsive con Bootstrap 5
-- Sidebar lateral colapsable
-- Formularios con validación y conversión automática a mayúsculas
-- Autocomplete para búsqueda de cruces
-- Filtros avanzados con ordenamiento y paginación
-- Modales para visualización de detalles
+- Diseno responsive profesional con Bootstrap 5
+- Menu lateral con submenus expandibles (cruces con gestion y mapa)
+- Formularios con validacion en tiempo real
+- Tooltips descriptivos en acciones criticas
+- Modales para visualizacion de contenido detallado
+- Conversion automatica a mayusculas para consistencia
+- Exportacion de documentos PDF con fichas tecnicas
 
-## Arquitectura Técnica
+## Arquitectura Tecnica
 
 ### Backend
 - Framework: NestJS 10.x
-- ORM: Prisma
-- Base de Datos: PostgreSQL 13+ con extensión PostGIS
-- Autenticación: JWT (Passport.js)
-- Documentación: Swagger/OpenAPI
-- Validación: class-validator + class-transformer
+- ORM: Prisma con cliente autogenerado
+- Base de Datos: PostgreSQL 13+ con extension PostGIS
+- Autenticacion: JWT con Passport.js
+- Documentacion API: Swagger/OpenAPI
+- Validacion: class-validator y class-transformer
+- Gestion de Archivos: Multer con almacenamiento en disco
 
 ### Frontend
-- Framework: React 18.x
-- Build Tool: Vite
-- Lenguaje: TypeScript
+- Framework: React 18.x con hooks
+- Herramienta de Build: Vite
+- Lenguaje: TypeScript con tipado estricto
 - UI Framework: Bootstrap 5.3.8
-- Gestión de Estado: Zustand
-- Mapas: Leaflet + React Leaflet
+- Gestion de Estado: Zustand para estado global
+- Mapas: Leaflet con React Leaflet
 - Enrutamiento: React Router v6
+- Generacion PDF: jsPDF con autotable
+- Cliente HTTP: Axios con interceptores
 
 ### Base de Datos
 - Motor: PostgreSQL 13+
-- Extensión Espacial: PostGIS
-- Esquema: Normalizado con relaciones FK
-- Funcionalidad Geoespacial: Coordenadas geográficas, geometrías
+- Extension Espacial: PostGIS para datos geoespaciales
+- Esquema: Normalizado con relaciones y constraints
+- Tipos Espaciales: Geometrias point para coordenadas
+- Indices: Optimizados para consultas geograficas y busquedas
 
 ## Requisitos del Sistema
 
-- Node.js >= 18.0.0
-- npm >= 9.0.0
-- PostgreSQL 13+ con PostGIS
-- Git
+- Node.js 18.0.0 o superior
+- npm 9.0.0 o superior
+- PostgreSQL 13+ con extension PostGIS instalada y habilitada
+- Git para control de versiones
+- Sistema operativo: Linux, macOS o Windows
 
-## Instalación
+## Instalacion
 
 ### 1. Clonar el repositorio
 
@@ -94,42 +128,100 @@ npm install
 
 ### 3. Configurar variables de entorno
 
-Crear archivo `.env` en la raíz del proyecto:
+Crear archivo `.env` en la raiz del proyecto:
 
 ```env
 # Base de Datos
-DATABASE_HOST=192.168.18.230
-DATABASE_PORT=5432
-DATABASE_USER=transito
-DATABASE_PASSWORD=transito
-DATABASE_NAME=monitoreo
+DATABASE_URL="postgresql://usuario:password@localhost:5432/monitoreo_db?schema=public"
+
+# Configuracion JWT
+JWT_SECRET=tu_clave_secreta_muy_segura_aqui
+JWT_EXPIRES_IN=7d
 
 # Backend
 PORT=3001
-JWT_SECRET=your-secret-key-here
 NODE_ENV=development
 
 # Frontend
 VITE_API_URL=http://localhost:3001/api
 ```
 
-### 4. Generar Prisma Client
+### 4. Configurar base de datos
 
 ```bash
+# Crear la base de datos
+createdb monitoreo_db
+
+# Habilitar extension PostGIS
+psql monitoreo_db -c "CREATE EXTENSION postgis;"
+
+# Ejecutar migraciones de Prisma
 cd apps/backend
+npx prisma migrate dev
+
+# Generar cliente Prisma
 npx prisma generate
 ```
 
-### 5. Iniciar la aplicación
+### 5. Cargar datos iniciales (opcional)
 
 ```bash
-# Desde la raíz del proyecto
+# Desde apps/backend
+npx prisma db seed
+```
 
-# Backend (puerto 3001)
-npm run backend:dev
+### 6. Iniciar aplicacion
 
-# Frontend (puerto 5173)
-npm run frontend:dev
+```bash
+# Volver a la raiz del proyecto
+cd ../..
+
+# Desarrollo - Backend y Frontend
+npm run dev
+
+# Solo backend (puerto 3001)
+npm run dev:backend
+
+# Solo frontend (puerto 5173)
+npm run dev:frontend
+```
+
+## Uso
+
+### Desarrollo
+
+```bash
+# Iniciar backend y frontend simultaneamente
+npm run dev
+
+# Backend con hot-reload (puerto 3001)
+npm run dev:backend
+
+# Frontend con Vite HMR (puerto 5173)
+npm run dev:frontend
+
+# Abrir Prisma Studio (explorador de BD)
+cd apps/backend && npx prisma studio
+```
+
+### Produccion
+
+```bash
+# Compilar backend
+cd apps/backend
+npm run build
+
+# Compilar frontend
+cd ../frontend
+npm run build
+
+# Iniciar backend en produccion
+cd ../backend
+npm run start:prod
+
+# Servir frontend (con servidor web como nginx o serve)
+cd ../frontend
+npx serve -s dist
 ```
 
 ## Estructura del Proyecto
@@ -137,130 +229,204 @@ npm run frontend:dev
 ```
 monitoreo-apirest/
 ├── apps/
-│   ├── backend/                 # API REST NestJS
+│   ├── backend/                    # API REST NestJS
+│   │   ├── prisma/
+│   │   │   ├── schema.prisma      # Esquema de base de datos
+│   │   │   └── migrations/        # Migraciones SQL
 │   │   ├── src/
-│   │   │   ├── auth/           # Autenticación JWT
-│   │   │   ├── users/          # Gestión de usuarios
-│   │   │   ├── incidents/      # Gestión de incidencias
-│   │   │   ├── cruces/         # Catálogo de cruces
-│   │   │   └── prisma/         # Servicio Prisma
-│   │   └── prisma/
-│   │       └── schema.prisma   # Esquema de base de datos
+│   │   │   ├── auth/              # Autenticacion JWT y guards
+│   │   │   ├── cruces/            # Modulo de cruces semaforizados
+│   │   │   ├── perifericos/       # Modulo de perifericos tecnicos
+│   │   │   ├── incidents/         # Modulo de incidencias
+│   │   │   ├── tipos/             # Catalogos jerarquicos
+│   │   │   ├── ubigeos/           # Division geografica administrativa
+│   │   │   ├── administradores/   # Entidades administradoras
+│   │   │   ├── ejes/              # Vias y avenidas
+│   │   │   └── users/             # Gestion de usuarios
+│   │   └── uploads/               # Archivos estaticos (planos, documentos)
 │   │
-│   └── frontend/                # Aplicación React
-│       ├── src/
-│       │   ├── components/     # Componentes reutilizables
-│       │   ├── features/       # Funcionalidades por módulo
-│       │   │   ├── auth/       # Login y gestión de sesión
-│       │   │   ├── incidents/  # Listado, detalle, formularios
-│       │   │   └── users/      # Administración de usuarios
-│       │   ├── pages/          # Páginas principales
-│       │   ├── services/       # Clientes API
-│       │   └── lib/            # Utilidades y configuración
-│       │
-├── database/                    # Scripts SQL y migraciones
-└── docs/                        # Documentación del proyecto
+│   └── frontend/                   # Aplicacion React
+│       ├── public/                # Assets estaticos
+│       └── src/
+│           ├── components/        # Componentes reutilizables
+│           │   ├── Layout.tsx    # Layout principal con menu lateral
+│           │   └── ...           
+│           ├── features/          # Modulos por funcionalidad
+│           │   ├── auth/         # Login y sesion
+│           │   ├── cruces/       # Gestion de cruces y mapa
+│           │   │   ├── CrucesList.tsx
+│           │   │   ├── CruceDetail.tsx
+│           │   │   ├── CruceForm.tsx
+│           │   │   └── CrucesMap.tsx
+│           │   ├── incidents/    # Gestion de incidencias
+│           │   └── users/        # Administracion de usuarios
+│           ├── pages/            # Paginas principales
+│           │   ├── Dashboard.tsx # Dashboard analitico
+│           │   ├── Inicio.tsx    # Mapa de inicio
+│           │   └── ...
+│           ├── services/         # Clientes API (Axios)
+│           └── utils/            # Utilidades y helpers
+│
+├── database/                      # Scripts SQL adicionales
+├── docs/                          # Documentacion del proyecto
+├── package.json                   # Configuracion monorepo
+└── README.md
 ```
 
-## Scripts Disponibles
+## API Endpoints Principales
 
-### Backend
-```bash
-npm run backend:dev          # Desarrollo con hot-reload
-npm run backend:build        # Build para producción
-npm run backend:start        # Ejecutar build de producción
-npx prisma studio            # Abrir Prisma Studio
-```
+### Autenticacion
+- `POST /api/auth/login` - Iniciar sesion
+- `GET /api/auth/me` - Obtener usuario autenticado
+- `POST /api/auth/logout` - Cerrar sesion
 
-### Frontend
-```bash
-npm run frontend:dev         # Desarrollo con Vite
-npm run frontend:build       # Build optimizado
-npm run frontend:preview     # Preview del build
-```
+### Cruces Semaforizados
+- `GET /api/cruces` - Listar cruces (paginacion, filtros, ordenamiento)
+- `GET /api/cruces/:id` - Obtener detalle de cruce
+- `POST /api/cruces` - Crear nuevo cruce
+- `PATCH /api/cruces/:id` - Actualizar cruce
+- `DELETE /api/cruces/:id` - Eliminar cruce
+- `GET /api/cruces/:id/perifericos` - Listar perifericos del cruce
+- `POST /api/cruces/:id/perifericos` - Asociar periferico existente
+- `GET /api/cruces/catalog` - Catalogo simplificado para autocomplete
 
-## Endpoints Principales
-
-### Autenticación
-- POST `/api/auth/login` - Inicio de sesión
-- GET `/api/auth/profile` - Perfil del usuario autenticado
+### Perifericos
+- `GET /api/perifericos` - Listar perifericos
+- `GET /api/perifericos/:id` - Detalle de periferico
+- `POST /api/perifericos` - Crear nuevo periferico
+- `PATCH /api/perifericos/:id` - Actualizar periferico
+- `DELETE /api/perifericos/:id` - Eliminar periferico
 
 ### Incidencias
-- GET `/api/incidents` - Listar incidencias (paginado, filtros, ordenamiento)
-- GET `/api/incidents/:id` - Detalle de incidencia
-- POST `/api/incidents` - Crear incidencia
-- PATCH `/api/incidents/:id` - Actualizar incidencia
-- DELETE `/api/incidents/:id` - Eliminar incidencia
-- GET `/api/incidents/:id/trackings` - Seguimientos de incidencia
-- POST `/api/incidents/:id/trackings` - Crear seguimiento
+- `GET /api/incidents` - Listar incidencias (paginado, filtros)
+- `GET /api/incidents/:id` - Detalle de incidencia
+- `POST /api/incidents` - Crear incidencia
+- `PATCH /api/incidents/:id` - Actualizar incidencia
+- `DELETE /api/incidents/:id` - Eliminar incidencia
+- `GET /api/incidents/:id/tracking` - Obtener seguimientos
+- `POST /api/incidents/:id/tracking` - Agregar seguimiento
 
-### Catálogos
-- GET `/api/incidents/catalogs/tipos` - Tipos de incidencia
-- GET `/api/incidents/catalogs/estados` - Estados
-- GET `/api/incidents/catalogs/equipos` - Equipos técnicos
-- GET `/api/cruces/catalog` - Cruces semaforizados
+### Catalogos
+- `GET /api/tipos` - Tipos jerarquicos (cruces, perifericos, incidencias)
+- `GET /api/ubigeos` - Division geografica (departamento, provincia, distrito)
+- `GET /api/administradores` - Entidades administradoras
+- `GET /api/ejes` - Vias y avenidas principales
+- `GET /api/incidents/catalogs/estados` - Estados de incidencias
+- `GET /api/incidents/catalogs/equipos` - Equipos tecnicos
 
 ### Usuarios
-- GET `/api/users` - Listar usuarios
-- POST `/api/users` - Crear usuario
-- PATCH `/api/users/:id` - Actualizar usuario
-- DELETE `/api/users/:id` - Eliminar usuario
+- `GET /api/users` - Listar usuarios
+- `GET /api/users/:id` - Detalle de usuario
+- `POST /api/users` - Crear usuario
+- `PATCH /api/users/:id` - Actualizar usuario
+- `DELETE /api/users/:id` - Eliminar usuario
 
-Documentación completa disponible en: http://localhost:3001/api/docs
+Documentacion completa disponible en: `http://localhost:3001/api/docs` (Swagger UI)
 
 ## Funcionalidades Destacadas
 
-### Mapas con Priorización
-Los marcadores en el mapa utilizan código de colores para identificación visual rápida:
+### Mapas con Priorizacion Visual
+Los marcadores en los mapas utilizan codigo de colores para identificacion visual rapida:
+
+**Mapa de Cruces:**
+- Colores diferenciados por administrador (8 colores distintos)
+- Iconos tipo pin con semaforo interno
+- Filtros por tipo de gestion, comunicacion y administrador
+
+**Mapa de Incidencias:**
 - Rojo: Prioridad Alta
 - Naranja: Prioridad Media
 - Verde: Prioridad Baja
 
-### Conversión Automática a Mayúsculas
-Todos los campos de texto se convierten automáticamente a mayúsculas para mantener consistencia en los datos.
+### Conversion Automatica a Mayusculas
+Todos los campos de texto se convierten automaticamente a mayusculas para mantener consistencia en la base de datos.
 
 ### Herencia de Coordenadas
-Las incidencias heredan automáticamente las coordenadas geográficas del cruce seleccionado, eliminando la necesidad de captura manual.
+Las incidencias heredan automaticamente las coordenadas geograficas del cruce seleccionado, eliminando la necesidad de captura manual de ubicacion.
 
-### Sistema de Seguimientos
+### Sistema de Seguimientos con Timeline
 Cada incidencia mantiene un historial completo de seguimientos con:
-- Cambios de estado
-- Asignación de equipos y responsables
-- Reportes detallados
-- Timestamps automáticos
-- Usuario que registra cada acción
+- Cambios de estado con timestamps
+- Asignacion de equipos y responsables
+- Reportes detallados de intervenciones
+- Usuario que registra cada accion
+- Visualizacion tipo timeline
 
 ### Validaciones de Negocio
-- Prevención de seguimientos en incidencias finalizadas
-- Actualización automática de estado de incidencia al crear seguimiento
-- Validación de campos requeridos
-- Restricción de edición de ubicación geográfica
+- Prevencion de seguimientos en incidencias finalizadas
+- Actualizacion automatica de estado al crear seguimiento
+- Validacion exhaustiva de campos requeridos
+- Restriccion de edicion de ubicacion geografica heredada
 
-## Tecnologías Utilizadas
+### Gestion de Perifericos con Seguridad
+- Formulario completo para creacion de perifericos
+- Asociacion multiple periferico-cruce
+- Visualizacion simplificada en listas (solo tipo)
+- Modal de detalle con todos los campos
+- Sistema de mostrar/ocultar passwords
+- Exclusion del campo IP (tipo CIDR PostgreSQL no soportado en formularios)
 
-**Backend:**
-- NestJS 10.4.4
-- Prisma 5.14.0
-- PostgreSQL + PostGIS
-- Passport JWT
+## Tecnologias y Librerias
+
+### Backend
+- @nestjs/core 10.4.4
+- @nestjs/common
+- @nestjs/jwt
+- @nestjs/passport
+- @prisma/client 5.14.0
+- passport-jwt
+- bcryptjs
 - class-validator
-- Swagger
+- class-transformer
+- multer
 
-**Frontend:**
-- React 18.3.1
-- TypeScript 5.5.3
-- Vite 5.3.1
-- Bootstrap 5.3.8
-- Leaflet 1.9.4
-- React Router 6.23.1
-- Zustand 4.5.2
-- Axios 1.7.2
+### Frontend
+- react 18.3.1
+- react-dom 18.3.1
+- react-router-dom 6.23.1
+- typescript 5.5.3
+- zustand 4.5.2
+- leaflet 1.9.4
+- react-leaflet
+- bootstrap 5.3.8
+- jspdf
+- jspdf-autotable
+- axios 1.7.2
+
+### Herramientas de Desarrollo
+- vite 5.3.1
+- @vitejs/plugin-react
+- prisma 5.14.0
+- @types/react
+- @types/leaflet
+- eslint
+- typescript-eslint
+
+## Seguridad
+
+- Autenticacion mediante tokens JWT con expiracion configurable
+- Hash seguro de passwords usando bcryptjs (salt rounds: 10)
+- Validacion exhaustiva de datos en backend con class-validator
+- Control de acceso basado en roles (RBAC)
+- Proteccion de rutas en frontend mediante guards
+- Sanitizacion de inputs en formularios
+- CORS configurado para origenes permitidos
+- Headers de seguridad HTTP
+- Proteccion contra inyeccion SQL mediante Prisma ORM
+
+## Contribucion
+
+Este es un proyecto privado. Para contribuir, contactar al autor.
 
 ## Licencia
 
-MIT License
+Todos los derechos reservados - Alexander Laines
 
-## Autor
+## Soporte
 
-Aland Laines Calonge
+Para consultas tecnicas o reporte de problemas, contactar al desarrollador.
+
+---
+
+Desarrollado con profesionalismo y atencion al detalle por Alexander Laines
 

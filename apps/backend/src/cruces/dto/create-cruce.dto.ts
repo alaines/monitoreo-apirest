@@ -1,5 +1,6 @@
 import { IsString, IsNumber, IsBoolean, IsOptional, IsNotEmpty, Min, Max } from 'class-validator';
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
+import { Transform, Type } from 'class-transformer';
 
 export class CreateCruceDto {
   @ApiProperty({ description: 'Código de ubigeo', example: '150101' })
@@ -8,43 +9,56 @@ export class CreateCruceDto {
   ubigeoId!: string;
 
   @ApiProperty({ description: 'Tipo de gestión', example: 1 })
+  @Type(() => Number)
   @IsNumber()
   tipoGestion!: number;
 
   @ApiPropertyOptional({ description: 'ID del administrador' })
   @IsOptional()
+  @Type(() => Number)
   @IsNumber()
   administradorId?: number;
 
   @ApiProperty({ description: 'ID del proyecto', example: 1 })
+  @Type(() => Number)
   @IsNumber()
   proyectoId!: number;
 
   @ApiProperty({ description: 'ID de vía 1', example: 1 })
+  @Type(() => Number)
   @IsNumber()
   via1!: number;
 
   @ApiProperty({ description: 'ID de vía 2', example: 2 })
+  @Type(() => Number)
   @IsNumber()
   via2!: number;
 
   @ApiPropertyOptional({ description: 'Tipo de comunicación' })
   @IsOptional()
+  @Type(() => Number)
   @IsNumber()
   tipoComunicacion?: number;
 
   @ApiPropertyOptional({ description: 'Estado activo/inactivo', default: true })
   @IsOptional()
+  @Transform(({ value }) => {
+    if (value === 'true') return true;
+    if (value === 'false') return false;
+    return Boolean(value);
+  })
   @IsBoolean()
   estado?: boolean;
 
   @ApiPropertyOptional({ description: 'Tipo de cruce' })
   @IsOptional()
+  @Type(() => Number)
   @IsNumber()
   tipoCruce?: number;
 
   @ApiPropertyOptional({ description: 'Tipo de estructura' })
   @IsOptional()
+  @Type(() => Number)
   @IsNumber()
   tipoEstructura?: number;
 
@@ -65,6 +79,7 @@ export class CreateCruceDto {
 
   @ApiPropertyOptional({ description: 'Año de implementación', example: 2023 })
   @IsOptional()
+  @Type(() => Number)
   @IsNumber()
   @Min(1900)
   @Max(2100)
@@ -81,12 +96,14 @@ export class CreateCruceDto {
   nombre!: string;
 
   @ApiProperty({ description: 'Latitud', example: -12.0464 })
+  @Type(() => Number)
   @IsNumber()
   @Min(-90)
   @Max(90)
   latitud!: number;
 
   @ApiProperty({ description: 'Longitud', example: -77.0428 })
+  @Type(() => Number)
   @IsNumber()
   @Min(-180)
   @Max(180)
@@ -99,6 +116,7 @@ export class CreateCruceDto {
 
   @ApiPropertyOptional({ description: 'Tipo de control' })
   @IsOptional()
+  @Type(() => Number)
   @IsNumber()
   tipoControl?: number;
 

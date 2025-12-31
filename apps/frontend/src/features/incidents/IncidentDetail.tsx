@@ -43,7 +43,6 @@ export function IncidentDetail({ incidentId, onClose }: IncidentDetailProps) {
         incidentsService.getEstadosCatalog(),
         incidentsService.getEquiposCatalog(),
       ]);
-      console.log('Estados disponibles:', estadosData);
       setEstados(estadosData);
       setEquipos(equiposData);
     } catch (error) {
@@ -84,8 +83,6 @@ export function IncidentDetail({ incidentId, onClose }: IncidentDetailProps) {
       alert('El reporte es requerido');
       return;
     }
-
-    console.log('Enviando seguimiento:', trackingForm);
 
     try {
       await incidentsService.createTracking(incidentId, trackingForm);
@@ -236,6 +233,23 @@ export function IncidentDetail({ incidentId, onClose }: IncidentDetailProps) {
                   <div className="fw-bold">
                     {incident.cruce?.nombre || <span className="text-muted">Sin cruce asignado</span>}
                   </div>
+                </div>
+              </div>
+
+              <div className="row mb-3">
+                <div className="col-md-6">
+                  <label className="form-label text-muted small mb-1">
+                    <i className="fas fa-bolt me-1"></i>
+                    Empresa Eléctrica
+                  </label>
+                  <div>{incident.cruce?.electricoEmpresa || <span className="text-muted">No especificado</span>}</div>
+                </div>
+                <div className="col-md-6">
+                  <label className="form-label text-muted small mb-1">
+                    <i className="fas fa-plug me-1"></i>
+                    Suministro
+                  </label>
+                  <div>{incident.cruce?.electricoSuministro || <span className="text-muted">No especificado</span>}</div>
                 </div>
               </div>
 

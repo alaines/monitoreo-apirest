@@ -9,8 +9,16 @@ import {
   Query,
   ParseIntPipe,
   UseGuards,
+  UseInterceptors,
+  UploadedFiles,
+  Res,
+  NotFoundException,
 } from '@nestjs/common';
-import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth } from '@nestjs/swagger';
+import { FileFieldsInterceptor } from '@nestjs/platform-express';
+import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth, ApiConsumes } from '@nestjs/swagger';
+import { diskStorage } from 'multer';
+import { extname } from 'path';
+import { Request, Response } from 'express';
 import { CrucesService } from './cruces.service';
 import { CreateCruceDto } from './dto/create-cruce.dto';
 import { UpdateCruceDto } from './dto/update-cruce.dto';
@@ -20,6 +28,7 @@ import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { RolesGuard } from '../common/guards/roles.guard';
 import { Roles } from '../common/decorators/roles.decorator';
 import { CurrentUser } from '../common/decorators/current-user.decorator';
+import { Public } from '../common/decorators/public.decorator';
 
 @ApiTags('cruces')
 @ApiBearerAuth()
@@ -31,10 +40,82 @@ export class CrucesController {
   @Post()
   @Roles('ADMINISTRADOR', 'SUPERVISOR')
   @ApiOperation({ summary: 'Crear un nuevo cruce' })
+  @ApiConsumes('multipart/form-data')
   @ApiResponse({ status: 201, description: 'Cruce creado exitosamente' })
   @ApiResponse({ status: 403, description: 'No autorizado' })
-  create(@Body() createCruceDto: CreateCruceDto, @CurrentUser() user: any) {
-    return this.crucesService.create(createCruceDto, user.sub);
+  @UseInterceptors(
+    FileFieldsInterceptor(
+      [
+        { name: 'planoPdf', maxCount: 1 },
+        { name: 'planoDwg', maxCount: 1 },
+      ],
+      {
+        storage: diskStorage({
+          destination: './uploads/planos',
+          filename: (req: Request, file: Express.Multer.File, callback: (error: Error | null, filename: string) => void) => {
+            const codigo = ((req.body as any).codigo || 'SIN_CODIGO').replace(/[^a-zA-Z0-9]/g, '_');
+            const fecha = new Date().toISOString().split('T')[0].replace(/-/g, '');
+            const ext = extname(file.originalname);
+            const tipo = file.fieldname === 'planoPdf' ? 'PDF' : 'DWG';
+            
+            // Contar archivos existentes para el contador
+            const filename = `${codigo}-${fecha}-${tipo}${ext}`;
+            callback(null, filename);
+          },
+        }),
+        fileFilter: (req: Request, file: Express.Multer.File, callback: (error: Error | null, acceptFile: boolean) => void) => {
+          if (file.fieldname === 'planoPdf' && file.mimetype !== 'application/pdf') {
+            return callback(new Error('Solo se permiten archivos PDF'), false);
+          }
+          if (file.fieldname === 'planoDwg' && !file.originalname.toLowerCase().endsWith('.dwg')) {
+            return callback(new Error('Solo se permiten archivos DWG'), false);
+          }
+          callback(null, true);
+        },
+      },
+    ),
+  )
+  create(
+    @Body() bodyData: any, // Recibir como objeto genérico para evitar validación prematura
+    @UploadedFiles() files: { planoPdf?: Express.Multer.File[]; planoDwg?: Express.Multer.File[] },
+    @CurrentUser() user: any,
+  ) {
+    console.log('=== DEBUG CREATE CRUCE ===');
+    console.log('Body recibido:', JSON.stringify(bodyData, null, 2));
+    console.log('Tipos de datos:');
+    Object.keys(bodyData).forEach(key => {
+      console.log(`  ${key}: ${typeof bodyData[key]} = ${bodyData[key]}`);
+    });
+    
+    // Transformar valores de FormData a tipos correctos
+    const transformedDto: any = { ...bodyData };
+    
+    // Convertir strings a números
+    const numericFields = ['tipoGestion', 'administradorId', 'proyectoId', 'via1', 'via2', 
+                           'tipoComunicacion', 'tipoCruce', 'tipoEstructura',
+                           'anoImplementacion', 'tipoControl', 'latitud', 'longitud'];
+    numericFields.forEach(field => {
+      if (transformedDto[field] !== undefined && transformedDto[field] !== '' && transformedDto[field] !== null) {
+        const numValue = Number(transformedDto[field]);
+        if (!isNaN(numValue)) {
+          transformedDto[field] = numValue;
+        }
+      }
+    });
+    
+    // Convertir string a boolean
+    if (transformedDto.estado !== undefined) {
+      transformedDto.estado = transformedDto.estado === 'true' || transformedDto.estado === true || transformedDto.estado === 1 || transformedDto.estado === '1';
+    }
+    
+    console.log('Datos transformados:', JSON.stringify(transformedDto, null, 2));
+    
+    const cruceData = {
+      ...transformedDto,
+      ...(files?.planoPdf?.[0] && { planoPdf: files.planoPdf[0].filename }),
+      ...(files?.planoDwg?.[0] && { planoDwg: files.planoDwg[0].filename }),
+    };
+    return this.crucesService.create(cruceData, user.sub);
   }
 
   @Get()
@@ -62,11 +143,74 @@ export class CrucesController {
   @Patch(':id')
   @Roles('ADMINISTRADOR', 'SUPERVISOR')
   @ApiOperation({ summary: 'Actualizar un cruce' })
+  @ApiConsumes('multipart/form-data')
   @ApiResponse({ status: 200, description: 'Cruce actualizado exitosamente' })
   @ApiResponse({ status: 404, description: 'Cruce no encontrado' })
   @ApiResponse({ status: 403, description: 'No autorizado' })
-  update(@Param('id', ParseIntPipe) id: number, @Body() updateCruceDto: UpdateCruceDto) {
-    return this.crucesService.update(id, updateCruceDto);
+  @UseInterceptors(
+    FileFieldsInterceptor(
+      [
+        { name: 'planoPdf', maxCount: 1 },
+        { name: 'planoDwg', maxCount: 1 },
+      ],
+      {
+        storage: diskStorage({
+          destination: './uploads/planos',
+          filename: (req: Request, file: Express.Multer.File, callback: (error: Error | null, filename: string) => void) => {
+            const codigo = ((req.body as any).codigo || 'SIN_CODIGO').replace(/[^a-zA-Z0-9]/g, '_');
+            const fecha = new Date().toISOString().split('T')[0].replace(/-/g, '');
+            const ext = extname(file.originalname);
+            const tipo = file.fieldname === 'planoPdf' ? 'PDF' : 'DWG';
+            
+            // Contar archivos existentes para el contador
+            const filename = `${codigo}-${fecha}-${tipo}${ext}`;
+            callback(null, filename);
+          },
+        }),
+        fileFilter: (req: Request, file: Express.Multer.File, callback: (error: Error | null, acceptFile: boolean) => void) => {
+          if (file.fieldname === 'planoPdf' && file.mimetype !== 'application/pdf') {
+            return callback(new Error('Solo se permiten archivos PDF'), false);
+          }
+          if (file.fieldname === 'planoDwg' && !file.originalname.toLowerCase().endsWith('.dwg')) {
+            return callback(new Error('Solo se permiten archivos DWG'), false);
+          }
+          callback(null, true);
+        },
+      },
+    ),
+  )
+  update(
+    @Param('id', ParseIntPipe) id: number,
+    @Body() bodyData: any, // Recibir como objeto genérico para evitar validación prematura
+    @UploadedFiles() files: { planoPdf?: Express.Multer.File[]; planoDwg?: Express.Multer.File[] },
+  ) {
+    // Transformar valores de FormData a tipos correctos
+    const transformedDto: any = { ...bodyData };
+    
+    // Convertir strings a números
+    const numericFields = ['tipoGestion', 'administradorId', 'proyectoId', 'via1', 'via2', 
+                           'tipoComunicacion', 'tipoCruce', 'tipoEstructura',
+                           'anoImplementacion', 'tipoControl', 'latitud', 'longitud'];
+    numericFields.forEach(field => {
+      if (transformedDto[field] !== undefined && transformedDto[field] !== '' && transformedDto[field] !== null) {
+        const numValue = Number(transformedDto[field]);
+        if (!isNaN(numValue)) {
+          transformedDto[field] = numValue;
+        }
+      }
+    });
+    
+    // Convertir string a boolean
+    if (transformedDto.estado !== undefined) {
+      transformedDto.estado = transformedDto.estado === 'true' || transformedDto.estado === true || transformedDto.estado === 1 || transformedDto.estado === '1';
+    }
+    
+    const cruceData = {
+      ...transformedDto,
+      ...(files?.planoPdf?.[0] && { planoPdf: files.planoPdf[0].filename }),
+      ...(files?.planoDwg?.[0] && { planoDwg: files.planoDwg[0].filename }),
+    };
+    return this.crucesService.update(id, cruceData);
   }
 
   @Delete(':id')

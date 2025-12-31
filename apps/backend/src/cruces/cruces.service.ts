@@ -4,26 +4,39 @@ import { CreateCruceDto } from './dto/create-cruce.dto';
 import { UpdateCruceDto } from './dto/update-cruce.dto';
 import { QueryCrucesDto } from './dto/query-cruces.dto';
 import { Prisma } from '@prisma/client';
+import { readFile } from 'fs/promises';
+import { join } from 'path';
 
 @Injectable()
 export class CrucesService {
   constructor(private prisma: PrismaService) {}
 
   async create(createCruceDto: CreateCruceDto, userId?: number) {
+    const { ubigeoId, proyectoId, administradorId, via1, via2, ...resto } = createCruceDto;
+    
     const data: any = {
-      ...createCruceDto,
+      ...resto,
+      ubigeo: { connect: { id: ubigeoId } },
+      proyecto: { connect: { id: proyectoId } },
       createdAt: new Date(),
       updatedAt: new Date(),
     };
 
-    // Si hay latitud y longitud, crear la geometría PostGIS
-    if (createCruceDto.latitud && createCruceDto.longitud) {
-      data.geom = Prisma.raw(
-        `ST_SetSRID(ST_MakePoint(${createCruceDto.longitud}, ${createCruceDto.latitud}), 4326)`
-      );
+    // Manejar relaciones opcionales
+    if (administradorId) {
+      data.administrador = { connect: { id: administradorId } };
+    }
+    
+    if (via1) {
+      data.via1 = Number(via1);
+    }
+    
+    if (via2) {
+      data.via2 = Number(via2);
     }
 
-    return this.prisma.cruce.create({
+    // Crear el cruce (sin geom, ya que es Unsupported)
+    const cruce = await this.prisma.cruce.create({
       data,
       include: {
         ubigeo: true,
@@ -36,6 +49,17 @@ export class CrucesService {
         },
       },
     });
+
+    // Si hay latitud y longitud, actualizar la geometría PostGIS con query raw
+    if (createCruceDto.latitud && createCruceDto.longitud) {
+      await this.prisma.$executeRaw`
+        UPDATE cruces 
+        SET geom = ST_SetSRID(ST_MakePoint(${createCruceDto.longitud}, ${createCruceDto.latitud}), 4326)
+        WHERE id = ${cruce.id}
+      `;
+    }
+
+    return cruce;
   }
 
   async findAll(query: QueryCrucesDto) {
@@ -125,19 +149,41 @@ export class CrucesService {
   async update(id: number, updateCruceDto: UpdateCruceDto) {
     await this.findOne(id); // Verificar que existe
 
+    const { ubigeoId, proyectoId, administradorId, via1, via2, ...resto } = updateCruceDto;
+    
     const data: any = {
-      ...updateCruceDto,
+      ...resto,
       updatedAt: new Date(),
     };
 
-    // Si se actualizan las coordenadas, actualizar la geometría
-    if (updateCruceDto.latitud !== undefined && updateCruceDto.longitud !== undefined) {
-      data.geom = Prisma.raw(
-        `ST_SetSRID(ST_MakePoint(${updateCruceDto.longitud}, ${updateCruceDto.latitud}), 4326)`
-      );
+    // Manejar relaciones obligatorias
+    if (ubigeoId !== undefined) {
+      data.ubigeo = { connect: { id: ubigeoId } };
+    }
+    
+    if (proyectoId !== undefined) {
+      data.proyecto = { connect: { id: proyectoId } };
+    }
+    
+    // Manejar relaciones opcionales
+    if (administradorId !== undefined) {
+      if (administradorId === null) {
+        data.administrador = { disconnect: true };
+      } else {
+        data.administrador = { connect: { id: Number(administradorId) } };
+      }
+    }
+    
+    if (via1 !== undefined) {
+      data.via1 = via1 === null ? null : Number(via1);
+    }
+    
+    if (via2 !== undefined) {
+      data.via2 = via2 === null ? null : Number(via2);
     }
 
-    return this.prisma.cruce.update({
+    // Actualizar el cruce (sin geom, ya que es Unsupported)
+    const updatedCruce = await this.prisma.cruce.update({
       where: { id },
       data,
       include: {
@@ -151,6 +197,17 @@ export class CrucesService {
         },
       },
     });
+
+    // Si se actualizan las coordenadas, actualizar la geometría con query raw
+    if (updateCruceDto.latitud !== undefined && updateCruceDto.longitud !== undefined) {
+      await this.prisma.$executeRaw`
+        UPDATE cruces 
+        SET geom = ST_SetSRID(ST_MakePoint(${updateCruceDto.longitud}, ${updateCruceDto.latitud}), 4326)
+        WHERE id = ${id}
+      `;
+    }
+
+    return updatedCruce;
   }
 
   async remove(id: number) {

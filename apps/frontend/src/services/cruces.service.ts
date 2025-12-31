@@ -100,8 +100,26 @@ export const crucesService = {
     return response.data;
   },
 
+  async createCruceWithFiles(formData: FormData) {
+    const response = await api.post('/cruces', formData, {
+      headers: {
+        'Content-Type': 'multipart/form-data',
+      },
+    });
+    return response.data;
+  },
+
   async updateCruce(id: number, data: Partial<Cruce>) {
     const response = await api.patch(`/cruces/${id}`, data);
+    return response.data;
+  },
+
+  async updateCruceWithFiles(id: number, formData: FormData) {
+    const response = await api.patch(`/cruces/${id}`, formData, {
+      headers: {
+        'Content-Type': 'multipart/form-data',
+      },
+    });
     return response.data;
   },
 

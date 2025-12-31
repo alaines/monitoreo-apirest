@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useAuthStore } from '../features/auth/authStore';
 
@@ -8,10 +8,19 @@ export function Layout({ children }: { children: React.ReactNode }) {
   const { user, logout } = useAuthStore();
   const [showUserMenu, setShowUserMenu] = useState(false);
   const [sidebarOpen, setSidebarOpen] = useState(true);
+  const [crucesSubmenuOpen, setCrucesSubmenuOpen] = useState(false);
 
   const canManageUsers = user?.grupo?.nombre === 'ADMINISTRADOR' || user?.grupo?.nombre === 'SUPERVISOR';
 
   const isActive = (path: string) => location.pathname === path;
+  const isActivePath = (path: string) => location.pathname.startsWith(path);
+
+  // Abrir automáticamente el submenú de cruces si estamos en una ruta de cruces
+  useEffect(() => {
+    if (isActivePath('/cruces')) {
+      setCrucesSubmenuOpen(true);
+    }
+  }, [location.pathname]);
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', height: '100vh', backgroundColor: 'var(--gray-100)', overflow: 'hidden' }}>
@@ -41,9 +50,9 @@ export function Layout({ children }: { children: React.ReactNode }) {
         </div>
 
         <div style={{ fontSize: '16px', fontWeight: '500', color: 'var(--gray-600)' }}>
-          {isActive('/') && 'Dashboard'}
+          {isActive('/') && 'Inicio'}
           {isActive('/incidents') && 'Gestión de Incidencias'}
-          {isActive('/cruces') && 'Gestión de Cruces'}
+          {isActivePath('/cruces') && 'Cruces'}
           {isActive('/users') && 'Gestión de Usuarios'}
         </div>
 
@@ -87,7 +96,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
             onMouseLeave={(e) => !isActive('/') && (e.currentTarget.style.background = 'transparent')}
           >
             <i className="fas fa-chart-line" style={{ width: '20px' }}></i>
-            Dashboard
+            Inicio
           </button>
 
           <button
@@ -114,29 +123,86 @@ export function Layout({ children }: { children: React.ReactNode }) {
             Incidencias
           </button>
 
-          <button
-            onClick={() => navigate('/cruces')}
-            style={{
-              width: '100%',
-              padding: '12px 20px',
-              border: 'none',
-              background: isActive('/cruces') ? 'rgba(95, 149, 152, 0.2)' : 'transparent',
-              color: 'white',
-              textAlign: 'left',
-              cursor: 'pointer',
-              display: 'flex',
-              alignItems: 'center',
-              gap: '12px',
-              fontSize: '14px',
-              transition: 'background 0.2s',
-              borderLeft: isActive('/cruces') ? '4px solid var(--primary)' : '4px solid transparent'
-            }}
-            onMouseEnter={(e) => !isActive('/cruces') && (e.currentTarget.style.background = 'rgba(255,255,255,0.05)')}
-            onMouseLeave={(e) => !isActive('/cruces') && (e.currentTarget.style.background = 'transparent')}
-          >
-            <i className="fas fa-traffic-light" style={{ width: '20px' }}></i>
-            Cruces
-          </button>
+          {/* Cruces con submenú */}
+          <div>
+            <button
+              onClick={() => setCrucesSubmenuOpen(!crucesSubmenuOpen)}
+              style={{
+                width: '100%',
+                padding: '12px 20px',
+                border: 'none',
+                background: isActivePath('/cruces') ? 'rgba(95, 149, 152, 0.2)' : 'transparent',
+                color: 'white',
+                textAlign: 'left',
+                cursor: 'pointer',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '12px',
+                fontSize: '14px',
+                transition: 'background 0.2s',
+                borderLeft: isActivePath('/cruces') ? '4px solid var(--primary-light)' : '4px solid transparent'
+              }}
+              onMouseEnter={(e) => !isActivePath('/cruces') && (e.currentTarget.style.background = 'rgba(255,255,255,0.05)')}
+              onMouseLeave={(e) => !isActivePath('/cruces') && (e.currentTarget.style.background = 'transparent')}
+            >
+              <i className="fas fa-traffic-light" style={{ width: '20px' }}></i>
+              <span style={{ flex: 1 }}>Cruces</span>
+              <i className={`fas fa-chevron-${crucesSubmenuOpen ? 'down' : 'right'}`} style={{ fontSize: '12px' }}></i>
+            </button>
+
+            {/* Submenú de Cruces */}
+            {crucesSubmenuOpen && (
+              <div style={{ backgroundColor: 'rgba(0,0,0,0.2)' }}>
+                <button
+                  onClick={() => navigate('/cruces')}
+                  style={{
+                    width: '100%',
+                    padding: '10px 20px 10px 52px',
+                    border: 'none',
+                    background: (isActive('/cruces') || location.pathname.startsWith('/cruces/') && !isActive('/cruces/mapa')) ? 'rgba(95, 149, 152, 0.3)' : 'transparent',
+                    color: 'white',
+                    textAlign: 'left',
+                    cursor: 'pointer',
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '10px',
+                    fontSize: '13px',
+                    transition: 'background 0.2s',
+                    borderLeft: (isActive('/cruces') || location.pathname.startsWith('/cruces/') && !isActive('/cruces/mapa')) ? '4px solid var(--primary)' : '4px solid transparent'
+                  }}
+                  onMouseEnter={(e) => !(isActive('/cruces') || location.pathname.startsWith('/cruces/') && !isActive('/cruces/mapa')) && (e.currentTarget.style.background = 'rgba(255,255,255,0.05)')}
+                  onMouseLeave={(e) => !(isActive('/cruces') || location.pathname.startsWith('/cruces/') && !isActive('/cruces/mapa')) && (e.currentTarget.style.background = 'transparent')}
+                >
+                  <i className="fas fa-list" style={{ width: '16px', fontSize: '12px' }}></i>
+                  Gestión
+                </button>
+
+                <button
+                  onClick={() => navigate('/cruces/mapa')}
+                  style={{
+                    width: '100%',
+                    padding: '10px 20px 10px 52px',
+                    border: 'none',
+                    background: isActive('/cruces/mapa') ? 'rgba(95, 149, 152, 0.3)' : 'transparent',
+                    color: 'white',
+                    textAlign: 'left',
+                    cursor: 'pointer',
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '10px',
+                    fontSize: '13px',
+                    transition: 'background 0.2s',
+                    borderLeft: isActive('/cruces/mapa') ? '4px solid var(--primary)' : '4px solid transparent'
+                  }}
+                  onMouseEnter={(e) => !isActive('/cruces/mapa') && (e.currentTarget.style.background = 'rgba(255,255,255,0.05)')}
+                  onMouseLeave={(e) => !isActive('/cruces/mapa') && (e.currentTarget.style.background = 'transparent')}
+                >
+                  <i className="fas fa-map-marked-alt" style={{ width: '16px', fontSize: '12px' }}></i>
+                  Mapa
+                </button>
+              </div>
+            )}
+          </div>
 
           <button
             style={{

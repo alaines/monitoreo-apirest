@@ -6,6 +6,10 @@ import { PrismaModule } from './prisma/prisma.module';
 import { IncidentsModule } from './incidents/incidents.module';
 import { CrucesModule } from './cruces/cruces.module';
 import { PerifericosModule } from './perifericos/perifericos.module';
+import { TiposModule } from './tipos/tipos.module';
+import { UbigeosModule } from './ubigeos/ubigeos.module';
+import { AdministradoresModule } from './administradores/administradores.module';
+import { EjesModule } from './ejes/ejes.module';
 
 @Module({
   imports: [
@@ -18,6 +22,10 @@ import { PerifericosModule } from './perifericos/perifericos.module';
     IncidentsModule,
     CrucesModule,
     PerifericosModule,
+    TiposModule,
+    UbigeosModule,
+    AdministradoresModule,
+    EjesModule,
   ],
 })
 export class AppModule {}

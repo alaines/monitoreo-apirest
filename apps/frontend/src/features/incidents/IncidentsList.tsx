@@ -256,8 +256,8 @@ export function IncidentsList() {
         </div>
         {showFilters && (
           <div className="card-body">
-            <div className="row g-3">
-              <div className="col-md-3">
+            <div className="row g-2">
+              <div className="col-md-2">
                 <label className="form-label small">Tipo de Incidencia</label>
                 <select 
                   className="form-select form-select-sm"
@@ -338,12 +338,13 @@ export function IncidentsList() {
                   onChange={(e) => applyFilters({ ...filters, fechaHasta: e.target.value })}
                 />
               </div>
-              <div className="col-md-2 d-flex align-items-end">
+              <div className="col-md-1 d-flex align-items-end">
                 <button 
-                  className="btn btn-sm btn-outline-danger w-100"
+                  className="btn btn-outline-secondary w-100"
                   onClick={clearFilters}
+                  title="Limpiar filtros"
                 >
-                  <i className="fas fa-times me-1"></i>Limpiar
+                  <i className="fas fa-eraser"></i>
                 </button>
               </div>
             </div>
@@ -437,7 +438,7 @@ export function IncidentsList() {
                           <i className="fas fa-eye"></i>
                         </button>
                         <button
-                          className="btn btn-sm btn-outline-secondary"
+                          className="btn btn-sm btn-outline-warning"
                           onClick={() => {
                             setSelectedIncidentId(incident.id);
                             setFormMode('edit');

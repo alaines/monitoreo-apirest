@@ -113,9 +113,7 @@ export function Dashboard() {
   const loadDashboardData = async () => {
     setLoading(true);
     try {
-      console.log('🔍 Cargando datos del dashboard (límite: 5000)...');
       const incidentsData = await incidentsService.getIncidents({ page: 1, limit: 5000 });
-      console.log('📊 Total de incidencias recibidas:', incidentsData.data.length);
 
       const now = new Date();
       const periodStart = new Date();
@@ -135,8 +133,6 @@ export function Dashboard() {
       const filteredIncidents = incidentsData.data.filter((i: Incident) => 
         new Date(i.createdAt) >= periodStart
       );
-
-      console.log(`📈 Filtro "${selectedPeriod}": ${filteredIncidents.length} incidencias (desde ${periodStart.toISOString()})`);
 
       const openTickets = filteredIncidents.filter((t: Incident) => t.estadoId === 1).length;
       const inProgressTickets = filteredIncidents.filter((t: Incident) => t.estadoId === 2).length;
@@ -164,7 +160,6 @@ export function Dashboard() {
         avgResolutionTime,
       };
 
-      console.log('📊 Estadísticas calculadas:', statsData);
       setStats(statsData);
 
       // Filtrar incidencias activas para el mapa aplicando también el filtro de período
@@ -172,8 +167,6 @@ export function Dashboard() {
       const activeForMap = filteredIncidents.filter((i: Incident) => 
         (i.estadoId === 1 || i.estadoId === 2) && i.latitude && i.longitude
       );
-      
-      console.log(`🗺️ Mapa: ${activeForMap.length} de ${statsData.activeIncidents} activas (${activeForMap.filter(i => i.cruce).length} con cruce, ${activeForMap.filter(i => !i.cruce).length} con coords propias)`);
       
       setActiveIncidents(activeForMap);
     } catch (error) {

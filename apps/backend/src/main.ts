@@ -2,9 +2,16 @@ import { NestFactory } from '@nestjs/core';
 import { ValidationPipe } from '@nestjs/common';
 import { SwaggerModule, DocumentBuilder } from '@nestjs/swagger';
 import { AppModule } from './app.module';
+import { NestExpressApplication } from '@nestjs/platform-express';
+import { join } from 'path';
 
 async function bootstrap() {
-  const app = await NestFactory.create(AppModule);
+  const app = await NestFactory.create<NestExpressApplication>(AppModule);
+
+  // Servir archivos estáticos de uploads
+  app.useStaticAssets(join(__dirname, '..', 'uploads'), {
+    prefix: '/uploads/',
+  });
 
   // CORS
   app.enableCors({
@@ -27,6 +34,8 @@ async function bootstrap() {
     .setDescription('Sistema de Gestión de Incidencias de Semáforos')
     .setVersion('1.0')
     .addBearerAuth()
+    .addServer('http://192.168.18.230:3001/api/', 'LAN Backend')
+    .addServer('http://localhost:3001/api/', 'Local Backend')
     .addTag('auth', 'Autenticación')
     .addTag('users', 'Gestión de Usuarios')
     .addTag('incidents', 'Gestión de Incidencias')

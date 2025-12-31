@@ -4,13 +4,14 @@ import { useAuthStore } from './features/auth/authStore';
 import { ProtectedRoute } from './components/ProtectedRoute';
 import { LoginPage } from './features/auth/pages/LoginPage';
 import { Layout } from './components/Layout';
-import { Dashboard } from './pages/Dashboard';
+import { Inicio } from './pages/Inicio';
 import { IncidentsList } from './features/incidents/IncidentsList';
 import { IncidentForm } from './features/incidents/IncidentForm';
 import { IncidentDetail } from './features/incidents/IncidentDetail';
 import { CrucesList } from './features/cruces/CrucesList';
 import { CruceForm } from './features/cruces/CruceForm';
 import { CruceDetail } from './features/cruces/CruceDetail';
+import { CrucesMap } from './features/cruces/CrucesMap';
 
 function App() {
   const { initialize, isAuthenticated } = useAuthStore();
@@ -31,7 +32,7 @@ function App() {
           element={
             <ProtectedRoute>
               <Layout>
-                <Dashboard />
+                <Inicio />
               </Layout>
             </ProtectedRoute>
           }
@@ -82,6 +83,16 @@ function App() {
             <ProtectedRoute>
               <Layout>
                 <CrucesList />
+              </Layout>
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/cruces/mapa"
+          element={
+            <ProtectedRoute>
+              <Layout>
+                <CrucesMap />
               </Layout>
             </ProtectedRoute>
           }

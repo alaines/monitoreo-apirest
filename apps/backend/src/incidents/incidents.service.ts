@@ -68,6 +68,14 @@ export class IncidentsService {
               codigo: true,
               latitud: true,
               longitud: true,
+              electricoEmpresa: true,
+              electricoSuministro: true,
+              administrador: {
+                select: {
+                  id: true,
+                  nombre: true,
+                },
+              },
             },
           },
           equipo: true,
@@ -153,6 +161,14 @@ export class IncidentsService {
             codigo: true,
             latitud: true,
             longitud: true,
+            electricoEmpresa: true,
+            electricoSuministro: true,
+            administrador: {
+              select: {
+                id: true,
+                nombre: true,
+              },
+            },
           },
         },
         equipo: true,
