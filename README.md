@@ -4,11 +4,34 @@ Sistema integral de gestion y monitoreo de cruces semaforizados e incidencias de
 
 ## Autor
 
-Alexander Laines
+Aland Laines Calonge
 
 ## Descripcion
 
 Aplicacion web profesional para la gestion, seguimiento y analisis de cruces semaforizados, perifericos asociados e incidencias de trafico. Permite el registro completo de infraestructura vial, gestion de perifericos tecnicos, seguimiento de incidencias ciudadanas, y visualizacion geografica mediante mapas interactivos con priorizacion por nivel de urgencia.
+
+## Capturas de Pantalla
+
+### Pantalla de Inicio
+![Inicio](docs/screenshots/inicio.PNG)
+
+### Login
+![Login](docs/screenshots/login.PNG)
+
+### Gestion de Cruces
+![Gestion de Cruces](docs/screenshots/gestion_cruces.PNG)
+
+### Mapa de Cruces Semaforizados
+![Mapa de Cruces](docs/screenshots/mapa_cruces.PNG)
+
+### Detalle de Cruce con Perifericos
+![Detalle de Cruce](docs/screenshots/detalle_cruce.PNG)
+
+### Gestion de Incidencias
+![Gestion de Incidencias](docs/screenshots/gestion_incidencias.PNG)
+
+### Detalle de Incidencia
+![Detalle de Incidencia](docs/screenshots/detalle_incidencia.PNG)
 
 ## Caracteristicas Principales
 

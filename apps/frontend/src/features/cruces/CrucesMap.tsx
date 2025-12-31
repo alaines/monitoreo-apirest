@@ -267,7 +267,70 @@ export function CrucesMap() {
       </div>
 
       {/* Mapa */}
-      <div className="card shadow-sm" style={{ flex: 1, minHeight: 0 }}>
+      <div className="card shadow-sm" style={{ flex: 1, minHeight: 0, position: 'relative' }}>
+        {/* Leyenda */}
+        <div 
+          className="card position-absolute" 
+          style={{ 
+            top: '20px', 
+            right: '20px', 
+            zIndex: 1000,
+            minWidth: '220px',
+            boxShadow: '0 2px 8px rgba(0,0,0,0.2)'
+          }}
+        >
+          <div className="card-header bg-primary text-white py-2">
+            <h6 className="mb-0" style={{ fontSize: '14px' }}>
+              <i className="fas fa-palette me-2"></i>
+              Administradores
+            </h6>
+          </div>
+          <div className="card-body p-2" style={{ maxHeight: '300px', overflowY: 'auto' }}>
+            {administradores.length > 0 ? (
+              <div style={{ fontSize: '13px' }}>
+                {administradores.map((admin) => {
+                  const colors: { [key: number]: string } = {
+                    1: '#dc3545',
+                    2: '#0d6efd',
+                    3: '#198754',
+                    4: '#ffc107',
+                    5: '#6f42c1',
+                    6: '#fd7e14',
+                    7: '#20c997',
+                    8: '#d63384',
+                  };
+                  const color = colors[admin.id] || '#6c757d';
+                  
+                  return (
+                    <div 
+                      key={admin.id} 
+                      className="d-flex align-items-center mb-2"
+                    >
+                      <div
+                        style={{
+                          width: '20px',
+                          height: '20px',
+                          backgroundColor: color,
+                          borderRadius: '50%',
+                          border: '2px solid white',
+                          boxShadow: '0 1px 3px rgba(0,0,0,0.3)',
+                          flexShrink: 0,
+                          marginRight: '8px'
+                        }}
+                      ></div>
+                      <span style={{ fontSize: '12px' }}>{admin.nombre}</span>
+                    </div>
+                  );
+                })}
+              </div>
+            ) : (
+              <p className="text-muted mb-0" style={{ fontSize: '12px' }}>
+                No hay administradores
+              </p>
+            )}
+          </div>
+        </div>
+
         <div className="card-body p-0" style={{ height: '100%' }}>
           <div style={{ height: '100%', width: '100%' }}>
             <MapContainer
