@@ -1,6 +1,8 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { crucesService, Cruce } from '../../services/cruces.service';
+import { CruceDetail } from './CruceDetail';
+import { CruceForm } from './CruceForm';
 
 type SortField = 'codigo' | 'nombre' | 'distrito' | 'estado';
 type SortOrder = 'asc' | 'desc';
@@ -16,6 +18,10 @@ export function CrucesList() {
   const [sortField, setSortField] = useState<SortField>('codigo');
   const [sortOrder, setSortOrder] = useState<SortOrder>('asc');
   const [showFilters, setShowFilters] = useState(false);
+  const [detailModalOpen, setDetailModalOpen] = useState(false);
+  const [formModalOpen, setFormModalOpen] = useState(false);
+  const [selectedCruceId, setSelectedCruceId] = useState<number | null>(null);
+  const [formMode, setFormMode] = useState<'create' | 'edit'>('create');
   const [filters, setFilters] = useState({
     search: '',
     codigo: '',
@@ -119,7 +125,11 @@ export function CrucesList() {
         </h2>
         <button 
           className="btn btn-primary"
-          onClick={() => navigate('/cruces/new')}
+          onClick={() => {
+            setSelectedCruceId(null);
+            setFormMode('create');
+            setFormModalOpen(true);
+          }}
         >
           <i className="fas fa-plus me-2"></i>
           Nuevo Cruce
@@ -276,14 +286,21 @@ export function CrucesList() {
                         <td className="text-center">
                           <button
                             className="btn btn-sm btn-outline-primary me-2"
-                            onClick={() => navigate(`/cruces/${cruce.id}`)}
+                            onClick={() => {
+                              setSelectedCruceId(cruce.id);
+                              setDetailModalOpen(true);
+                            }}
                             title="Ver detalle"
                           >
                             <i className="fas fa-eye"></i>
                           </button>
                           <button
                             className="btn btn-sm btn-outline-warning me-2"
-                            onClick={() => navigate(`/cruces/${cruce.id}/edit`)}
+                            onClick={() => {
+                              setSelectedCruceId(cruce.id);
+                              setFormMode('edit');
+                              setFormModalOpen(true);
+                            }}
                             title="Editar"
                           >
                             <i className="fas fa-edit"></i>
@@ -358,6 +375,56 @@ export function CrucesList() {
           )}
         </div>
       </div>
+
+      {/* Modal para visualizar detalle */}
+      {detailModalOpen && selectedCruceId && (
+        <div className="modal show d-block" style={{ backgroundColor: 'rgba(0,0,0,0.5)' }}>
+          <div className="modal-dialog modal-xl modal-dialog-scrollable">
+            <div className="modal-content">
+              <div className="modal-header bg-primary text-white">
+                <h5 className="modal-title">
+                  <i className="fas fa-eye me-2"></i>
+                  Ver Cruce
+                </h5>
+                <button type="button" className="btn-close btn-close-white" onClick={() => setDetailModalOpen(false)}></button>
+              </div>
+              <div className="modal-body">
+                <CruceDetail
+                  cruceId={selectedCruceId}
+                  onClose={() => setDetailModalOpen(false)}
+                />
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Modal para crear/editar */}
+      {formModalOpen && (
+        <div className="modal show d-block" style={{ backgroundColor: 'rgba(0,0,0,0.5)' }}>
+          <div className="modal-dialog modal-lg modal-dialog-scrollable">
+            <div className="modal-content">
+              <div className="modal-header bg-primary text-white">
+                <h5 className="modal-title">
+                  <i className={`fas ${formMode === 'create' ? 'fa-plus-circle' : 'fa-edit'} me-2`}></i>
+                  {formMode === 'create' ? 'Nuevo Cruce' : 'Editar Cruce'}
+                </h5>
+                <button type="button" className="btn-close btn-close-white" onClick={() => setFormModalOpen(false)}></button>
+              </div>
+              <div className="modal-body">
+                <CruceForm
+                  cruceId={selectedCruceId}
+                  onClose={() => setFormModalOpen(false)}
+                  onSave={() => {
+                    setFormModalOpen(false);
+                    loadCruces();
+                  }}
+                />
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
