@@ -159,74 +159,125 @@ export function IncidentDetail({ incidentId, onClose }: IncidentDetailProps) {
     <div className="modal show d-block" style={{ backgroundColor: 'rgba(0,0,0,0.5)' }} onClick={onClose}>
       <div className="modal-dialog modal-xl modal-dialog-scrollable" onClick={(e) => e.stopPropagation()}>
         <div className="modal-content">
-          <div className="modal-header">
-            <h5 className="modal-title">Detalle de Incidencia #{incident.id}</h5>
-            <button type="button" className="btn-close" onClick={onClose}></button>
+          <div className="modal-header bg-primary text-white">
+            <h5 className="modal-title">
+              <i className="fas fa-eye me-2"></i>
+              Detalle de Incidencia #{incident.id}
+            </h5>
+            <button type="button" className="btn-close btn-close-white" onClick={onClose}></button>
           </div>
-          <div className="modal-body p-0">
+          <div className="modal-body">
       <div className="row g-3">
         <div className="col-md-8">
-          <div className="card border-0 shadow-sm mb-3">
-            <div className="card-header bg-white border-bottom">
-              <h5 className="mb-0">Información General</h5>
-            </div>
+          {/* Información General */}
+          <div className="card mb-3">
             <div className="card-body">
+              <h6 className="card-title mb-3 fw-bold">
+                <i className="fas fa-info-circle me-2 text-primary"></i>
+                Información General
+              </h6>
+              
               <div className="row mb-3">
                 <div className="col-md-6">
-                  <label className="text-muted small mb-1">Tipo de Incidencia</label>
+                  <label className="form-label text-muted small mb-1">Tipo de Incidencia</label>
                   <div className="fw-bold">{incident.incidencia?.tipo || 'Sin especificar'}</div>
                 </div>
                 <div className="col-md-6">
-                  <label className="text-muted small mb-1">Estado</label>
+                  <label className="form-label text-muted small mb-1">Estado</label>
                   <div>{getStatusBadge(incident.estadoId)}</div>
                 </div>
               </div>
-              <div className="row mb-3">
-                <div className="col-12">
-                  <label className="text-muted small mb-1">Descripción</label>
-                  <div className="p-3 bg-light rounded">
-                    {incident.descripcion || 'Sin descripción'}
-                  </div>
-                </div>
-              </div>
+
               <div className="row mb-3">
                 <div className="col-md-6">
-                  <label className="text-muted small mb-1">Cruce</label>
-                  <div className="fw-bold">
-                    {incident.cruce?.nombre ? (
-                      <>
-                        <i className="fas fa-map-marker-alt me-2 text-primary"></i>
-                        {incident.cruce.nombre}
-                      </>
+                  <label className="form-label text-muted small mb-1">Prioridad</label>
+                  <div>
+                    {incident.prioridad?.nombre ? (
+                      <span className={`badge ${
+                        incident.prioridadId === 1 ? 'bg-danger' :
+                        incident.prioridadId === 2 ? 'bg-warning text-dark' :
+                        'bg-success'
+                      }`}>
+                        {incident.prioridad.nombre}
+                      </span>
                     ) : (
-                      <span className="text-muted">Sin cruce asignado</span>
+                      <span className="text-muted">Sin prioridad</span>
                     )}
                   </div>
                 </div>
                 <div className="col-md-6">
-                  <label className="text-muted small mb-1">Reportador</label>
-                  <div>{incident.reportadorNombres || 'No especificado'}</div>
+                  <label className="form-label text-muted small mb-1">Equipo Asignado</label>
+                  <div>
+                    {incident.equipo?.nombre ? (
+                      <span className="badge bg-info text-dark">
+                        <i className="fas fa-users me-1"></i>
+                        {incident.equipo.nombre}
+                      </span>
+                    ) : (
+                      <span className="text-muted">Sin equipo</span>
+                    )}
+                  </div>
                 </div>
               </div>
+
+              <div className="mb-3">
+                <label className="form-label text-muted small mb-1">Descripción</label>
+                <div className="p-3 bg-light rounded border">
+                  {incident.descripcion || <span className="text-muted">Sin descripción</span>}
+                </div>
+              </div>
+
+              <div className="row mb-3">
+                <div className="col-12">
+                  <label className="form-label text-muted small mb-1">
+                    <i className="fas fa-map-marker-alt me-1"></i>
+                    Cruce/Semáforo
+                  </label>
+                  <div className="fw-bold">
+                    {incident.cruce?.nombre || <span className="text-muted">Sin cruce asignado</span>}
+                  </div>
+                </div>
+              </div>
+
               <div className="row mb-3">
                 <div className="col-md-6">
-                  <label className="text-muted small mb-1">Fecha de Creación</label>
-                  <div><i className="fas fa-calendar me-2"></i>{new Date(incident.createdAt).toLocaleString('es-PE')}</div>
+                  <label className="form-label text-muted small mb-1">Reportador</label>
+                  <div>{incident.reportadorNombres || <span className="text-muted">No especificado</span>}</div>
                 </div>
                 <div className="col-md-6">
-                  <label className="text-muted small mb-1">Última Actualización</label>
-                  <div><i className="fas fa-clock me-2"></i>{incident.updatedAt ? new Date(incident.updatedAt).toLocaleString('es-PE') : 'No actualizado'}</div>
+                  <label className="form-label text-muted small mb-1">Contacto</label>
+                  <div>{incident.reportadorDatoContacto || <span className="text-muted">No especificado</span>}</div>
+                </div>
+              </div>
+
+              <div className="row">
+                <div className="col-md-6">
+                  <label className="form-label text-muted small mb-1">
+                    <i className="fas fa-calendar me-1"></i>
+                    Fecha de Creación
+                  </label>
+                  <div>{new Date(incident.createdAt).toLocaleString('es-PE')}</div>
+                </div>
+                <div className="col-md-6">
+                  <label className="form-label text-muted small mb-1">
+                    <i className="fas fa-clock me-1"></i>
+                    Última Actualización
+                  </label>
+                  <div>{incident.updatedAt ? new Date(incident.updatedAt).toLocaleString('es-PE') : <span className="text-muted">No actualizado</span>}</div>
                 </div>
               </div>
             </div>
           </div>
         </div>
+
+        {/* Columna lateral - Ubicación */}
         <div className="col-md-4">
-          <div className="card border-0 shadow-sm">
-            <div className="card-header bg-white border-bottom">
-              <h5 className="mb-0">Ubicación</h5>
-            </div>
+          <div className="card">
             <div className="card-body">
+              <h6 className="card-title mb-3 fw-bold">
+                <i className="fas fa-location-arrow me-2 text-primary"></i>
+                Ubicación Geográfica
+              </h6>
               {incident.latitude && incident.longitude ? (
                 <>
                   <div className="mb-3">
@@ -261,33 +312,35 @@ export function IncidentDetail({ incidentId, onClose }: IncidentDetailProps) {
       {/* Sección de Seguimientos */}
       <div className="row mt-3">
         <div className="col-12">
-          <div className="card border-0 shadow-sm">
-            <div className="card-header bg-white border-bottom d-flex justify-content-between align-items-center">
-              <h5 className="mb-0">
-                <i className="fas fa-history me-2"></i>
-                Seguimientos
-              </h5>
-              {incident.estadoId !== 4 && (
-                <button
-                  className="btn btn-sm btn-primary"
-                  onClick={() => setShowTrackingForm(!showTrackingForm)}
-                >
-                  <i className="fas fa-plus me-2"></i>
-                  Agregar Seguimiento
-                </button>
-              )}
-              {incident.estadoId === 4 && (
-                <span className="badge bg-success">
-                  <i className="fas fa-check-circle me-1"></i>
-                  Incidencia Finalizada
-                </span>
-              )}
-            </div>
+          <div className="card">
             <div className="card-body">
+              <div className="d-flex justify-content-between align-items-center mb-3">
+                <h6 className="card-title mb-0 fw-bold">
+                  <i className="fas fa-history me-2 text-primary"></i>
+                  Historial de Seguimientos
+                </h6>
+                {incident.estadoId !== 4 ? (
+                  <button
+                    className="btn btn-sm btn-primary"
+                    onClick={() => setShowTrackingForm(!showTrackingForm)}
+                  >
+                    <i className="fas fa-plus me-2"></i>
+                    Agregar Seguimiento
+                  </button>
+                ) : (
+                  <span className="badge bg-success">
+                    <i className="fas fa-check-circle me-1"></i>
+                    Incidencia Finalizada
+                  </span>
+                )}
+              </div>
               {/* Formulario de nuevo seguimiento */}
               {showTrackingForm && incident.estadoId !== 4 && (
-                <div className="mb-4 p-3 bg-light rounded">
-                  <h6 className="mb-3">Nuevo Seguimiento</h6>
+                <div className="mb-4 p-3 border rounded bg-light">
+                  <h6 className="mb-3">
+                    <i className="fas fa-plus-circle me-2"></i>
+                    Nuevo Seguimiento
+                  </h6>
                   <form onSubmit={handleSubmitTracking}>
                     <div className="row mb-3">
                       <div className="col-md-6">
@@ -346,6 +399,7 @@ export function IncidentDetail({ incidentId, onClose }: IncidentDetailProps) {
                           setTrackingForm({ reporte: '', estadoId: undefined, equipoId: undefined });
                         }}
                       >
+                        <i className="fas fa-times me-2"></i>
                         Cancelar
                       </button>
                     </div>
@@ -362,61 +416,47 @@ export function IncidentDetail({ incidentId, onClose }: IncidentDetailProps) {
                 </div>
               ) : trackings.length === 0 ? (
                 <div className="text-center py-4 text-muted">
-                  <i className="fas fa-inbox fa-3x mb-3 d-block"></i>
-                  <p>No hay seguimientos registrados</p>
+                  <i className="fas fa-inbox fa-2x mb-3 d-block"></i>
+                  <p className="mb-0">No hay seguimientos registrados</p>
                 </div>
               ) : (
                 <div className="timeline">
                   {trackings.map((tracking, index) => (
-                    <div key={tracking.id} className="timeline-item mb-3">
-                      <div className="d-flex">
-                        <div className="timeline-marker me-3">
-                          <div className="bg-primary rounded-circle d-flex align-items-center justify-content-center" style={{ width: '40px', height: '40px' }}>
-                            <i className="fas fa-comment text-white"></i>
-                          </div>
-                          {index < trackings.length - 1 && (
-                            <div className="timeline-line bg-secondary" style={{ width: '2px', height: '100%', marginLeft: '19px', marginTop: '5px' }}></div>
-                          )}
-                        </div>
-                        <div className="flex-grow-1">
-                          <div className="card border-0 shadow-sm">
-                            <div className="card-body">
-                              <div className="d-flex justify-content-between align-items-start mb-2">
-                                <div>
-                                  <small className="text-muted">
-                                    <i className="fas fa-user me-1"></i>
-                                    {tracking.usuarioRegistra || 'Sistema'}
-                                  </small>
-                                  <small className="text-muted ms-3">
-                                    <i className="fas fa-clock me-1"></i>
-                                    {new Date(tracking.createdAt).toLocaleString('es-PE')}
-                                  </small>
-                                </div>
-                                {tracking.estado && (
-                                  <div>
-                                    {getStatusBadge(tracking.estadoId)}
-                                  </div>
-                                )}
-                              </div>
-                              {tracking.equipo && (
-                                <div className="mb-2">
-                                  <small className="badge bg-info text-dark">
-                                    <i className="fas fa-users me-1"></i>
-                                    {tracking.equipo.nombre}
-                                  </small>
-                                </div>
-                              )}
-                              {tracking.responsable && (
-                                <div className="mb-2">
-                                  <small className="badge bg-secondary">
-                                    <i className="fas fa-user-tie me-1"></i>
-                                    {tracking.responsable.nombre}
-                                  </small>
-                                </div>
-                              )}
-                              <p className="mb-0">{tracking.reporte}</p>
+                    <div key={tracking.id} className="mb-3">
+                      <div className="card border-start border-primary border-4">
+                        <div className="card-body">
+                          <div className="d-flex justify-content-between align-items-start mb-2">
+                            <div>
+                              <small className="text-muted">
+                                <i className="fas fa-user me-1"></i>
+                                {tracking.usuarioRegistra || 'Sistema'}
+                              </small>
+                              <small className="text-muted ms-3">
+                                <i className="fas fa-clock me-1"></i>
+                                {new Date(tracking.createdAt).toLocaleString('es-PE')}
+                              </small>
                             </div>
+                            {tracking.estado && (
+                              <div>
+                                {getStatusBadge(tracking.estadoId)}
+                              </div>
+                            )}
                           </div>
+                          {tracking.equipo && (
+                            <div className="mb-2">
+                              <span className="badge bg-info text-dark me-2">
+                                <i className="fas fa-users me-1"></i>
+                                {tracking.equipo.nombre}
+                              </span>
+                              {tracking.responsable && (
+                                <span className="badge bg-secondary">
+                                  <i className="fas fa-user-tie me-1"></i>
+                                  {tracking.responsable.nombre}
+                                </span>
+                              )}
+                            </div>
+                          )}
+                          <p className="mb-0">{tracking.reporte}</p>
                         </div>
                       </div>
                     </div>
@@ -427,6 +467,25 @@ export function IncidentDetail({ incidentId, onClose }: IncidentDetailProps) {
           </div>
         </div>
       </div>
+          </div>
+          <div className="modal-footer bg-light">
+            <button type="button" className="btn btn-secondary" onClick={onClose}>
+              <i className="fas fa-times me-2"></i>
+              Cerrar
+            </button>
+            {incident.estadoId !== 4 && (
+              <button 
+                type="button" 
+                className="btn btn-primary"
+                onClick={() => {
+                  onClose();
+                  // Aquí podrías navegar a editar si necesitas
+                }}
+              >
+                <i className="fas fa-edit me-2"></i>
+                Editar Incidencia
+              </button>
+            )}
           </div>
         </div>
       </div>
