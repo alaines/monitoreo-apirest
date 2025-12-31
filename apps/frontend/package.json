@@ -12,7 +12,7 @@
     "format": "prettier --write \"src/**/*.{ts,tsx,css}\""
   },
   "dependencies": {
-    "@hookform/resolvers": "^3.3.3",
+    "@hookform/resolvers": "^5.2.2",
     "@popperjs/core": "^2.11.8",
     "axios": "^1.6.2",
     "bootstrap": "^5.3.8",
