@@ -1,8 +1,9 @@
 # Sprint 6: Sistema de Reportes
 
-**Estado:** PLANIFICADO  
+**Estado:** ✅ COMPLETADO (31 diciembre 2025)  
 **Prioridad:** Alta  
-**Estimacion:** 2 semanas
+**Estimacion:** 2 semanas  
+**Tiempo Real:** 3 semanas
 
 ## Objetivo
 
@@ -221,26 +222,76 @@ El sistema actual cuenta con un dashboard basico con KPIs de incidencias. Se req
 
 ### Backend
 - `exceljs` - Generacion de archivos Excel con formato
-- `pdfmake` - Generacion de PDFs
+- ~~`pdfkit`~~ - **REMOVIDO** (problemas con webpack bundles)
+- ~~`pdfmake`~~ - No implementado
 - Queries avanzadas con Prisma (groupBy, aggregate)
 
 ### Frontend
-- `chart.js` + `react-chartjs-2` - Graficos interactivos
-- `recharts` (alternativa) - Graficos React nativos
-- `file-saver` - Descarga de archivos generados
+- `chart.js` 4.x + `react-chartjs-2` 5.x - Graficos interactivos ✅
+- `jspdf` 3.x + `jspdf-autotable` 5.x - Generacion de PDFs en frontend ✅
+- ~~`recharts`~~ - No implementado (se eligio Chart.js)
+- `file-saver` - No necesario (descarga nativa con Blob)
+
+## Implementacion Real
+
+### Cambios vs Plan Original
+
+1. **PDFKit Removido del Backend**: Problemas con fuentes en webpack bundles
+   - Solucion: Generar PDFs en frontend con jsPDF
+   - Beneficio: Menor carga en servidor, mejor escalabilidad
+
+2. **Reporte Grafico Completo**: 
+   - 5 graficos interactivos con Chart.js
+   - Evolucion temporal adaptativa (hora/dia/mes segun periodo)
+   - Top 5 averias con comparativa atendidas vs por atender
+   - Filtrado especifico por "PROBLEMA - CRUCE" (parentId)
+   - Clasificacion de estados con 5 categorias
+
+3. **Exportacion PDF con Graficos**:
+   - Captura de canvas de Chart.js a PNG
+   - Insercion de imagenes en PDF (no tablas)
+   - Paginacion automatica
+
+4. **Excel Consolidado**:
+   - Matriz cruces x tipos de incidencia
+   - Hoja de detalle con listado completo
+   - Formato profesional con estilos
+
+### Archivos Creados
+
+**Backend:**
+- `apps/backend/src/reportes/reportes.controller.ts` (endpoints grafico)
+- `apps/backend/src/reportes/reportes.service.ts` (logica getReporteGrafico)
+- `apps/backend/src/reportes/dto/reporte-grafico.dto.ts`
+
+**Frontend:**
+- `apps/frontend/src/features/reportes/ReporteGrafico.tsx` (componente principal)
+- `apps/frontend/src/services/reportes-grafico.service.ts` (cliente API)
+
+**Documentacion:**
+- `docs/REPORTE_GRAFICO.md` (documentacion completa)
+
+**Eliminados:**
+- `apps/frontend/src/components/DwgViewer.tsx` (no usado)
+
+### Correcciones Importantes
+
+- **Enums en Mayusculas**: PeriodoReporte (DIA, MES, ANIO) en frontend y backend
+- **Referencias Chart.js**: useRef para captura de canvas
+- **Validaciones**: Mensajes de "sin datos" en graficos vacios
 
 ## Definicion de Hecho
 
-- [ ] Todos los tipos de reportes implementados
-- [ ] Exportacion a Excel funcional con formato
-- [ ] Exportacion a PDF funcional con formato
-- [ ] Graficos estadisticos interactivos
-- [ ] Filtros aplicables en todos los reportes
-- [ ] Pagina de reportes accesible desde menu
-- [ ] Metricas calculadas correctamente
-- [ ] Performance aceptable (< 5 segundos para reportes grandes)
-- [ ] Sin errores en consola
-- [ ] Documentacion actualizada
+- [x] Todos los tipos de reportes implementados
+- [x] Exportacion a Excel funcional con formato
+- [x] Exportacion a PDF funcional con formato (frontend con jsPDF)
+- [x] Graficos estadisticos interactivos (Chart.js)
+- [x] Filtros aplicables en todos los reportes
+- [x] Pagina de reportes accesible desde menu
+- [x] Metricas calculadas correctamente
+- [x] Performance aceptable (< 5 segundos para reportes grandes)
+- [x] Sin errores en consola
+- [x] Documentacion actualizada (docs/REPORTE_GRAFICO.md)
 
 ## Riesgos y Dependencias
 

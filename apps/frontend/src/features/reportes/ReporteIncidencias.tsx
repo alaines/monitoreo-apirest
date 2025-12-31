@@ -1,4 +1,6 @@
 import { useState, useEffect } from 'react';
+import jsPDF from 'jspdf';
+import autoTable from 'jspdf-autotable';
 import { reportesService, PeriodoReporte, FiltrosReporte, EstadisticasReporte } from '../../services/reportes.service';
 import { tiposService, Tipo } from '../../services/tipos.service';
 import { administradoresService, Administrador } from '../../services/administradores.service';
@@ -7,7 +9,6 @@ export function ReporteIncidencias() {
   const [loading, setLoading] = useState(false);
   const [exporting, setExporting] = useState(false);
   const [estadisticas, setEstadisticas] = useState<EstadisticasReporte | null>(null);
-  const [incidencias, setIncidencias] = useState<any[]>([]);
   
   // Catálogos
   const [tipos, setTipos] = useState<Tipo[]>([]);
@@ -50,12 +51,8 @@ export function ReporteIncidencias() {
     try {
       setLoading(true);
       const filtros = buildFiltros();
-      const [dataEstadisticas, dataIncidencias] = await Promise.all([
-        reportesService.getEstadisticas(filtros),
-        reportesService.getReporteIncidencias(filtros)
-      ]);
+      const dataEstadisticas = await reportesService.getEstadisticas(filtros);
       setEstadisticas(dataEstadisticas);
-      setIncidencias(dataIncidencias);
     } catch (error) {
       console.error('Error loading estadisticas:', error);
     } finally {
@@ -100,12 +97,153 @@ export function ReporteIncidencias() {
   const handleExportarPDF = async () => {
     try {
       setExporting(true);
-      const filtros = buildFiltros();
-      await reportesService.exportarPDF(filtros);
+      
+      if (!estadisticas) {
+        alert('No hay datos para exportar');
+        return;
+      }
+
+      const doc = new jsPDF();
+      
+      // Encabezado
+      doc.setFontSize(18);
+      doc.text('Sistema de Monitoreo de Semáforos', 105, 15, { align: 'center' });
+      doc.setFontSize(14);
+      doc.text('Reporte de Incidencias', 105, 24, { align: 'center' });
+      
+      // Información del periodo
+      doc.setFontSize(10);
+      let periodoTexto = '';
+      if (periodo === PeriodoReporte.MES) {
+        const nombreMes = meses.find(m => m.value === mes)?.label || '';
+        periodoTexto = `Periodo: ${nombreMes} ${anio}`;
+      } else if (periodo === PeriodoReporte.ANIO) {
+        periodoTexto = `Periodo: Año ${anio}`;
+      } else if (periodo === PeriodoReporte.DIA) {
+        periodoTexto = `Periodo: Hoy`;
+      } else if (periodo === PeriodoReporte.PERSONALIZADO && fechaInicio && fechaFin) {
+        periodoTexto = `Periodo: ${fechaInicio} a ${fechaFin}`;
+      }
+      
+      doc.text(periodoTexto, 105, 32, { align: 'center' });
+      doc.text(`Total de incidencias: ${estadisticas.total}`, 105, 38, { align: 'center' });
+      doc.text(`Fecha de generación: ${new Date().toLocaleString('es-PE')}`, 105, 44, { align: 'center' });
+      
+      doc.setLineWidth(0.5);
+      doc.line(10, 48, 200, 48);
+      
+      let y = 54;
+      
+      // Resumen por Tipo
+      doc.setFontSize(12);
+      doc.setFont('helvetica', 'bold');
+      doc.text('Resumen por Tipo de Incidencia', 14, y);
+      doc.setFont('helvetica', 'normal');
+      y += 6;
+      
+      autoTable(doc, {
+        startY: y,
+        head: [['Tipo', 'Cantidad', 'Porcentaje']],
+        body: estadisticas.porTipo.map(item => [
+          item.tipo,
+          item.cantidad.toString(),
+          `${item.porcentaje}%`
+        ]),
+        theme: 'grid',
+        headStyles: { fillColor: [41, 128, 185] },
+        styles: { fontSize: 9, cellPadding: 2 },
+      });
+      
+      y = (doc as any).lastAutoTable.finalY + 10;
+      
+      // Resumen por Estado
+      doc.setFontSize(12);
+      doc.setFont('helvetica', 'bold');
+      doc.text('Resumen por Estado', 14, y);
+      doc.setFont('helvetica', 'normal');
+      y += 6;
+      
+      autoTable(doc, {
+        startY: y,
+        head: [['Estado', 'Cantidad', 'Porcentaje']],
+        body: estadisticas.porEstado.map(item => [
+          item.estado,
+          item.cantidad.toString(),
+          `${item.porcentaje}%`
+        ]),
+        theme: 'grid',
+        headStyles: { fillColor: [41, 128, 185] },
+        styles: { fontSize: 9, cellPadding: 2 },
+      });
+      
+      y = (doc as any).lastAutoTable.finalY + 10;
+      
+      // Si hay espacio, agregar por administrador, si no, nueva página
+      if (y > 240) {
+        doc.addPage();
+        y = 20;
+      }
+      
+      // Resumen por Administrador
+      doc.setFontSize(12);
+      doc.setFont('helvetica', 'bold');
+      doc.text('Resumen por Administrador', 14, y);
+      doc.setFont('helvetica', 'normal');
+      y += 6;
+      
+      autoTable(doc, {
+        startY: y,
+        head: [['Administrador', 'Cantidad']],
+        body: estadisticas.porAdministrador.map(item => [
+          item.administrador,
+          item.cantidad.toString()
+        ]),
+        theme: 'grid',
+        headStyles: { fillColor: [39, 174, 96] },
+        styles: { fontSize: 9, cellPadding: 2 },
+      });
+      
+      y = (doc as any).lastAutoTable.finalY + 10;
+      
+      // Si hay datos por mes, agregarlos
+      if (estadisticas.porMes.length > 0) {
+        if (y > 240) {
+          doc.addPage();
+          y = 20;
+        }
+        
+        doc.setFontSize(12);
+        doc.setFont('helvetica', 'bold');
+        doc.text('Resumen por Mes', 14, y);
+        doc.setFont('helvetica', 'normal');
+        y += 6;
+        
+        autoTable(doc, {
+          startY: y,
+          head: [['Mes', 'Cantidad']],
+          body: estadisticas.porMes.map(item => [
+            item.mes,
+            item.cantidad.toString()
+          ]),
+          theme: 'grid',
+          headStyles: { fillColor: [243, 156, 18] },
+          styles: { fontSize: 9, cellPadding: 2 },
+        });
+      }
+      
+      // Footer
+      const pageCount = (doc as any).internal.getNumberOfPages();
+      for (let i = 1; i <= pageCount; i++) {
+        doc.setPage(i);
+        doc.setFontSize(9);
+        doc.text(`Página ${i} de ${pageCount}`, 200 - 20, 290, { align: 'right' });
+      }
+      
+      doc.save(`reporte_incidencias_${new Date().toISOString().split('T')[0]}.pdf`);
       alert('PDF descargado exitosamente');
     } catch (error: any) {
       console.error('Error exporting to PDF:', error);
-      alert(`Error al exportar a PDF: ${error.response?.data?.message || error.message}`);
+      alert(`Error al exportar a PDF: ${error.message}`);
     } finally {
       setExporting(false);
     }
@@ -523,123 +661,7 @@ export function ReporteIncidencias() {
             </div>
           </div>
 
-          {/* Listado de Incidencias */}
-          <div className="row mt-4">
-            <div className="col-12">
-              <div className="card shadow-sm">
-                <div className="card-header bg-light d-flex justify-content-between align-items-center">
-                  <h5 className="mb-0">
-                    <i className="fas fa-list me-2"></i>
-                    Listado de Incidencias ({incidencias.length})
-                  </h5>
-                </div>
-                <div className="card-body p-0">
-                  <div className="table-responsive">
-                    <table className="table table-hover mb-0">
-                      <thead className="table-light">
-                        <tr>
-                          <th style={{ width: '60px' }}>Nro</th>
-                          <th>Fecha y Hora</th>
-                          <th>Incidencia</th>
-                          <th>Tipo</th>
-                          <th>Cruce</th>
-                          <th>Estado</th>
-                          <th>Asignado a</th>
-                          <th>Tiempo</th>
-                        </tr>
-                      </thead>
-                      <tbody>
-                        {incidencias.length > 0 ? (
-                          incidencias.map((inc, index) => {
-                            const fechaReporte = new Date(inc.createdAt);
-                            const fechaCierre = inc.updatedAt && inc.estadoId === 3 ? new Date(inc.updatedAt) : null;
-                            const ultimoSeguimiento = inc.seguimientos && inc.seguimientos.length > 0 ? inc.seguimientos[0] : null;
-                            
-                            return (
-                              <tr key={inc.id}>
-                                <td className="text-center">{index + 1}</td>
-                                <td style={{ fontSize: '13px' }}>
-                                  {fechaReporte.toLocaleString('es-PE', {
-                                    day: '2-digit',
-                                    month: '2-digit',
-                                    year: 'numeric',
-                                    hour: '2-digit',
-                                    minute: '2-digit'
-                                  })}
-                                </td>
-                                <td>
-                                  <div style={{ fontSize: '14px', fontWeight: '500' }}>
-                                    {inc.incidencia?.tipo || 'Sin tipo'}
-                                  </div>
-                                  {inc.descripcion && (
-                                    <div style={{ fontSize: '12px', color: '#6c757d' }}>
-                                      {inc.descripcion.substring(0, 60)}
-                                      {inc.descripcion.length > 60 ? '...' : ''}
-                                    </div>
-                                  )}
-                                </td>
-                                <td style={{ fontSize: '13px' }}>
-                                  {inc.incidencia?.tipo || 'N/A'}
-                                </td>
-                                <td style={{ fontSize: '13px' }}>
-                                  {inc.cruce ? (
-                                    <>
-                                      <div>{inc.cruce.codigo}</div>
-                                      <div style={{ fontSize: '11px', color: '#6c757d' }}>
-                                        {inc.cruce.nombre}
-                                      </div>
-                                    </>
-                                  ) : 'N/A'}
-                                </td>
-                                <td>
-                                  <span className={`badge ${
-                                    ultimoSeguimiento?.estado?.nombre?.includes('RESUELTO') || ultimoSeguimiento?.estado?.nombre?.includes('FINALIZADO') 
-                                      ? 'bg-success' 
-                                      : ultimoSeguimiento?.estado?.nombre?.includes('PROCESO')
-                                      ? 'bg-warning'
-                                      : 'bg-secondary'
-                                  }`}>
-                                    {ultimoSeguimiento?.estado?.nombre || 'PENDIENTE'}
-                                  </span>
-                                </td>
-                                <td style={{ fontSize: '13px' }}>
-                                  {ultimoSeguimiento?.responsable?.nombre || inc.equipo?.nombre || 'Sin asignar'}
-                                </td>
-                                <td style={{ fontSize: '12px' }}>
-                                  {fechaCierre ? (
-                                    (() => {
-                                      const diff = fechaCierre.getTime() - fechaReporte.getTime();
-                                      const horas = Math.floor(diff / (1000 * 60 * 60));
-                                      const minutos = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
-                                      
-                                      if (horas > 24) {
-                                        const dias = Math.floor(horas / 24);
-                                        const horasRestantes = horas % 24;
-                                        return `${dias}d ${horasRestantes}h`;
-                                      }
-                                      return `${horas}h ${minutos}m`;
-                                    })()
-                                  ) : (
-                                    <span className="text-muted">En proceso</span>
-                                  )}
-                                </td>
-                              </tr>
-                            );
-                          })
-                        ) : (
-                          <tr>
-                            <td colSpan={8} className="text-center py-4 text-muted">
-                              No hay incidencias para mostrar con los filtros seleccionados
-                            </td>
-                          </tr>
-                        )}
-                      </tbody>
-                    </table>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
+
         </>
       ) : null}
     </div>

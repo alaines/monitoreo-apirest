@@ -147,6 +147,7 @@ model Ticket {
   equipo                 Equipo?                  @relation(fields: [equipoId], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "Tickets_to_equipos")
   incidencia             Incidencia               @relation(fields: [incidenciaId], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "Tickets_to_incidencias")
   reportador             Reportador?              @relation(fields: [reportadorId], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "Tickets_to_reportadores")
+  estado                 Estado?                  @relation(fields: [estadoId], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "Tickets_to_estados")
 
   @@index([createdAt])
   @@index([estadoId], map: "tickets_estado_idx")
@@ -203,6 +204,7 @@ model Estado {
   createdAt    DateTime?           @map("created") @db.Timestamp(6)
   updatedAt    DateTime?           @map("modified") @db.Timestamp(6)
   seguimientos TicketSeguimiento[]
+  tickets      Ticket[]
 
   @@map("estados")
 }

@@ -2,10 +2,10 @@ import { IsOptional, IsDateString, IsEnum, IsNumber } from 'class-validator';
 import { Type } from 'class-transformer';
 
 export enum PeriodoReporte {
-  DIA = 'dia',
-  MES = 'mes',
-  ANIO = 'anio',
-  PERSONALIZADO = 'personalizado'
+  DIA = 'DIA',
+  MES = 'MES',
+  ANIO = 'ANIO',
+  PERSONALIZADO = 'PERSONALIZADO'
 }
 
 export class ReporteIncidenciasDto {

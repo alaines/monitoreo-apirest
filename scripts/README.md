@@ -2,35 +2,135 @@
 
 Este directorio contiene scripts para gestionar los servicios del Sistema de Monitoreo.
 
-## Scripts Disponibles
+## 🎯 Scripts Principales
 
-### 🚀 start-services.sh
-Inicia ambos servicios (Backend y Frontend) de forma robusta.
+### Gestión del Sistema Completo
 
-**Uso:**
+#### 🚀 start-all.sh
+Inicia todos los servicios del sistema (Backend + Frontend).
+
 ```bash
-bash scripts/start-services.sh
+bash scripts/start-all.sh
+# o simplemente
+./scripts/start-all.sh
 ```
 
 **Características:**
-- Limpia procesos anteriores automáticamente
-- Verifica y libera puertos si están en uso
-- Espera a que los servicios inicien correctamente
-- Crea logs en `logs/backend.log` y `logs/frontend.log`
-- Tiempo de espera inteligente (60s para backend, 20s para frontend)
-- Muestra errores con últimas líneas de log si algo falla
-
-**Servicios iniciados:**
-- Backend: http://192.168.18.230:3001/api
-- Swagger: http://192.168.18.230:3001/docs
-- Frontend: http://192.168.18.230:5173
+- Inicia backend y frontend en orden
+- Verifica que cada servicio inicie correctamente
+- Muestra URLs de acceso al finalizar
+- Si algo falla, detiene todo automáticamente
 
 ---
 
-### 🔍 check-services.sh
+#### 🛑 stop-all.sh
+Detiene todos los servicios del sistema.
+
+```bash
+bash scripts/stop-all.sh
+```
+
+**Características:**
+- Cierre graceful primero (SIGTERM)
+- Si no responde, forzar cierre (SIGKILL)
+- Limpia procesos residuales
+- Libera puertos 3001 y 5173
+
+---
+
+#### 🔄 restart-all.sh
+Reinicia todos los servicios del sistema.
+
+```bash
+bash scripts/restart-all.sh
+```
+
+Equivale a ejecutar `stop-all.sh` seguido de `start-all.sh`.
+
+---
+
+## 🔧 Scripts Individuales
+
+### Backend
+
+#### 🚀 start-backend.sh
+Inicia solo el backend (NestJS en puerto 3001).
+
+```bash
+bash scripts/start-backend.sh
+```
+
+**URLs generadas:**
+- API Base: http://192.168.18.230:3001/api
+- Swagger: http://192.168.18.230:3001/api/docs
+- Login: http://192.168.18.230:3001/api/auth/login
+
+**Log:** `backend.log` en la raíz del proyecto
+
+---
+
+#### 🛑 stop-backend.sh
+Detiene solo el backend.
+
+```bash
+bash scripts/stop-backend.sh
+```
+
+---
+
+#### 🔄 restart-backend.sh
+Reinicia solo el backend.
+
+```bash
+bash scripts/restart-backend.sh
+```
+
+Útil cuando solo modificaste código del backend.
+
+---
+
+### Frontend
+
+#### 🚀 start-frontend.sh
+Inicia solo el frontend (Vite en puerto 5173).
+
+```bash
+bash scripts/start-frontend.sh
+```
+
+**URLs generadas:**
+- Local: http://localhost:5173
+- Network: http://192.168.18.230:5173
+
+**Log:** `frontend.log` en la raíz del proyecto
+
+---
+
+#### 🛑 stop-frontend.sh
+Detiene solo el frontend.
+
+```bash
+bash scripts/stop-frontend.sh
+```
+
+---
+
+#### 🔄 restart-frontend.sh
+Reinicia solo el frontend.
+
+```bash
+bash scripts/restart-frontend.sh
+```
+
+Útil cuando solo modificaste código del frontend.
+
+---
+
+## 🔍 Scripts de Utilidad
+
+### check-services.sh
 Verifica el estado de los servicios.
 
-**Uso:**
 ```bash
 bash scripts/check-services.sh
 ```
@@ -44,26 +144,9 @@ bash scripts/check-services.sh
 
 ---
 
-### 🛑 stop-services.sh
-Detiene ambos servicios de forma segura.
-
-**Uso:**
-```bash
-bash scripts/stop-services.sh
-```
-
-**Características:**
-- Cierre graceful primero (SIGTERM)
-- Si no responde, forzar cierre (SIGKILL)
-- Limpia procesos residuales
-- Verifica que los puertos queden liberados
-
----
-
 ### 🌱 seed-incidents.sh
 Crea incidencias de prueba en la base de datos.
 
-**Uso:**
 ```bash
 bash scripts/seed-incidents.sh
 ```
@@ -74,30 +157,113 @@ bash scripts/seed-incidents.sh
 - Todas con coordenadas válidas
 - Diferentes tipos, prioridades y estados
 
-## Flujo de Trabajo Recomendado
+---
+
+## 📋 Flujo de Trabajo Recomendado
 
 ### Inicio del día
 ```bash
-bash scripts/start-services.sh
+./scripts/start-all.sh
+```
+
+### Desarrollo - Solo modificaste backend
+```bash
+./scripts/restart-backend.sh
+```
+
+### Desarrollo - Solo modificaste frontend
+```bash
+./scripts/restart-frontend.sh
 ```
 
 ### Verificar que todo funciona
 ```bash
-bash scripts/check-services.sh
+./scripts/check-services.sh
 ```
 
 ### Ver logs en tiempo real
 ```bash
 # Backend
-tail -f logs/backend.log
+tail -f backend.log
 
 # Frontend
-tail -f logs/frontend.log
+tail -f frontend.log
+
+# Ambos a la vez
+tail -f backend.log frontend.log
 ```
 
 ### Detener al finalizar
 ```bash
-bash scripts/stop-services.sh
+./scripts/stop-all.sh
+```
+
+---
+
+## 🎨 Estructura de Scripts
+
+```
+scripts/
+├── start-all.sh          # Inicia todo el sistema
+├── stop-all.sh           # Detiene todo el sistema
+├── restart-all.sh        # Reinicia todo el sistema
+│
+├── start-backend.sh      # Inicia solo backend
+├── stop-backend.sh       # Detiene solo backend
+├── restart-backend.sh    # Reinicia solo backend
+│
+├── start-frontend.sh     # Inicia solo frontend
+├── stop-frontend.sh      # Detiene solo frontend
+├── restart-frontend.sh   # Reinicia solo frontend
+│
+├── check-services.sh     # Verifica estado de servicios
+├── seed-incidents.sh     # Crea datos de prueba
+│
+└── README.md            # Este archivo
+```
+
+---
+
+## ⚠️ Notas Importantes
+
+- Los scripts usan `lsof` para verificar puertos. Asegúrate de tenerlo instalado.
+- Los logs se guardan en la raíz del proyecto (`backend.log` y `frontend.log`).
+- El backend tarda ~40-60 segundos en compilar la primera vez.
+- El frontend tarda ~10-20 segundos en estar listo.
+- Si un puerto está en uso, el script intentará liberarlo automáticamente.
+
+---
+
+## 🆘 Solución de Problemas
+
+### Puerto en uso
+```bash
+# Ver qué proceso usa el puerto 3001
+lsof -i:3001
+
+# Ver qué proceso usa el puerto 5173
+lsof -i:5173
+
+# Matar proceso específico
+kill -9 <PID>
+```
+
+### Ver logs de error
+```bash
+# Backend
+tail -100 backend.log
+
+# Frontend
+tail -100 frontend.log
+```
+
+### Limpiar todo y reiniciar
+```bash
+./scripts/stop-all.sh
+pkill -9 -f "nest start"
+pkill -9 -f "vite"
+sleep 2
+./scripts/start-all.sh
 ```
 
 ## Solución de Problemas

@@ -1,12 +1,10 @@
-import axios from 'axios';
-
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000';
+import { api } from '../lib/api';
 
 export enum PeriodoReporte {
-  DIA = 'dia',
-  MES = 'mes',
-  ANIO = 'anio',
-  PERSONALIZADO = 'personalizado'
+  DIA = 'DIA',
+  MES = 'MES',
+  ANIO = 'ANIO',
+  PERSONALIZADO = 'PERSONALIZADO'
 }
 
 export interface FiltrosReporte {
@@ -31,31 +29,22 @@ export interface EstadisticasReporte {
 
 class ReportesService {
   async getReporteIncidencias(filtros: FiltrosReporte) {
-    const response = await axios.get(`${API_URL}/reportes/incidencias`, {
+    const response = await api.get('/reportes/incidencias', {
       params: filtros,
-      headers: {
-        Authorization: `Bearer ${localStorage.getItem('token')}`,
-      },
     });
     return response.data;
   }
 
   async getEstadisticas(filtros: FiltrosReporte): Promise<EstadisticasReporte> {
-    const response = await axios.get(`${API_URL}/reportes/incidencias/estadisticas`, {
+    const response = await api.get('/reportes/incidencias/estadisticas', {
       params: filtros,
-      headers: {
-        Authorization: `Bearer ${localStorage.getItem('token')}`,
-      },
     });
     return response.data;
   }
 
   async exportarExcel(filtros: FiltrosReporte) {
-    const response = await axios.get(`${API_URL}/reportes/incidencias/excel`, {
+    const response = await api.get('/reportes/incidencias/excel', {
       params: filtros,
-      headers: {
-        Authorization: `Bearer ${localStorage.getItem('token')}`,
-      },
       responseType: 'blob',
     });
 
@@ -71,11 +60,8 @@ class ReportesService {
   }
 
   async exportarPDF(filtros: FiltrosReporte) {
-    const response = await axios.get(`${API_URL}/reportes/incidencias/pdf`, {
+    const response = await api.get('/reportes/incidencias/pdf', {
       params: filtros,
-      headers: {
-        Authorization: `Bearer ${localStorage.getItem('token')}`,
-      },
       responseType: 'blob',
     });
 

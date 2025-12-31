@@ -82,6 +82,19 @@ Aplicacion web profesional para la gestion, seguimiento y analisis de cruces sem
 - Metricas de tiempo promedio de resolucion
 - Integracion con mapas para analisis espacial
 
+### Sistema de Reportes
+- **Reporte de Incidencias**: Estadisticas detalladas con exportacion a PDF
+- **Reporte Grafico**: Visualizacion con Chart.js (5 graficos interactivos)
+  * Grafico de torta: Incidencias por tipo (filtradas por "PROBLEMA - CRUCE")
+  * Grafico de barras: Top 10 cruces con mas incidencias
+  * Grafico de barras: Distribucion por estado
+  * Grafico de lineas: Evolucion temporal adaptativa (hora/dia/mes segun periodo)
+  * Grafico de barras comparativo: Top 5 averias (atendidas vs por atender)
+- Filtros dinamicos: Dia, Mes, Ano con seleccion intuitiva
+- Exportacion a PDF con graficos visuales (no tablas)
+- Clasificacion de estados: Atendidas (ATENDIDO, CERRADO, FINALIZADO, RESUELTO, COMPLETADO)
+- Exportacion a Excel con formato consolidado (matriz cruces x tipos)
+
 ### Sistema de Autenticacion
 - Autenticacion JWT segura con tokens de larga duracion
 - Control de acceso basado en roles (RBAC)
@@ -116,7 +129,8 @@ Aplicacion web profesional para la gestion, seguimiento y analisis de cruces sem
 - Gestion de Estado: Zustand para estado global
 - Mapas: Leaflet con React Leaflet
 - Enrutamiento: React Router v6
-- Generacion PDF: jsPDF con autotable
+- Graficos: Chart.js 4.x con react-chartjs-2
+- Generacion PDF: jsPDF con autotable (frontend only)
 - Cliente HTTP: Axios con interceptores
 
 ### Base de Datos
@@ -412,8 +426,10 @@ Cada incidencia mantiene un historial completo de seguimientos con:
 - leaflet 1.9.4
 - react-leaflet
 - bootstrap 5.3.8
-- jspdf
-- jspdf-autotable
+- chart.js 4.5.1
+- react-chartjs-2 5.3.1
+- jspdf 3.0.4
+- jspdf-autotable 5.0.2
 - axios 1.7.2
 
 ### Herramientas de Desarrollo

@@ -262,6 +262,29 @@ export function Layout({ children }: { children: React.ReactNode }) {
                   <i className="fas fa-ticket-alt" style={{ width: '16px', fontSize: '12px' }}></i>
                   Incidencias
                 </button>
+                <button
+                  onClick={() => navigate('/reportes/grafico')}
+                  style={{
+                    width: '100%',
+                    padding: '10px 20px 10px 52px',
+                    border: 'none',
+                    background: isActive('/reportes/grafico') ? 'rgba(95, 149, 152, 0.3)' : 'transparent',
+                    color: 'white',
+                    textAlign: 'left',
+                    cursor: 'pointer',
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '10px',
+                    fontSize: '13px',
+                    transition: 'background 0.2s',
+                    borderLeft: isActive('/reportes/grafico') ? '4px solid var(--primary)' : '4px solid transparent'
+                  }}
+                  onMouseEnter={(e) => !isActive('/reportes/grafico') && (e.currentTarget.style.background = 'rgba(255,255,255,0.05)')}
+                  onMouseLeave={(e) => !isActive('/reportes/grafico') && (e.currentTarget.style.background = 'transparent')}
+                >
+                  <i className="fas fa-chart-bar" style={{ width: '16px', fontSize: '12px' }}></i>
+                  Reporte Gráfico
+                </button>
               </div>
             )}
           </div>

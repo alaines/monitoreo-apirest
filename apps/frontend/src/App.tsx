@@ -13,6 +13,7 @@ import { CruceForm } from './features/cruces/CruceForm';
 import { CruceDetail } from './features/cruces/CruceDetail';
 import { CrucesMap } from './features/cruces/CrucesMap';
 import { ReporteIncidencias } from './features/reportes/ReporteIncidencias';
+import ReporteGrafico from './features/reportes/ReporteGrafico';
 
 function App() {
   const { initialize, isAuthenticated } = useAuthStore();
@@ -134,6 +135,16 @@ function App() {
             <ProtectedRoute>
               <Layout>
                 <ReporteIncidencias />
+              </Layout>
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/reportes/grafico"
+          element={
+            <ProtectedRoute>
+              <Layout>
+                <ReporteGrafico />
               </Layout>
             </ProtectedRoute>
           }
