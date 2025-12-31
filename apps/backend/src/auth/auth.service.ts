@@ -116,9 +116,7 @@ export class AuthService {
       return null;
     }
 
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    const { passwordHash, clave, ...result } = user;
-    return result;
+    return user;
   }
 
   private async generateTokens(userId: number, usuario: string, grupoId: number) {
