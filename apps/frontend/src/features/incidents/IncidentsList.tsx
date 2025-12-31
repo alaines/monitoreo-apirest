@@ -410,9 +410,9 @@ export function IncidentsList() {
                 ) : (
                   incidents.map((incident) => (
                     <tr key={incident.id}>
-                      <td className="px-4 py-3">#{incident.id}</td>
-                      <td className="py-3">{incident.incidencia?.tipo || '-'}</td>
-                      <td className="py-3">
+                      <td className="px-4">#{incident.id}</td>
+                      <td>{incident.incidencia?.tipo || '-'}</td>
+                      <td>
                         {incident.cruce?.nombre ? (
                           <span className="text-primary">
                             <i className="fas fa-map-marker-alt me-1"></i>
@@ -422,11 +422,11 @@ export function IncidentsList() {
                           <span className="text-muted">Sin cruce</span>
                         )}
                       </td>
-                      <td className="py-3">{getStatusBadge(incident.estadoId)}</td>
-                      <td className="py-3">
+                      <td>{getStatusBadge(incident.estadoId)}</td>
+                      <td>
                         <small>{new Date(incident.createdAt).toLocaleString('es-PE')}</small>
                       </td>
-                      <td className="py-3 text-center">
+                      <td className="text-center">
                         <button
                           className="btn btn-sm btn-outline-primary me-2"
                           onClick={() => {
