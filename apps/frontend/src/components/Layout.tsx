@@ -40,7 +40,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
           </div>
         </div>
 
-        <div style={{ fontSize: '16px', fontWeight: '500', color: '#6c757d' }}>
+        <div style={{ fontSize: '16px', fontWeight: '500', color: 'var(--gray-600)' }}>
           {isActive('/') && 'Dashboard'}
           {isActive('/incidents') && 'Gestión de Incidencias'}
           {isActive('/cruces') && 'Gestión de Cruces'}
