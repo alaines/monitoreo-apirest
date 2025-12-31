@@ -443,7 +443,7 @@ Este es un proyecto privado. Para contribuir, contactar al autor.
 
 ## Licencia
 
-Todos los derechos reservados - Alexander Laines
+Todos los derechos reservados - Aland Laines Calonge
 
 ## Soporte
 
@@ -451,5 +451,5 @@ Para consultas tecnicas o reporte de problemas, contactar al desarrollador.
 
 ---
 
-Desarrollado con profesionalismo y atencion al detalle por Alexander Laines
+Desarrollado con profesionalismo y atencion al detalle por Aland Laines Calonge
 
