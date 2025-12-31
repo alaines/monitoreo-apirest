@@ -1,7 +1,7 @@
 import { Injectable, UnauthorizedException } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { ConfigService } from '@nestjs/config';
-import * as bcrypt from 'bcrypt';
+import { createHash, timingSafeEqual } from 'crypto';
 import { PrismaService } from '../prisma/prisma.service';
 import { LoginDto } from './dto/auth.dto';
 
@@ -16,7 +16,12 @@ export class AuthService {
   async login(loginDto: LoginDto) {
     const user = await this.prisma.user.findUnique({
       where: { usuario: loginDto.usuario },
-      include: {
+      select: {
+        id: true,
+        usuario: true,
+        grupoId: true,
+        clave: true,
+        estado: true,
         grupo: {
           select: {
             id: true,
@@ -30,14 +35,12 @@ export class AuthService {
       throw new UnauthorizedException('Credenciales inválidas');
     }
 
-    if (!user.passwordHash) {
+    if (!user.clave) {
       throw new UnauthorizedException('Usuario sin contraseña configurada');
     }
 
-    const isPasswordValid = await bcrypt.compare(
-      loginDto.password,
-      user.passwordHash,
-    );
+    const hashedPassword = this.hashPassword(loginDto.password);
+    const isPasswordValid = this.safeCompare(hashedPassword, user.clave);
 
     if (!isPasswordValid) {
       throw new UnauthorizedException('Credenciales inválidas');
@@ -69,6 +72,12 @@ export class AuthService {
 
       const user = await this.prisma.user.findUnique({
         where: { id: payload.sub },
+        select: {
+          id: true,
+          usuario: true,
+          grupoId: true,
+          estado: true,
+        },
       });
 
       if (!user || !user.estado) {
@@ -89,7 +98,15 @@ export class AuthService {
   async validateUser(userId: number) {
     const user = await this.prisma.user.findUnique({
       where: { id: userId },
-      include: {
+      select: {
+        id: true,
+        usuario: true,
+        grupoId: true,
+        personaId: true,
+        estado: true,
+        createdAt: true,
+        updatedAt: true,
+        online: true,
         grupo: true,
         persona: true,
       },
@@ -100,7 +117,7 @@ export class AuthService {
     }
 
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    const { passwordHash, ...result } = user;
+    const { passwordHash, clave, ...result } = user;
     return result;
   }
 
@@ -121,8 +138,15 @@ export class AuthService {
     return { accessToken, refreshToken };
   }
 
-  async hashPassword(password: string): Promise<string> {
-    const rounds = this.configService.get('BCRYPT_ROUNDS') || 10;
-    return bcrypt.hash(password, Number(rounds));
+  hashPassword(password: string): string {
+    return createHash('md5').update(password).digest('hex');
+  }
+
+  private safeCompare(a: string, b: string): boolean {
+    if (a.length !== b.length) {
+      return false;
+    }
+
+    return timingSafeEqual(Buffer.from(a), Buffer.from(b));
   }
 }

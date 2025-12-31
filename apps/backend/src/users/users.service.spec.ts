@@ -12,7 +12,7 @@ describe('UsersService', () => {
   const mockUser = {
     id: 1,
     usuario: 'testuser',
-    passwordHash: 'hashed',
+    clave: 'hashed',
     grupoId: 1,
     personaId: null,
     estado: true,
@@ -78,7 +78,7 @@ describe('UsersService', () => {
     it('should create a new user successfully', async () => {
       jest.spyOn(prismaService.user, 'findUnique').mockResolvedValue(null);
       jest.spyOn(prismaService.grupo, 'findUnique').mockResolvedValue({ id: 1, nombre: 'OPERADOR' } as any);
-      jest.spyOn(authService, 'hashPassword').mockResolvedValue('hashed-password');
+      jest.spyOn(authService, 'hashPassword').mockReturnValue('hashed-password');
       jest.spyOn(prismaService.user, 'create').mockResolvedValue(mockUser as any);
 
       const result = await service.create({
@@ -89,6 +89,7 @@ describe('UsersService', () => {
 
       expect(result).toBeDefined();
       expect(result).not.toHaveProperty('passwordHash');
+      expect(result).not.toHaveProperty('clave');
     });
   });
 
@@ -119,6 +120,7 @@ describe('UsersService', () => {
 
       expect(result).toBeDefined();
       expect(result).not.toHaveProperty('passwordHash');
+      expect(result).not.toHaveProperty('clave');
     });
   });
 
@@ -131,6 +133,7 @@ describe('UsersService', () => {
 
       expect(result).toBeDefined();
       expect(result).not.toHaveProperty('passwordHash');
+      expect(result).not.toHaveProperty('clave');
     });
   });
 
