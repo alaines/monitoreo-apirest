@@ -109,40 +109,65 @@ export function Inicio() {
   const [selectedIncidentId, setSelectedIncidentId] = useState<number | null>(null);
   const [selectedAdministrador, setSelectedAdministrador] = useState<number | null>(null);
   const [administradores, setAdministradores] = useState<Administrador[]>([]);
+  const hasLoadedRef = useRef(false);
 
   useEffect(() => {
     if (!user) {
       navigate('/login');
       return;
     }
-    loadInicioData();
-  }, [user, navigate]);
+    
+    // Solo cargar una vez
+    if (!hasLoadedRef.current) {
+      hasLoadedRef.current = true;
+      loadInicioData();
+    }
+  }, [user]);
 
   const loadInicioData = async () => {
     setLoading(true);
     try {
-      const incidentsData = await incidentsService.getIncidents({ page: 1, limit: 5000 });
-
-      // Sin filtro de período, usar todas las incidencias
-      const allIncidents = incidentsData.data;
-
-      // Filtrar incidencias de hoy
+      // Obtener estadísticas generales del backend
+      const backendStats = await incidentsService.getStatistics();
+      
+      // Calcular fecha de hoy
       const today = new Date();
       today.setHours(0, 0, 0, 0);
-      const todayIncidents = allIncidents.filter((i: Incident) => 
-        new Date(i.createdAt) >= today
-      );
+      const todayStr = today.toISOString().split('T')[0];
+      
+      // Hacer peticiones en paralelo para optimizar
+      const [activeIncidentsData, todayIncidentsData, adminsData] = await Promise.all([
+        // Traer todas las incidencias activas (sin límite de paginación)
+        incidentsService.getIncidents({ 
+          page: 1, 
+          limit: 10000, // Límite alto para traer todas las activas
+          // No filtramos por estadoId para obtener todas y filtrar localmente por fecha
+        }),
+        // Incidencias de hoy para las estadísticas diarias
+        incidentsService.getIncidents({ 
+          page: 1, 
+          limit: 1000,
+          // Aquí también traemos todas para filtrar por fecha localmente
+        }),
+        // Administradores
+        administradoresService.getAdministradores()
+      ]);
 
-      // Estadísticas totales
-      const openTickets = allIncidents.filter((t: Incident) => t.estadoId === 1).length;
-      const inProgressTickets = allIncidents.filter((t: Incident) => t.estadoId === 2).length;
-      const closedTickets = allIncidents.filter((t: Incident) => t.estadoId === 3).length;
+      const allIncidents = activeIncidentsData.data;
+      
+      // Filtrar incidencias de hoy
+      const todayIncidents = allIncidents.filter((i: Incident) => {
+        const createdDate = new Date(i.createdAt);
+        createdDate.setHours(0, 0, 0, 0);
+        return createdDate.getTime() === today.getTime();
+      });
 
       // Estadísticas de hoy
       const todayOpenTickets = todayIncidents.filter((t: Incident) => t.estadoId === 1).length;
       const todayInProgressTickets = todayIncidents.filter((t: Incident) => t.estadoId === 2).length;
       const todayClosedTickets = todayIncidents.filter((t: Incident) => t.estadoId === 3).length;
 
+      // Calcular tiempo promedio de resolución (solo de las incidencias resueltas que tenemos)
       const resolvedIncidents = allIncidents.filter((t: Incident) => t.estadoId === 3);
       const totalResolutionTime = resolvedIncidents.reduce((acc: number, inc: Incident) => {
         if (inc.updatedAt) {
@@ -157,11 +182,11 @@ export function Inicio() {
         : 0;
 
       const statsData = {
-        totalIncidents: allIncidents.length,
-        activeIncidents: allIncidents.filter((i: Incident) => i.estadoId === 1 || i.estadoId === 2).length,
-        openTickets,
-        inProgressTickets,
-        closedTickets,
+        totalIncidents: backendStats.total,
+        activeIncidents: backendStats.pendientes + backendStats.enProceso,
+        openTickets: backendStats.pendientes,
+        inProgressTickets: backendStats.enProceso,
+        closedTickets: backendStats.resueltas,
         avgResolutionTime,
         todayActiveIncidents: todayIncidents.filter((i: Incident) => i.estadoId === 1 || i.estadoId === 2).length,
         todayOpenTickets,
@@ -171,15 +196,12 @@ export function Inicio() {
 
       setStats(statsData);
 
-      // Todas las incidencias activas con coordenadas para el mapa
+      // Solo incidencias activas con coordenadas para el mapa
       const activeForMap = allIncidents.filter((i: Incident) => 
         (i.estadoId === 1 || i.estadoId === 2) && i.latitude && i.longitude
       );
       
       setActiveIncidents(activeForMap);
-
-      // Cargar administradores desde el servicio
-      const adminsData = await administradoresService.getAdministradores();
       setAdministradores(adminsData);
     } catch (error) {
       console.error('❌ Error cargando datos de inicio:', error);
