@@ -15,6 +15,12 @@ export default defineConfig({
   server: {
     host: '0.0.0.0',
     port: 5173,
+    allowedHosts: [
+      'apps.movingenia.com',
+      'localhost',
+      '192.168.18.230',
+      '34.66.18.138'
+    ],
     proxy: {
       '/api': {
         target: 'http://192.168.18.230:3001',
