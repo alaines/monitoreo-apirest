@@ -10,12 +10,13 @@
 -- Credenciales:
 -- Usuario: admin
 -- Password: Admin123
+-- Hash: MD5
 -- ============================================
 
 INSERT INTO usuarios (usuario, password, nombres, apellido_paterno, apellido_materno, estado, rol)
 VALUES (
   'admin',
-  '$2b$10$rQ7HqW.5X8J8wH5yG3b5FOYvXNKp3fBJ7L2xL.LJ0Bx5H5qW8xZ0S', -- Admin123
+  'e64b78fc3bc91bcbc7dc232ba8ec59e0', -- MD5('Admin123')
   'Administrador',
   'Sistema',
   'Monitoreo',
