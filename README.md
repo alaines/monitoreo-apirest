@@ -6,6 +6,59 @@ Sistema integral de gestion y monitoreo de cruces semaforizados e incidencias de
 
 Aland Laines Calonge
 
+## 📚 Documentación de Instalación
+
+- **[📖 Guía de Instalación Completa](docs/INSTALLATION.md)** - Instalación detallada para desarrollo y producción
+- **[⚡ Guía Rápida](docs/guides/GUIA-RAPIDA.md)** - Inicio rápido para desarrollo
+- **[🔧 Configuración de Servidor](docs/architecture/SERVER-CONFIG.md)** - Configuración técnica de servidores
+
+## ⚡ Instalación Rápida
+
+### Desarrollo Local (5 minutos)
+```bash
+# 1. Clonar y entrar al proyecto
+git clone https://github.com/alaines/monitoreo-apirest.git
+cd monitoreo-apirest
+
+# 2. Instalar dependencias
+npm install
+
+# 3. Configurar PostgreSQL
+createdb monitoreo
+psql -d monitoreo -f database/current-schema.sql
+psql -d monitoreo -f database/init.sql
+
+# 4. Configurar variables de entorno
+cp .env.example .env
+# Editar .env con tus valores
+
+# 5. Iniciar aplicación
+npm run backend:dev  # Terminal 1
+npm run frontend:dev # Terminal 2
+```
+
+**Acceder:** http://localhost:5173  
+**Credenciales:** `admin` / `Admin123` (cambiar después del primer login)
+
+### Producción (Instalación Automática)
+```bash
+# Clonar repositorio
+git clone https://github.com/alaines/monitoreo-apirest.git
+cd monitoreo-apirest
+
+# Ejecutar instalador (requiere sudo)
+sudo ./scripts/install-production.sh
+```
+
+El script instalará automáticamente:
+- ✅ Node.js 20
+- ✅ PostgreSQL + PostGIS
+- ✅ PM2 (gestor de procesos)
+- ✅ Base de datos con usuario admin
+- ✅ Servicios configurados y corriendo
+
+Ver [Guía de Instalación](docs/INSTALLATION.md) para instalación manual o personalización.
+
 ## Descripcion
 
 Aplicacion web profesional para la gestion, seguimiento y analisis de cruces semaforizados, perifericos asociados e incidencias de trafico. Permite el registro completo de infraestructura vial, gestion de perifericos tecnicos, seguimiento de incidencias ciudadanas, y visualizacion geografica mediante mapas interactivos con priorizacion por nivel de urgencia.

@@ -58,3 +58,4 @@ prisma/migrations/
 
 # OS
 Thumbs.db
+.ppk
