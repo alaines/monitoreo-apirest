@@ -107,12 +107,13 @@ Sistema integral de gestion de cruces semaforizados, perifericos e incidencias p
 | US-020 | Como usuario, necesito exportar reportes a Excel con formato | 5 | 6 | PLANIFICADO |
 | US-021 | Como usuario, necesito exportar reportes a PDF con formato | 5 | 6 | PLANIFICADO |
 | US-022 | Como supervisor, necesito analizar tiempos de atencion por equipo | 8 | 6 | PLANIFICADO |
-| US-023 | Como administrador, necesito gestionar catalogos (tabla tipos) | 13 | 7 | PLANIFICADO |
-| US-024 | Como administrador, necesito gestion avanzada de usuarios | 13 | 7 | PLANIFICADO |
-| US-025 | Como administrador, necesito crear y gestionar perfiles de usuario | 13 | 7 | PLANIFICADO |
-| US-026 | Como administrador, necesito asignar permisos granulares por modulo | 13 | 7 | PLANIFICADO |
-| US-027 | Como sistema, necesito proteger rutas segun permisos del usuario | 8 | 7 | PLANIFICADO |
-| US-028 | Como administrador, necesito ver auditoria de cambios administrativos | 8 | 7 | PLANIFICADO |
+| US-023 | Como administrador, necesito gestionar catalogos (tabla tipos) | 13 | 7 | ✅ COMPLETADO |
+| US-024 | Como administrador, necesito gestion avanzada de usuarios | 13 | 7 | ✅ COMPLETADO |
+| US-025 | Como administrador, necesito crear y gestionar perfiles de usuario | 13 | 7 | ✅ COMPLETADO |
+| US-026 | Como administrador, necesito asignar permisos granulares por modulo | 13 | 7 | ✅ COMPLETADO |
+| US-027 | Como sistema, necesito proteger rutas segun permisos del usuario | 8 | 7 | ✅ COMPLETADO |
+| US-028 | Como administrador, necesito ver auditoria de cambios administrativos | 8 | 7 | ✅ COMPLETADO |
+| US-029 | Como administrador, necesito gestionar tablas maestras (Areas, Equipos, etc) | 21 | 7 | ✅ COMPLETADO |
 | US-029 | Como operador, necesito adjuntar fotos a las incidencias | 8 | 8 | PENDIENTE |
 | US-030 | Como tecnico, necesito ver perifericos montados en estructuras | 13 | 8 | PENDIENTE |
 
