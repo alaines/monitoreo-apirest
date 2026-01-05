@@ -95,6 +95,12 @@ export function CrucesMap() {
         administradoresService.getAdministradores()
       ]);
       
+      console.log('Datos cargados:', {
+        cruces: crucesData,
+        tipos: tiposData,
+        administradores: adminsData
+      });
+      
       // Filtrar solo cruces con coordenadas
       const crucesConCoordenadas = crucesData.data.filter(
         (cruce: Cruce) => cruce.latitud !== null && cruce.longitud !== null
@@ -104,8 +110,17 @@ export function CrucesMap() {
       setFilteredCruces(crucesConCoordenadas);
       setTipos(tiposData);
       setAdministradores(adminsData);
+      
+      console.log('Estados actualizados:', {
+        cruces: crucesConCoordenadas.length,
+        tipos: tiposData.length,
+        administradores: adminsData.length
+      });
     } catch (error) {
       console.error('Error loading data:', error);
+      if (error instanceof Error) {
+        console.error('Error details:', error.message, error.stack);
+      }
     } finally {
       setLoading(false);
     }
@@ -157,6 +172,13 @@ export function CrucesMap() {
   // Filtrar tipos por parent_id (categorías)
   const tiposGestion = tipos.filter(t => t.parent_id === 4); // GESTION
   const tiposComunicacion = tipos.filter(t => t.parent_id === 9); // COMUNICACION
+  
+  console.log('Tipos filtrados:', {
+    todosLosTipos: tipos.length,
+    tiposGestion: tiposGestion.length,
+    tiposComunicacion: tiposComunicacion.length,
+    administradores: administradores.length
+  });
 
   if (loading) {
     return (
