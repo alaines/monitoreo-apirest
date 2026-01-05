@@ -12,28 +12,23 @@ export class MenusService {
       },
       select: {
         id: true,
-        codigo: true,
         name: true,
-        modulo: true,
         url: true,
         icono: true,
-        orden: true,
+        parentId: true,
       },
-      orderBy: [
-        { modulo: 'asc' },
-        { orden: 'asc' },
-      ],
     });
 
     // Mapear name a nombre para consistencia con el frontend
     return menus.map(menu => ({
       id: menu.id,
-      codigo: menu.codigo || '',
+      codigo: '',
       nombre: menu.name || 'Sin nombre',
-      modulo: menu.modulo || 'Sin módulo',
+      modulo: 'Sistema',
       url: menu.url || '',
       icono: menu.icono || '',
-      orden: menu.orden || 0,
+      orden: 0,
+      parentId: menu.parentId,
     }));
   }
 }

@@ -16,11 +16,6 @@ export class AccionesService {
   async findOne(id: number) {
     const accion = await this.prisma.accion.findUnique({
       where: { id },
-      include: {
-        _count: {
-          select: { gruposMenus: true },
-        },
-      },
     });
 
     if (!accion) {
@@ -67,18 +62,7 @@ export class AccionesService {
   }
 
   async remove(id: number) {
-    const accion = await this.findOne(id);
-
-    // Verificar si está siendo usada en permisos
-    const permisosCount = await this.prisma.grupoMenu.count({
-      where: { accionId: id },
-    });
-
-    if (permisosCount > 0) {
-      throw new ConflictException(
-        `No se puede eliminar la acción "${accion.nombre}" porque está siendo usada en ${permisosCount} permiso(s)`
-      );
-    }
+    await this.findOne(id);
 
     return this.prisma.accion.delete({
       where: { id },

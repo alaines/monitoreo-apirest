@@ -29,25 +29,11 @@ export class PermisosService {
           select: {
             id: true,
             name: true,
-            codigo: true,
-            modulo: true,
             url: true,
             icono: true,
           },
         },
-        accion: {
-          select: {
-            id: true,
-            nombre: true,
-            codigo: true,
-          },
-        },
       },
-      orderBy: [
-        { menu: { modulo: 'asc' } },
-        { menu: { orden: 'asc' } },
-        { accion: { orden: 'asc' } },
-      ],
     });
   }
 
@@ -89,14 +75,12 @@ export class PermisosService {
       return false;
     }
 
+    // En producción, solo verificamos si tiene acceso al menú (sin acciones)
     const permiso = await this.prisma.grupoMenu.findFirst({
       where: {
         grupoId: usuario.grupoId,
         menu: {
-          codigo: menuCodigo,
-        },
-        accion: {
-          codigo: accionCodigo,
+          name: menuCodigo, // Usamos name ya que no existe codigo
         },
       },
     });
@@ -113,7 +97,6 @@ export class PermisosService {
       where: {
         grupoId: createPermisoDto.grupoId,
         menuId: createPermisoDto.menuId,
-        accionId: createPermisoDto.accionId,
       },
     });
 
@@ -122,10 +105,12 @@ export class PermisosService {
     }
 
     return this.prisma.grupoMenu.create({
-      data: createPermisoDto,
+      data: {
+        grupoId: createPermisoDto.grupoId,
+        menuId: createPermisoDto.menuId,
+      },
       include: {
         menu: true,
-        accion: true,
       },
     });
   }
@@ -134,26 +119,34 @@ export class PermisosService {
    * Crear múltiples permisos de un menú para un grupo
    */
   async bulkCreatePermisos(bulkCreatePermisosDto: BulkCreatePermisosDto) {
-    const { grupoId, menuId, accionesIds } = bulkCreatePermisosDto;
+    const { grupoId, menuId } = bulkCreatePermisosDto;
 
-    // Eliminar permisos existentes de este grupo+menú
-    await this.prisma.grupoMenu.deleteMany({
+    // Verificar que no exista
+    const existingPermiso = await this.prisma.grupoMenu.findFirst({
       where: {
         grupoId,
         menuId,
       },
     });
 
-    // Crear nuevos permisos
-    const permisosData = accionesIds.map((accionId) => ({
-      grupoId,
-      menuId,
-      accionId,
-    }));
+    if (existingPermiso) {
+      return this.prisma.grupoMenu.findMany({
+        where: {
+          grupoId,
+          menuId,
+        },
+        include: {
+          menu: true,
+        },
+      });
+    }
 
-    await this.prisma.grupoMenu.createMany({
-      data: permisosData,
-      skipDuplicates: true,
+    // Crear permiso
+    await this.prisma.grupoMenu.create({
+      data: {
+        grupoId,
+        menuId,
+      },
     });
 
     return this.prisma.grupoMenu.findMany({
@@ -162,7 +155,7 @@ export class PermisosService {
         menuId,
       },
       include: {
-        accion: true,
+        menu: true,
       },
     });
   }
@@ -171,15 +164,12 @@ export class PermisosService {
    * Eliminar permisos específicos
    */
   async bulkDeletePermisos(bulkDeletePermisosDto: BulkDeletePermisosDto) {
-    const { grupoId, menuId, accionesIds } = bulkDeletePermisosDto;
+    const { grupoId, menuId } = bulkDeletePermisosDto;
 
     const result = await this.prisma.grupoMenu.deleteMany({
       where: {
         grupoId,
         menuId,
-        accionId: {
-          in: accionesIds,
-        },
       },
     });
 
@@ -231,7 +221,6 @@ export class PermisosService {
     const permisosDestino = permisosOrigen.map((permiso) => ({
       grupoId: grupoDestinoId,
       menuId: permiso.menuId,
-      accionId: permiso.accionId,
     }));
 
     await this.prisma.grupoMenu.createMany({
