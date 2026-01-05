@@ -71,12 +71,16 @@ model Grupo {
 }
 
 model GrupoMenu {
-  id      Int   @id(map: "grupos_menus_pkey1") @default(autoincrement())
-  grupoId Int   @map("grupo_id")
-  menuId  Int   @map("menu_id")
-  grupo   Grupo @relation(fields: [grupoId], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "Ref_menus_has_grupos_to_grupos")
-  menu    Menu  @relation(fields: [menuId], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "fk_grupos_menus_menus")
+  id       Int    @id(map: "grupos_menus_pkey1") @default(autoincrement())
+  grupoId  Int    @map("grupo_id")
+  menuId   Int    @map("menu_id")
+  accionId Int    @map("accion_id")
+  accion   Accion @relation(fields: [accionId], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "fk_grupos_menus_acciones")
+  grupo    Grupo  @relation(fields: [grupoId], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "Ref_menus_has_grupos_to_grupos")
+  menu     Menu   @relation(fields: [menuId], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "fk_grupos_menus_menus")
 
+  @@unique([grupoId, menuId, accionId], map: "uk_grupo_menu_accion")
+  @@index([accionId], map: "idx_grupos_menus_accion_id")
   @@index([grupoId], map: "idx_grupos_menus_grupo_id")
   @@index([menuId], map: "idx_grupos_menus_menu_id")
   @@map("grupos_menus")
@@ -93,8 +97,12 @@ model Menu {
   icono       String?     @db.VarChar
   created     DateTime?   @db.Timestamp(6)
   modified    DateTime?   @db.Timestamp(6)
+  codigo      String?     @unique @db.VarChar(50)
+  modulo      String?     @db.VarChar(50)
+  orden       Int?        @default(0)
   gruposMenus GrupoMenu[]
 
+  @@index([codigo], map: "idx_menus_codigo")
   @@map("menus")
 }
 
@@ -424,14 +432,15 @@ model spatial_ref_sys {
 }
 
 model Accion {
-  id          Int       @id @default(autoincrement())
-  nombre      String    @db.VarChar(50)
-  codigo      String    @unique @db.VarChar(20)
-  descripcion String?   @db.VarChar(200)
-  orden       Int?      @default(0)
-  estado      Boolean?  @default(true)
-  createdAt   DateTime? @default(now()) @map("created") @db.Timestamp(6)
-  updatedAt   DateTime? @default(now()) @updatedAt @map("modified") @db.Timestamp(6)
+  id          Int         @id @default(autoincrement())
+  nombre      String      @db.VarChar(50)
+  codigo      String      @unique @db.VarChar(20)
+  descripcion String?     @db.VarChar(200)
+  orden       Int?        @default(0)
+  estado      Boolean?    @default(true)
+  createdAt   DateTime?   @default(now()) @map("created") @db.Timestamp(6)
+  updatedAt   DateTime?   @default(now()) @updatedAt @map("modified") @db.Timestamp(6)
+  gruposMenus GrupoMenu[]
 
   @@index([codigo], map: "idx_acciones_codigo")
   @@map("acciones")
