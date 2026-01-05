@@ -18,8 +18,8 @@ NC='\033[0m' # No Color
 # Variables de entorno
 PROD_SERVER="apps.movingenia.com"
 DB_SERVER="dbsrv.movingenia.com"
-PROD_USER="alaines"
-PROD_DIR="/home/alaines/monitoreo-apirest"
+PROD_USER="daddyplayerperu"
+PROD_DIR="/home/daddyplayerperu/monitoreo-apirest"
 BACKEND_PORT=3001
 FRONTEND_PORT=5173
 
@@ -36,7 +36,7 @@ echo -e "${GREEN}✅ Cambios enviados a GitHub${NC}"
 
 echo -e "${YELLOW}🔄 Paso 3: Conectando al servidor de producción (${PROD_SERVER})...${NC}"
 ssh ${PROD_USER}@${PROD_SERVER} << 'ENDSSH'
-cd /home/alaines/monitoreo-apirest || { echo "❌ Error: Directorio no encontrado"; exit 1; }
+cd /home/daddyplayerperu/monitoreo-apirest || { echo "❌ Error: Directorio no encontrado"; exit 1; }
 
 echo "📥 Descargando últimos cambios..."
 git pull origin main
