@@ -1,0 +1,207 @@
+// ============================================
+// PROPUESTA SCHEMA PERMISOS - Sprint 7
+// ============================================
+// Mantiene compatibilidad con sistema CakePHP
+// Extiende funcionalidad con permisos granulares
+// ============================================
+
+// ✅ MANTENER (sin cambios)
+model User {
+  id           Int       @id @default(autoincrement())
+  personaId    Int?      @map("persona_id")
+  usuario      String    @unique @db.VarChar(16)
+  grupoId      Int?      @map("grupo_id")        // FK a grupos (perfiles)
+  clave        String?   @db.VarChar
+  areaId       Int?      @map("area_id")
+  estado       Boolean   @default(true)
+  createdAt    DateTime? @map("created") @db.Timestamp(6)
+  updatedAt    DateTime? @map("modified") @db.Timestamp(6)
+  online       Boolean?
+  passwordHash String?   @map("password_hash")
+  
+  area         Area?     @relation(fields: [areaId], references: [id])
+  grupo        Grupo?    @relation(fields: [grupoId], references: [id])
+  persona      Persona?  @relation(fields: [personaId], references: [id])
+  
+  // ➕ Nuevas relaciones
+  auditorias   Auditoria[] @relation("usuario_auditor")
+
+  @@map("users")
+}
+
+// ✅ MANTENER (sin cambios)
+model Grupo {
+  id          Int         @id @default(autoincrement())
+  nombre      String?     @db.VarChar(16)
+  descripcion String?     @db.VarChar(100)
+  estado      Boolean     @default(true)
+  createdAt   DateTime?   @map("created") @db.Timestamp(6)
+  updatedAt   DateTime?   @map("modified") @db.Timestamp(6)
+  edicion     Boolean?
+  
+  gruposMenus GrupoMenu[]
+  users       User[]
+
+  @@map("grupos")
+}
+
+// 🔄 EXTENDER (agregar columnas de acciones)
+model GrupoMenu {
+  id            Int     @id @default(autoincrement())
+  menuId        Int     @map("menu_id")
+  grupoId       Int     @map("grupo_id")
+  
+  // ➕ Nuevas columnas de permisos granulares
+  puedeVer      Boolean @default(true)  @map("puede_ver")
+  puedeCrear    Boolean @default(false) @map("puede_crear")
+  puedeEditar   Boolean @default(false) @map("puede_editar")
+  puedeEliminar Boolean @default(false) @map("puede_eliminar")
+  puedeExportar Boolean @default(false) @map("puede_exportar")
+  
+  grupo   Grupo @relation(fields: [grupoId], references: [id], onDelete: Cascade)
+  menu    Menu  @relation(fields: [menuId], references: [id], onDelete: Cascade)
+
+  @@unique([grupoId, menuId], name: "idx_grupo_menu_unique")
+  @@index([grupoId])
+  @@index([menuId])
+  @@map("grupos_menus")
+}
+
+// 🔄 EXTENDER (agregar campos para mejor control)
+model Menu {
+  id          Int          @id @default(autoincrement())
+  parentId    Int?         @map("parent_id")
+  lft         Int?
+  rght        Int?
+  name        String?      @db.VarChar
+  estado      Boolean?
+  url         String?      @db.VarChar
+  icono       String?      @db.VarChar
+  created     DateTime?    @db.Timestamp(6)
+  modified    DateTime?    @db.Timestamp(6)
+  
+  // ➕ Nuevos campos
+  codigo      String?      @unique @db.VarChar(50)  // 'usuarios', 'tickets', 'reportes', etc.
+  modulo      String?      @db.VarChar(50)          // 'administracion', 'operaciones', etc.
+  orden       Int?         @default(0)               // Orden de visualización
+  
+  gruposMenus GrupoMenu[]
+  parent      Menu?        @relation("MenuToParent", fields: [parentId], references: [id])
+  children    Menu[]       @relation("MenuToParent")
+
+  @@index([parentId])
+  @@index([codigo])
+  @@map("menus")
+}
+
+// ➕ NUEVA TABLA - Auditoría de cambios
+model Auditoria {
+  id              Int      @id @default(autoincrement())
+  usuarioId       Int      @map("usuario_id")
+  tabla           String   @db.VarChar(50)           // 'users', 'tickets', etc.
+  registroId      Int      @map("registro_id")        // ID del registro modificado
+  accion          String   @db.VarChar(20)           // 'CREATE', 'UPDATE', 'DELETE'
+  datosAnteriores Json?    @map("datos_anteriores")   // Estado previo (UPDATE/DELETE)
+  datosNuevos     Json?    @map("datos_nuevos")       // Estado nuevo (CREATE/UPDATE)
+  ip              String?  @db.VarChar(45)           // IPv4 o IPv6
+  userAgent       String?  @map("user_agent") @db.Text
+  createdAt       DateTime @default(now()) @map("created") @db.Timestamp(6)
+  
+  usuario User @relation("usuario_auditor", fields: [usuarioId], references: [id])
+
+  @@index([usuarioId])
+  @@index([tabla, registroId])
+  @@index([accion])
+  @@index([createdAt])
+  @@map("auditoria")
+}
+
+// ➕ NUEVA TABLA - Configuración general (OPCIONAL)
+model Configuracion {
+  id          Int       @id @default(autoincrement())
+  clave       String    @unique @db.VarChar(100)    // 'sistema.nombre', 'email.smtp', etc.
+  valor       String?   @db.Text                     // Valor del parámetro
+  descripcion String?   @db.Text                     // Descripción del parámetro
+  tipo        String?   @default("string") @db.VarChar(20) // 'string', 'number', 'boolean', 'json'
+  editable    Boolean   @default(true)               // Si puede editarse desde UI
+  createdAt   DateTime? @map("created") @db.Timestamp(6)
+  updatedAt   DateTime? @map("modified") @db.Timestamp(6)
+
+  @@index([clave])
+  @@map("configuracion")
+}
+
+// ============================================
+// DATOS SEMILLA (SEEDS) - Grupos predefinidos
+// ============================================
+
+/*
+INSERT INTO grupos (id, nombre, descripcion, estado, edicion) VALUES
+  (1, 'SUPER_ADMIN',    'Super Administrador del Sistema', true, false),
+  (2, 'ADMINISTRADOR',  'Administrador General',           true, false),
+  (3, 'SUPERVISOR',     'Supervisor de Operaciones',       true, true),
+  (4, 'OPERADOR',       'Operador de Campo',               true, true),
+  (5, 'TECNICO',        'Técnico Especialista',            true, true),
+  (6, 'CONSULTA',       'Solo Consulta',                   true, true);
+
+-- Grupos con edicion=false: No se pueden eliminar ni modificar permisos (críticos)
+-- Grupos con edicion=true: Se pueden personalizar
+*/
+
+// ============================================
+// EJEMPLO DE PERMISOS - Grupo ADMINISTRADOR
+// ============================================
+
+/*
+-- Menú: Usuarios (menu_id = 1)
+INSERT INTO grupos_menus (grupo_id, menu_id, puede_ver, puede_crear, puede_editar, puede_eliminar, puede_exportar) 
+VALUES (2, 1, true, true, true, true, true);
+
+-- Menú: Tickets (menu_id = 2)  
+INSERT INTO grupos_menus (grupo_id, menu_id, puede_ver, puede_crear, puede_editar, puede_eliminar, puede_exportar)
+VALUES (2, 2, true, true, true, false, true);
+
+-- Menú: Reportes (menu_id = 3) - Solo ver y exportar
+INSERT INTO grupos_menus (grupo_id, menu_id, puede_ver, puede_crear, puede_editar, puede_eliminar, puede_exportar)
+VALUES (2, 3, true, false, false, false, true);
+*/
+
+// ============================================
+// MIGRACIÓN DESDE SISTEMA ACTUAL
+// ============================================
+
+/*
+-- 1. Agregar columnas a grupos_menus
+ALTER TABLE grupos_menus 
+  ADD COLUMN puede_ver      BOOLEAN DEFAULT true,
+  ADD COLUMN puede_crear    BOOLEAN DEFAULT false,
+  ADD COLUMN puede_editar   BOOLEAN DEFAULT false,
+  ADD COLUMN puede_eliminar BOOLEAN DEFAULT false,
+  ADD COLUMN puede_exportar BOOLEAN DEFAULT false;
+
+-- 2. Actualizar registros existentes (dar todos los permisos a lo que ya existía)
+UPDATE grupos_menus 
+SET 
+  puede_ver = true,
+  puede_crear = true,
+  puede_editar = true,
+  puede_eliminar = true,
+  puede_exportar = true
+WHERE puede_ver IS NULL;
+
+-- 3. Agregar campos a menus
+ALTER TABLE menus
+  ADD COLUMN codigo VARCHAR(50) UNIQUE,
+  ADD COLUMN modulo VARCHAR(50),
+  ADD COLUMN orden  INTEGER DEFAULT 0;
+
+-- 4. Actualizar códigos de menús existentes
+UPDATE menus SET codigo = 'inicio'          WHERE id = 1;
+UPDATE menus SET codigo = 'tickets'         WHERE id = 2;
+UPDATE menus SET codigo = 'reportes'        WHERE id = 3;
+UPDATE menus SET codigo = 'administracion'  WHERE id = 4;
+
+-- 5. Crear tablas nuevas
+CREATE TABLE auditoria (...);
+CREATE TABLE configuracion (...);
+*/

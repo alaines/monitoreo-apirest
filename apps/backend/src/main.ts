@@ -28,25 +28,51 @@ async function bootstrap() {
     }),
   );
 
-  // Swagger documentation (configurar ANTES del global prefix)
+  // Global prefix PRIMERO
+  app.setGlobalPrefix('api');
+
+  // Swagger documentation (configurar DESPUÉS del global prefix)
   const config = new DocumentBuilder()
     .setTitle('Monitoreo API')
     .setDescription('Sistema de Gestión de Incidencias de Semáforos')
     .setVersion('1.0')
     .addBearerAuth()
-    .addServer('http://192.168.18.230:3001/api/', 'LAN Backend')
-    .addServer('http://localhost:3001/api/', 'Local Backend')
-    .addTag('auth', 'Autenticación')
+    .addServer('http://192.168.18.230:3001', 'Servidor LAN')
+    .addServer('http://localhost:3001', 'Servidor Local')
+    // Organización de tags por módulo
+    .addTag('🔐 Autenticación', '')
+    .addTag('auth', 'Autenticación y Seguridad')
+    .addTag('👥 Administración', '')
     .addTag('users', 'Gestión de Usuarios')
+    .addTag('grupos', 'Gestión de Grupos')
+    .addTag('menus', 'Gestión de Menús')
+    .addTag('acciones', 'Acciones de Permisos')
+    .addTag('permisos', 'Gestión de Permisos')
+    .addTag('�️ Mantenimientos', '')
+    .addTag('areas', 'Áreas')
+    .addTag('equipos', 'Equipos de Trabajo')
+    .addTag('reportadores', 'Reportadores')
+    .addTag('responsables', 'Responsables')
+    .addTag('proyectos', 'Proyectos')
+    .addTag('incidencias', 'Tipos de Incidencias')
+    .addTag('📁 Catálogos', '')
+    .addTag('tipos', 'Tipos Jerárquicos (Cruces)')
+    .addTag('ubigeos', 'Ubigeos (Departamentos, Provincias, Distritos)')
+    .addTag('administradores', 'Administradores de Entidades')
+    .addTag('ejes', 'Ejes Viales')
+    .addTag('🚦 Operaciones', '')
     .addTag('incidents', 'Gestión de Incidencias')
+    .addTag('cruces', 'Gestión de Cruces')
+    .addTag('perifericos', 'Gestión de Periféricos')
+    .addTag('📊 Reportes', '')
+    .addTag('reportes', 'Reportes y Estadísticas')
     .build();
 
-  const document = SwaggerModule.createDocument(app, config);
+  const document = SwaggerModule.createDocument(app, config, {
+    operationIdFactory: (controllerKey: string, methodKey: string) => methodKey,
+  });
   
-  // Global prefix ANTES de Swagger para que las rutas se generen correctamente
-  app.setGlobalPrefix('api');
-  
-  // Swagger usando CDN para evitar problemas con rutas relativas
+  // Swagger con configuración mejorada (ruta 'docs' porque el prefix 'api' ya se aplicó)
   SwaggerModule.setup('docs', app, document, {
     swaggerOptions: {
       persistAuthorization: true,

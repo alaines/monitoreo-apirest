@@ -10,11 +10,22 @@ export function Layout({ children }: { children: React.ReactNode }) {
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const [crucesSubmenuOpen, setCrucesSubmenuOpen] = useState(false);
   const [reportesSubmenuOpen, setReportesSubmenuOpen] = useState(false);
+  const [adminSubmenuOpen, setAdminSubmenuOpen] = useState(false);
+  const [mantenimientosSubmenuOpen, setMantenimientosSubmenuOpen] = useState(false);
 
-  const canManageUsers = user?.grupo?.nombre === 'ADMINISTRADOR' || user?.grupo?.nombre === 'SUPERVISOR';
+  const canManageUsers = user?.grupo?.nombre === 'SUPER_ADMIN' || 
+                         user?.grupo?.nombre === 'ADMINISTRADOR' || 
+                         user?.grupo?.nombre === 'SUPERVISOR';
 
   const isActive = (path: string) => location.pathname === path;
   const isActivePath = (path: string) => location.pathname.startsWith(path);
+
+  // Debug: mostrar datos del usuario en consola
+  useEffect(() => {
+    console.log('Usuario actual:', user);
+    console.log('Grupo:', user?.grupo);
+    console.log('Puede gestionar usuarios:', canManageUsers);
+  }, [user, canManageUsers]);
 
   // Abrir automáticamente el submenú de cruces si estamos en una ruta de cruces
   useEffect(() => {
@@ -23,6 +34,12 @@ export function Layout({ children }: { children: React.ReactNode }) {
     }
     if (isActivePath('/reportes')) {
       setReportesSubmenuOpen(true);
+    }
+    if (isActivePath('/admin')) {
+      setAdminSubmenuOpen(true);
+    }
+    if (isActivePath('/mantenimientos')) {
+      setMantenimientosSubmenuOpen(true);
     }
   }, [location.pathname]);
 
@@ -58,6 +75,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
           {isActive('/incidents') && 'Gestión de Incidencias'}
           {isActivePath('/cruces') && 'Cruces'}
           {isActivePath('/reportes') && 'Reportes'}
+          {isActivePath('/admin') && 'Administración'}
           {isActive('/users') && 'Gestión de Usuarios'}
         </div>
 
@@ -289,30 +307,331 @@ export function Layout({ children }: { children: React.ReactNode }) {
             )}
           </div>
 
+          {/* Administración con submenú */}
           {canManageUsers && (
-            <button
-              onClick={() => navigate('/users')}
-              style={{
-                width: '100%',
-                padding: '12px 20px',
-                border: 'none',
-                background: isActive('/users') ? 'rgba(95, 149, 152, 0.2)' : 'transparent',
-                color: 'white',
-                textAlign: 'left',
-                cursor: 'pointer',
-                display: 'flex',
-                alignItems: 'center',
-                gap: '12px',
-                fontSize: '14px',
-                transition: 'background 0.2s',
-                borderLeft: isActive('/users') ? '4px solid var(--primary)' : '4px solid transparent'
-              }}
-              onMouseEnter={(e) => !isActive('/users') && (e.currentTarget.style.background = 'rgba(255,255,255,0.05)')}
-              onMouseLeave={(e) => !isActive('/users') && (e.currentTarget.style.background = 'transparent')}
-            >
-              <i className="fas fa-users" style={{ width: '20px' }}></i>
-              Usuarios
-            </button>
+            <div>
+              <button
+                onClick={() => setAdminSubmenuOpen(!adminSubmenuOpen)}
+                style={{
+                  width: '100%',
+                  padding: '12px 20px',
+                  border: 'none',
+                  background: isActivePath('/admin') ? 'rgba(95, 149, 152, 0.2)' : 'transparent',
+                  color: 'white',
+                  textAlign: 'left',
+                  cursor: 'pointer',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '12px',
+                  fontSize: '14px',
+                  transition: 'background 0.2s',
+                  borderLeft: isActivePath('/admin') ? '4px solid var(--primary-light)' : '4px solid transparent'
+                }}
+                onMouseEnter={(e) => !isActivePath('/admin') && (e.currentTarget.style.background = 'rgba(255,255,255,0.05)')}
+                onMouseLeave={(e) => !isActivePath('/admin') && (e.currentTarget.style.background = 'transparent')}
+              >
+                <i className="fas fa-cog" style={{ width: '20px' }}></i>
+                Administración
+                <i
+                  className={`fas fa-chevron-${adminSubmenuOpen ? 'down' : 'right'} ms-auto`}
+                  style={{ fontSize: '12px' }}
+                ></i>
+              </button>
+
+              {adminSubmenuOpen && (
+                <div style={{ background: 'rgba(0,0,0,0.2)', paddingLeft: '20px' }}>
+                  <button
+                    onClick={() => navigate('/admin/users')}
+                    style={{
+                      width: '100%',
+                      padding: '10px 20px',
+                      border: 'none',
+                      background: isActive('/admin/users') ? 'rgba(95, 149, 152, 0.3)' : 'transparent',
+                      color: 'white',
+                      textAlign: 'left',
+                      cursor: 'pointer',
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '12px',
+                      fontSize: '13px',
+                      transition: 'background 0.2s'
+                    }}
+                    onMouseEnter={(e) => !isActive('/admin/users') && (e.currentTarget.style.background = 'rgba(255,255,255,0.05)')}
+                    onMouseLeave={(e) => !isActive('/admin/users') && (e.currentTarget.style.background = 'transparent')}
+                  >
+                    <i className="fas fa-users" style={{ width: '16px', fontSize: '12px' }}></i>
+                    Usuarios
+                  </button>
+
+                  <button
+                    onClick={() => navigate('/admin/grupos')}
+                    style={{
+                      width: '100%',
+                      padding: '10px 20px',
+                      border: 'none',
+                      background: isActive('/admin/grupos') ? 'rgba(95, 149, 152, 0.3)' : 'transparent',
+                      color: 'white',
+                      textAlign: 'left',
+                      cursor: 'pointer',
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '12px',
+                      fontSize: '13px',
+                      transition: 'background 0.2s'
+                    }}
+                    onMouseEnter={(e) => !isActive('/admin/grupos') && (e.currentTarget.style.background = 'rgba(255,255,255,0.05)')}
+                    onMouseLeave={(e) => !isActive('/admin/grupos') && (e.currentTarget.style.background = 'transparent')}
+                  >
+                    <i className="fas fa-shield-alt" style={{ width: '16px', fontSize: '12px' }}></i>
+                    Grupos y Permisos
+                  </button>
+                </div>
+              )}
+            </div>
+          )}
+
+          {/* Mantenimientos con submenú */}
+          {canManageUsers && (
+            <div>
+              <button
+                onClick={() => setMantenimientosSubmenuOpen(!mantenimientosSubmenuOpen)}
+                style={{
+                  width: '100%',
+                  padding: '12px 20px',
+                  border: 'none',
+                  background: isActivePath('/mantenimientos') ? 'rgba(95, 149, 152, 0.2)' : 'transparent',
+                  color: 'white',
+                  textAlign: 'left',
+                  cursor: 'pointer',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '12px',
+                  fontSize: '14px',
+                  transition: 'background 0.2s',
+                  borderLeft: isActivePath('/mantenimientos') ? '4px solid var(--primary-light)' : '4px solid transparent'
+                }}
+                onMouseEnter={(e) => !isActivePath('/mantenimientos') && (e.currentTarget.style.background = 'rgba(255,255,255,0.05)')}
+                onMouseLeave={(e) => !isActivePath('/mantenimientos') && (e.currentTarget.style.background = 'transparent')}
+              >
+                <i className="fas fa-cogs" style={{ width: '20px' }}></i>
+                Mantenimientos
+                <i
+                  className={`fas fa-chevron-${mantenimientosSubmenuOpen ? 'down' : 'right'} ms-auto`}
+                  style={{ fontSize: '12px' }}
+                ></i>
+              </button>
+
+              {mantenimientosSubmenuOpen && (
+                <div style={{ background: 'rgba(0,0,0,0.2)', paddingLeft: '20px' }}>
+                  <button
+                    onClick={() => navigate('/mantenimientos/tipos')}
+                    style={{
+                      width: '100%',
+                      padding: '10px 20px',
+                      border: 'none',
+                      background: isActive('/mantenimientos/tipos') ? 'rgba(95, 149, 152, 0.3)' : 'transparent',
+                      color: 'white',
+                      textAlign: 'left',
+                      cursor: 'pointer',
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '12px',
+                      fontSize: '13px',
+                      transition: 'background 0.2s'
+                    }}
+                    onMouseEnter={(e) => !isActive('/mantenimientos/tipos') && (e.currentTarget.style.background = 'rgba(255,255,255,0.05)')}
+                    onMouseLeave={(e) => !isActive('/mantenimientos/tipos') && (e.currentTarget.style.background = 'transparent')}
+                  >
+                    <i className="fas fa-folder-tree" style={{ width: '16px', fontSize: '12px' }}></i>
+                    Tipos
+                  </button>
+
+                  <button
+                    onClick={() => navigate('/mantenimientos/areas')}
+                    style={{
+                      width: '100%',
+                      padding: '10px 20px',
+                      border: 'none',
+                      background: isActive('/mantenimientos/areas') ? 'rgba(95, 149, 152, 0.3)' : 'transparent',
+                      color: 'white',
+                      textAlign: 'left',
+                      cursor: 'pointer',
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '12px',
+                      fontSize: '13px',
+                      transition: 'background 0.2s'
+                    }}
+                    onMouseEnter={(e) => !isActive('/mantenimientos/areas') && (e.currentTarget.style.background = 'rgba(255,255,255,0.05)')}
+                    onMouseLeave={(e) => !isActive('/mantenimientos/areas') && (e.currentTarget.style.background = 'transparent')}
+                  >
+                    <i className="fas fa-building" style={{ width: '16px', fontSize: '12px' }}></i>
+                    Áreas
+                  </button>
+
+                  <button
+                    onClick={() => navigate('/mantenimientos/equipos')}
+                    style={{
+                      width: '100%',
+                      padding: '10px 20px',
+                      border: 'none',
+                      background: isActive('/mantenimientos/equipos') ? 'rgba(95, 149, 152, 0.3)' : 'transparent',
+                      color: 'white',
+                      textAlign: 'left',
+                      cursor: 'pointer',
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '12px',
+                      fontSize: '13px',
+                      transition: 'background 0.2s'
+                    }}
+                    onMouseEnter={(e) => !isActive('/mantenimientos/equipos') && (e.currentTarget.style.background = 'rgba(255,255,255,0.05)')}
+                    onMouseLeave={(e) => !isActive('/mantenimientos/equipos') && (e.currentTarget.style.background = 'transparent')}
+                  >
+                    <i className="fas fa-users-cog" style={{ width: '16px', fontSize: '12px' }}></i>
+                    Equipos
+                  </button>
+
+                  <button
+                    onClick={() => navigate('/mantenimientos/reportadores')}
+                    style={{
+                      width: '100%',
+                      padding: '10px 20px',
+                      border: 'none',
+                      background: isActive('/mantenimientos/reportadores') ? 'rgba(95, 149, 152, 0.3)' : 'transparent',
+                      color: 'white',
+                      textAlign: 'left',
+                      cursor: 'pointer',
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '12px',
+                      fontSize: '13px',
+                      transition: 'background 0.2s'
+                    }}
+                    onMouseEnter={(e) => !isActive('/mantenimientos/reportadores') && (e.currentTarget.style.background = 'rgba(255,255,255,0.05)')}
+                    onMouseLeave={(e) => !isActive('/mantenimientos/reportadores') && (e.currentTarget.style.background = 'transparent')}
+                  >
+                    <i className="fas fa-user-tie" style={{ width: '16px', fontSize: '12px' }}></i>
+                    Reportadores
+                  </button>
+
+                  <button
+                    onClick={() => navigate('/mantenimientos/responsables')}
+                    style={{
+                      width: '100%',
+                      padding: '10px 20px',
+                      border: 'none',
+                      background: isActive('/mantenimientos/responsables') ? 'rgba(95, 149, 152, 0.3)' : 'transparent',
+                      color: 'white',
+                      textAlign: 'left',
+                      cursor: 'pointer',
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '12px',
+                      fontSize: '13px',
+                      transition: 'background 0.2s'
+                    }}
+                    onMouseEnter={(e) => !isActive('/mantenimientos/responsables') && (e.currentTarget.style.background = 'rgba(255,255,255,0.05)')}
+                    onMouseLeave={(e) => !isActive('/mantenimientos/responsables') && (e.currentTarget.style.background = 'transparent')}
+                  >
+                    <i className="fas fa-user-check" style={{ width: '16px', fontSize: '12px' }}></i>
+                    Responsables
+                  </button>
+
+                  <button
+                    onClick={() => navigate('/mantenimientos/administradores')}
+                    style={{
+                      width: '100%',
+                      padding: '10px 20px',
+                      border: 'none',
+                      background: isActive('/mantenimientos/administradores') ? 'rgba(95, 149, 152, 0.3)' : 'transparent',
+                      color: 'white',
+                      textAlign: 'left',
+                      cursor: 'pointer',
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '12px',
+                      fontSize: '13px',
+                      transition: 'background 0.2s'
+                    }}
+                    onMouseEnter={(e) => !isActive('/mantenimientos/administradores') && (e.currentTarget.style.background = 'rgba(255,255,255,0.05)')}
+                    onMouseLeave={(e) => !isActive('/mantenimientos/administradores') && (e.currentTarget.style.background = 'transparent')}
+                  >
+                    <i className="fas fa-user-shield" style={{ width: '16px', fontSize: '12px' }}></i>
+                    Administradores
+                  </button>
+
+                  <button
+                    onClick={() => navigate('/mantenimientos/ejes')}
+                    style={{
+                      width: '100%',
+                      padding: '10px 20px',
+                      border: 'none',
+                      background: isActive('/mantenimientos/ejes') ? 'rgba(95, 149, 152, 0.3)' : 'transparent',
+                      color: 'white',
+                      textAlign: 'left',
+                      cursor: 'pointer',
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '12px',
+                      fontSize: '13px',
+                      transition: 'background 0.2s'
+                    }}
+                    onMouseEnter={(e) => !isActive('/mantenimientos/ejes') && (e.currentTarget.style.background = 'rgba(255,255,255,0.05)')}
+                    onMouseLeave={(e) => !isActive('/mantenimientos/ejes') && (e.currentTarget.style.background = 'transparent')}
+                  >
+                    <i className="fas fa-road" style={{ width: '16px', fontSize: '12px' }}></i>
+                    Ejes
+                  </button>
+
+                  <button
+                    onClick={() => navigate('/mantenimientos/proyectos')}
+                    style={{
+                      width: '100%',
+                      padding: '10px 20px',
+                      border: 'none',
+                      background: isActive('/mantenimientos/proyectos') ? 'rgba(95, 149, 152, 0.3)' : 'transparent',
+                      color: 'white',
+                      textAlign: 'left',
+                      cursor: 'pointer',
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '12px',
+                      fontSize: '13px',
+                      transition: 'background 0.2s'
+                    }}
+                    onMouseEnter={(e) => !isActive('/mantenimientos/proyectos') && (e.currentTarget.style.background = 'rgba(255,255,255,0.05)')}
+                    onMouseLeave={(e) => !isActive('/mantenimientos/proyectos') && (e.currentTarget.style.background = 'transparent')}
+                  >
+                    <i className="fas fa-project-diagram" style={{ width: '16px', fontSize: '12px' }}></i>
+                    Proyectos
+                  </button>
+
+                  <button
+                    onClick={() => navigate('/mantenimientos/incidencias')}
+                    style={{
+                      width: '100%',
+                      padding: '10px 20px',
+                      border: 'none',
+                      background: isActive('/mantenimientos/incidencias') ? 'rgba(95, 149, 152, 0.3)' : 'transparent',
+                      color: 'white',
+                                      textAlign: 'left',
+                      cursor: 'pointer',
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '12px',
+                      fontSize: '13px',
+                      transition: 'background 0.2s'
+                    }}
+                    onMouseEnter={(e) => !isActive('/mantenimientos/incidencias') && (e.currentTarget.style.background = 'rgba(255,255,255,0.05)')}
+                    onMouseLeave={(e) => !isActive('/mantenimientos/incidencias') && (e.currentTarget.style.background = 'transparent')}
+                  >
+                    <i className="fas fa-exclamation-triangle" style={{ width: '16px', fontSize: '12px' }}></i>
+                    Tipos de Incidencias
+                  </button>
+                </div>
+              )}
+            </div>
           )}
         </nav>
 

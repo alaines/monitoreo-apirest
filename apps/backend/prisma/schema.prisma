@@ -10,20 +10,21 @@ datasource db {
 }
 
 model User {
-  id           Int       @id(map: "usuarios_pkey") @default(autoincrement())
-  personaId    Int?      @map("persona_id")
-  usuario      String    @unique @db.VarChar(16)
-  grupoId      Int?      @map("grupo_id")
-  clave        String?   @db.VarChar
-  areaId       Int?      @map("area_id")
-  estado       Boolean   @default(true)
-  createdAt    DateTime? @map("created") @db.Timestamp(6)
-  updatedAt    DateTime? @map("modified") @db.Timestamp(6)
+  id           Int          @id(map: "usuarios_pkey") @default(autoincrement())
+  personaId    Int?         @map("persona_id")
+  usuario      String       @unique @db.VarChar(16)
+  grupoId      Int?         @map("grupo_id")
+  clave        String?      @db.VarChar
+  areaId       Int?         @map("area_id")
+  estado       Boolean      @default(true)
+  createdAt    DateTime?    @map("created") @db.Timestamp(6)
+  updatedAt    DateTime?    @map("modified") @db.Timestamp(6)
   online       Boolean?
-  passwordHash String?   @map("password_hash")
-  area         Area?     @relation(fields: [areaId], references: [id], onDelete: Cascade, map: "usuarios_areas")
-  grupo        Grupo?    @relation(fields: [grupoId], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "usuarios_grupos")
-  persona      Persona?  @relation(fields: [personaId], references: [id], onDelete: Cascade, map: "usuarios_personas")
+  passwordHash String?      @map("password_hash")
+  auditorias   Auditoria[]  @relation("usuario_auditor")
+  area         Area?        @relation(fields: [areaId], references: [id], onDelete: Cascade, map: "usuarios_areas")
+  grupo        Grupo?       @relation(fields: [grupoId], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "usuarios_grupos")
+  persona      Persona?     @relation(fields: [personaId], references: [id], onDelete: Cascade, map: "usuarios_personas")
 
   @@map("users")
 }
@@ -55,40 +56,53 @@ model Persona {
 }
 
 model Grupo {
-  id          Int         @id @default(autoincrement())
-  nombre      String?     @db.VarChar(16)
-  descripcion String?     @db.VarChar(100)
-  estado      Boolean     @default(true)
-  createdAt   DateTime?   @map("created") @db.Timestamp(6)
-  updatedAt   DateTime?   @map("modified") @db.Timestamp(6)
-  edicion     Boolean?
-  gruposMenus GrupoMenu[]
-  users       User[]
+  id                  Int                   @id @default(autoincrement())
+  nombre              String?               @db.VarChar(16)
+  descripcion         String?               @db.VarChar(100)
+  estado              Boolean               @default(true)
+  createdAt           DateTime?             @map("created") @db.Timestamp(6)
+  updatedAt           DateTime?             @map("modified") @db.Timestamp(6)
+  edicion             Boolean?
+  gruposMenus         GrupoMenu[]
+  grupos_menus_backup grupos_menus_backup[]
+  users               User[]
 
   @@map("grupos")
 }
 
 model GrupoMenu {
-  id      Int   @id @default(autoincrement())
-  menuId  Int   @map("menu_id")
-  grupoId Int   @map("grupo_id")
-  grupo   Grupo @relation(fields: [grupoId], references: [id], onDelete: Cascade, map: "Ref_menus_has_grupos_to_grupos")
+  id       Int    @id(map: "grupos_menus_pkey1") @default(autoincrement())
+  grupoId  Int    @map("grupo_id")
+  menuId   Int    @map("menu_id")
+  accionId Int    @map("accion_id")
+  accion   Accion @relation(fields: [accionId], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "fk_grupos_menus_acciones")
+  grupo    Grupo  @relation(fields: [grupoId], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "Ref_menus_has_grupos_to_grupos")
+  menu     Menu   @relation(fields: [menuId], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "fk_grupos_menus_menus")
 
+  @@unique([grupoId, menuId, accionId], map: "uk_grupo_menu_accion")
+  @@index([accionId], map: "idx_grupos_menus_accion_id")
+  @@index([grupoId], map: "idx_grupos_menus_grupo_id")
+  @@index([menuId], map: "idx_grupos_menus_menu_id")
   @@map("grupos_menus")
 }
 
 model Menu {
-  id       Int       @id @default(autoincrement())
-  parentId Int?      @map("parent_id")
-  lft      Int?
-  rght     Int?
-  name     String?   @db.VarChar
-  estado   Boolean?
-  url      String?   @db.VarChar
-  icono    String?   @db.VarChar
-  created  DateTime? @db.Timestamp(6)
-  modified DateTime? @db.Timestamp(6)
+  id          Int         @id @default(autoincrement())
+  parentId    Int?        @map("parent_id")
+  lft         Int?
+  rght        Int?
+  name        String?     @db.VarChar
+  estado      Boolean?
+  url         String?     @db.VarChar
+  icono       String?     @db.VarChar
+  created     DateTime?   @db.Timestamp(6)
+  modified    DateTime?   @db.Timestamp(6)
+  codigo      String?     @unique @db.VarChar(50)
+  modulo      String?     @db.VarChar(50)
+  orden       Int?        @default(0)
+  gruposMenus GrupoMenu[]
 
+  @@index([codigo], map: "idx_menus_codigo")
   @@map("menus")
 }
 
@@ -141,6 +155,9 @@ model Ticket {
   reportadorId           Int?                     @map("reportadore_id")
   reportadorNombres      String?                  @map("reportadore_nombres") @db.VarChar(255)
   reportadorDatoContacto String?                  @map("reportadore_dato_contacto") @db.VarChar(255)
+  dia                    Int?
+  mes                    Int?
+  anho                   Int?
   geom                   Unsupported("geometry")?
   seguimientos           TicketSeguimiento[]
   cruce                  Cruce?                   @relation(fields: [cruceId], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "Tickets_to_cruces")
@@ -178,6 +195,7 @@ model TicketSeguimiento {
   createdAt       DateTime?    @map("created") @db.Timestamp(6)
   usuarioRegistra String?      @map("usuario_registra") @db.VarChar(255)
   updatedAt       DateTime?    @map("modified") @db.Timestamp(6)
+  diagnostico     String?
   responsable     Responsable? @relation(fields: [responsableId], references: [id], onDelete: Cascade, map: "Ticket_seguimientos_to_reponsables")
   ticket          Ticket?      @relation(fields: [ticketId], references: [id], onDelete: Cascade, map: "ticket_seguimientos_Tickets")
   equipo          Equipo?      @relation(fields: [equipoId], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "ticket_seguimientos_to_equipos")
@@ -269,6 +287,7 @@ model Cruce {
   usuarioRegistra     String?                  @map("usuario_registra") @db.VarChar(255)
   electricoEmpresa    String?                  @map("electrico_empresa") @db.VarChar(255)
   electricoSuministro String?                  @map("electrico_suministro") @db.VarChar(255)
+  plataforma          Int?
   geom                Unsupported("geometry")?
   administrador       Administrador?           @relation(fields: [administradorId], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "fk_cruces_administradores_1")
   proyecto            Proyecto                 @relation(fields: [proyectoId], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "fk_cruces_proyectos_1")
@@ -410,4 +429,61 @@ model spatial_ref_sys {
   auth_srid Int?
   srtext    String? @db.VarChar(2048)
   proj4text String? @db.VarChar(2048)
+}
+
+model Accion {
+  id          Int         @id @default(autoincrement())
+  nombre      String      @db.VarChar(50)
+  codigo      String      @unique @db.VarChar(20)
+  descripcion String?     @db.VarChar(200)
+  orden       Int?        @default(0)
+  estado      Boolean?    @default(true)
+  createdAt   DateTime?   @default(now()) @map("created") @db.Timestamp(6)
+  updatedAt   DateTime?   @default(now()) @updatedAt @map("modified") @db.Timestamp(6)
+  gruposMenus GrupoMenu[]
+
+  @@index([codigo], map: "idx_acciones_codigo")
+  @@map("acciones")
+}
+
+model Auditoria {
+  id              Int       @id @default(autoincrement())
+  usuarioId       Int       @map("usuario_id")
+  tabla           String    @db.VarChar(50)
+  registroId      Int?      @map("registro_id")
+  accion          String    @db.VarChar(20)
+  datosAnteriores Json?     @map("datos_anteriores")
+  datosNuevos     Json?     @map("datos_nuevos")
+  ip              String?   @db.VarChar(45)
+  userAgent       String?   @map("user_agent")
+  createdAt       DateTime? @default(now()) @map("created") @db.Timestamp(6)
+  usuario         User      @relation("usuario_auditor", fields: [usuarioId], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "fk_auditoria_users")
+
+  @@index([accion], map: "idx_auditoria_accion")
+  @@index([createdAt], map: "idx_auditoria_created")
+  @@index([tabla, registroId], map: "idx_auditoria_tabla_registro")
+  @@index([usuarioId], map: "idx_auditoria_usuario_id")
+  @@map("auditoria")
+}
+
+model Configuracion {
+  id          Int       @id @default(autoincrement())
+  clave       String    @unique @db.VarChar(100)
+  valor       String?
+  descripcion String?
+  tipo        String?   @default("string") @db.VarChar(20)
+  editable    Boolean?  @default(true)
+  createdAt   DateTime? @default(now()) @map("created") @db.Timestamp(6)
+  updatedAt   DateTime? @default(now()) @updatedAt @map("modified") @db.Timestamp(6)
+
+  @@index([clave], map: "idx_configuracion_clave")
+  @@map("configuracion")
+}
+
+/// This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments
+model grupos_menus_backup {
+  id       Int   @id(map: "grupos_menus_pkey") @default(autoincrement())
+  menu_id  Int
+  grupo_id Int
+  grupos   Grupo @relation(fields: [grupo_id], references: [id], onDelete: Cascade, map: "Ref_menus_has_grupos_to_grupos")
 }

@@ -6,11 +6,14 @@ import {
   Header,
   UseGuards,
 } from '@nestjs/common';
+import { ApiTags, ApiBearerAuth } from '@nestjs/swagger';
 import { Response } from 'express';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { ReportesService } from './reportes.service';
 import { ReporteIncidenciasDto } from './dto/reporte-incidencias.dto';
 
+@ApiTags('reportes')
+@ApiBearerAuth()
 @Controller('reportes')
 @UseGuards(JwtAuthGuard)
 export class ReportesController {

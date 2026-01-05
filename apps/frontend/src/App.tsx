@@ -14,6 +14,17 @@ import { CruceDetail } from './features/cruces/CruceDetail';
 import { CrucesMap } from './features/cruces/CrucesMap';
 import { ReporteIncidencias } from './features/reportes/ReporteIncidencias';
 import ReporteGrafico from './features/reportes/ReporteGrafico';
+import { UsersManagement } from './features/admin/users/UsersManagement';
+import { GruposPermisosManagement } from './features/admin/grupos/GruposPermisosManagement';
+import { CatalogosManagement } from './features/admin/catalogos/CatalogosManagement';
+import AreasManagement from './features/mantenimientos/areas/AreasManagement';
+import EquiposManagement from './features/mantenimientos/equipos/EquiposManagement';
+import ReportadoresManagement from './features/mantenimientos/reportadores/ReportadoresManagement';
+import ResponsablesManagement from './features/mantenimientos/responsables/ResponsablesManagement';
+import AdministradoresManagement from './features/mantenimientos/administradores/AdministradoresManagement';
+import EjesManagement from './features/mantenimientos/ejes/EjesManagement';
+import ProyectosManagement from './features/mantenimientos/proyectos/ProyectosManagement';
+import IncidenciasManagement from './features/mantenimientos/incidencias/IncidenciasManagement';
 
 function App() {
   const { initialize, isAuthenticated } = useAuthStore();
@@ -145,6 +156,126 @@ function App() {
             <ProtectedRoute>
               <Layout>
                 <ReporteGrafico />
+              </Layout>
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/admin/users"
+          element={
+            <ProtectedRoute>
+              <Layout>
+                <UsersManagement />
+              </Layout>
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/admin/grupos"
+          element={
+            <ProtectedRoute>
+              <Layout>
+                <GruposPermisosManagement />
+              </Layout>
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/admin/catalogos"
+          element={
+            <ProtectedRoute>
+              <Layout>
+                <CatalogosManagement />
+              </Layout>
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/mantenimientos/tipos"
+          element={
+            <ProtectedRoute>
+              <Layout>
+                <CatalogosManagement />
+              </Layout>
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/mantenimientos/areas"
+          element={
+            <ProtectedRoute>
+              <Layout>
+                <AreasManagement />
+              </Layout>
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/mantenimientos/equipos"
+          element={
+            <ProtectedRoute>
+              <Layout>
+                <EquiposManagement />
+              </Layout>
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/mantenimientos/reportadores"
+          element={
+            <ProtectedRoute>
+              <Layout>
+                <ReportadoresManagement />
+              </Layout>
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/mantenimientos/responsables"
+          element={
+            <ProtectedRoute>
+              <Layout>
+                <ResponsablesManagement />
+              </Layout>
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/mantenimientos/administradores"
+          element={
+            <ProtectedRoute>
+              <Layout>
+                <AdministradoresManagement />
+              </Layout>
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/mantenimientos/ejes"
+          element={
+            <ProtectedRoute>
+              <Layout>
+                <EjesManagement />
+              </Layout>
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/mantenimientos/proyectos"
+          element={
+            <ProtectedRoute>
+              <Layout>
+                <ProyectosManagement />
+              </Layout>
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/mantenimientos/incidencias"
+          element={
+            <ProtectedRoute>
+              <Layout>
+                <IncidenciasManagement />
               </Layout>
             </ProtectedRoute>
           }

@@ -8,6 +8,7 @@ import {
   Delete,
   Query,
   UseGuards,
+  UseInterceptors,
   ParseIntPipe,
 } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth, ApiQuery } from '@nestjs/swagger';
@@ -16,10 +17,13 @@ import { CreateUserDto, UpdateUserDto, UserResponseDto } from './dto/user.dto';
 import { Roles } from '../common/decorators/roles.decorator';
 import { RolesGuard } from '../common/guards/roles.guard';
 import { CurrentUser } from '../common/decorators/current-user.decorator';
+import { RequirePermission } from '../common/decorators/permissions.decorator';
+import { AuditInterceptor } from '../common/interceptors/audit.interceptor';
 
 @ApiTags('users')
 @ApiBearerAuth()
 @Controller('users')
+@UseInterceptors(AuditInterceptor)
 export class UsersController {
   constructor(private readonly usersService: UsersService) {}
 
@@ -31,9 +35,8 @@ export class UsersController {
   }
 
   @Post()
-  @UseGuards(RolesGuard)
-  @Roles('ADMINISTRADOR')
-  @ApiOperation({ summary: 'Crear nuevo usuario (solo admin)' })
+  @RequirePermission('users', 'create')
+  @ApiOperation({ summary: 'Crear nuevo usuario' })
   @ApiResponse({ status: 201, description: 'Usuario creado exitosamente', type: UserResponseDto })
   @ApiResponse({ status: 403, description: 'No autorizado' })
   @ApiResponse({ status: 409, description: 'Usuario ya existe' })
@@ -42,9 +45,8 @@ export class UsersController {
   }
 
   @Get()
-  @UseGuards(RolesGuard)
-  @Roles('ADMINISTRADOR', 'SUPERVISOR')
-  @ApiOperation({ summary: 'Obtener lista de usuarios (admin/supervisor)' })
+  @RequirePermission('users', 'view')
+  @ApiOperation({ summary: 'Obtener lista de usuarios' })
   @ApiQuery({ name: 'page', required: false, type: Number })
   @ApiQuery({ name: 'limit', required: false, type: Number })
   @ApiResponse({ status: 200, description: 'Lista de usuarios obtenida exitosamente' })
@@ -56,9 +58,8 @@ export class UsersController {
   }
 
   @Get(':id')
-  @UseGuards(RolesGuard)
-  @Roles('ADMINISTRADOR', 'SUPERVISOR')
-  @ApiOperation({ summary: 'Obtener usuario por ID (admin/supervisor)' })
+  @RequirePermission('users', 'view')
+  @ApiOperation({ summary: 'Obtener usuario por ID' })
   @ApiResponse({ status: 200, description: 'Usuario encontrado', type: UserResponseDto })
   @ApiResponse({ status: 404, description: 'Usuario no encontrado' })
   findOne(@Param('id', ParseIntPipe) id: number) {
@@ -66,9 +67,8 @@ export class UsersController {
   }
 
   @Patch(':id')
-  @UseGuards(RolesGuard)
-  @Roles('ADMINISTRADOR')
-  @ApiOperation({ summary: 'Actualizar usuario (solo admin)' })
+  @RequirePermission('users', 'edit')
+  @ApiOperation({ summary: 'Actualizar usuario' })
   @ApiResponse({ status: 200, description: 'Usuario actualizado exitosamente', type: UserResponseDto })
   @ApiResponse({ status: 404, description: 'Usuario no encontrado' })
   update(@Param('id', ParseIntPipe) id: number, @Body() updateUserDto: UpdateUserDto) {
@@ -76,9 +76,8 @@ export class UsersController {
   }
 
   @Delete(':id')
-  @UseGuards(RolesGuard)
-  @Roles('ADMINISTRADOR')
-  @ApiOperation({ summary: 'Desactivar usuario (solo admin)' })
+  @RequirePermission('users', 'delete')
+  @ApiOperation({ summary: 'Desactivar usuario' })
   @ApiResponse({ status: 200, description: 'Usuario desactivado exitosamente' })
   @ApiResponse({ status: 404, description: 'Usuario no encontrado' })
   remove(@Param('id', ParseIntPipe) id: number) {
