@@ -1,5 +1,5 @@
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { useAuthStore } from './features/auth/authStore';
 import { ProtectedRoute } from './components/ProtectedRoute';
 import { LoginPage } from './features/auth/pages/LoginPage';
@@ -28,10 +28,22 @@ import IncidenciasManagement from './features/mantenimientos/incidencias/Inciden
 
 function App() {
   const { initialize, isAuthenticated } = useAuthStore();
+  const [isInitialized, setIsInitialized] = useState(false);
 
   useEffect(() => {
     initialize();
+    setIsInitialized(true);
   }, [initialize]);
+
+  if (!isInitialized) {
+    return (
+      <div className="d-flex justify-content-center align-items-center" style={{ minHeight: '100vh' }}>
+        <div className="spinner-border" role="status">
+          <span className="visually-hidden">Cargando...</span>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <BrowserRouter>
