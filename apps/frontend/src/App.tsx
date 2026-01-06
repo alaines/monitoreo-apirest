@@ -14,6 +14,7 @@ import { CruceDetail } from './features/cruces/CruceDetail';
 import { CrucesMap } from './features/cruces/CrucesMap';
 import { ReporteIncidencias } from './features/reportes/ReporteIncidencias';
 import ReporteGrafico from './features/reportes/ReporteGrafico';
+import { MapaCalor } from './features/reportes/MapaCalor';
 import { UsersManagement } from './features/admin/users/UsersManagement';
 import { GruposPermisosManagement } from './features/admin/grupos/GruposPermisosManagement';
 import { CatalogosManagement } from './features/admin/catalogos/CatalogosManagement';
@@ -170,6 +171,16 @@ function App() {
             <ProtectedRoute>
               <Layout>
                 <ReporteGrafico />
+              </Layout>
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/reportes/mapa"
+          element={
+            <ProtectedRoute>
+              <Layout>
+                <MapaCalor />
               </Layout>
             </ProtectedRoute>
           }
