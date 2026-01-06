@@ -227,13 +227,13 @@ export function Inicio() {
             <div className="card border-0 shadow-sm h-100">
               <div className="card-body">
                 <div className="d-flex justify-content-between align-items-start mb-2">
-                  <h6 className="text-muted mb-0">Incidencias Activas</h6>
-                  <i className="fas fa-exclamation-circle" style={{ fontSize: '24px', color: '#dc3545' }}></i>
+                  <h6 className="text-muted mb-0">Pendientes Hoy</h6>
+                  <i className="fas fa-exclamation-circle" style={{ fontSize: '24px', color: '#ffc107' }}></i>
                 </div>
-                <h2 className="mb-0" style={{ fontSize: '1.5rem' }}>
-                  Hoy {stats?.todayActiveIncidents} / Total {stats?.activeIncidents}
+                <h2 className="mb-0" style={{ fontSize: '2.5rem', fontWeight: 'bold' }}>
+                  {stats?.todayOpenTickets || 0}
                 </h2>
-                <small className="text-muted">Tiempo real</small>
+                <small className="text-muted">Tickets sin atender del día</small>
               </div>
             </div>
           </div>
@@ -241,13 +241,13 @@ export function Inicio() {
             <div className="card border-0 shadow-sm h-100">
               <div className="card-body">
                 <div className="d-flex justify-content-between align-items-start mb-2">
-                  <h6 className="text-muted mb-0">Pendientes</h6>
-                  <i className="fas fa-ticket-alt" style={{ fontSize: '24px', color: '#ffc107' }}></i>
+                  <h6 className="text-muted mb-0">Cerrados Hoy</h6>
+                  <i className="fas fa-check-circle" style={{ fontSize: '24px', color: '#28a745' }}></i>
                 </div>
-                <h2 className="mb-0" style={{ fontSize: '1.5rem' }}>
-                  Hoy {stats?.todayOpenTickets} / Total {stats?.openTickets}
+                <h2 className="mb-0" style={{ fontSize: '2.5rem', fontWeight: 'bold' }}>
+                  {stats?.todayClosedTickets || 0}
                 </h2>
-                <small className="text-muted">Sin atender</small>
+                <small className="text-muted">Tickets resueltos del día</small>
               </div>
             </div>
           </div>
@@ -255,13 +255,13 @@ export function Inicio() {
             <div className="card border-0 shadow-sm h-100">
               <div className="card-body">
                 <div className="d-flex justify-content-between align-items-start mb-2">
-                  <h6 className="text-muted mb-0">En Progreso</h6>
-                  <i className="fas fa-spinner" style={{ fontSize: '24px', color: '#0056b3' }}></i>
+                  <h6 className="text-muted mb-0">Total Activos</h6>
+                  <i className="fas fa-tasks" style={{ fontSize: '24px', color: '#0056b3' }}></i>
                 </div>
-                <h2 className="mb-0" style={{ fontSize: '1.5rem' }}>
-                  Hoy {stats?.todayInProgressTickets} / Total {stats?.inProgressTickets}
+                <h2 className="mb-0" style={{ fontSize: '2.5rem', fontWeight: 'bold' }}>
+                  {stats?.activeIncidents || 0}
                 </h2>
-                <small className="text-muted">En atención</small>
+                <small className="text-muted">Todos los tickets abiertos</small>
               </div>
             </div>
           </div>
@@ -269,11 +269,13 @@ export function Inicio() {
             <div className="card border-0 shadow-sm h-100">
               <div className="card-body">
                 <div className="d-flex justify-content-between align-items-start mb-2">
-                  <h6 className="text-muted mb-0">Tiempo Promedio</h6>
-                  <i className="fas fa-clock" style={{ fontSize: '24px', color: '#28a745' }}></i>
+                  <h6 className="text-muted mb-0">Total Resueltos</h6>
+                  <i className="fas fa-check-double" style={{ fontSize: '24px', color: '#17a2b8' }}></i>
                 </div>
-                <h2 className="mb-0">{stats?.avgResolutionTime.toFixed(1)}h</h2>
-                <small className="text-muted">Resolución</small>
+                <h2 className="mb-0" style={{ fontSize: '2.5rem', fontWeight: 'bold' }}>
+                  {stats?.closedTickets || 0}
+                </h2>
+                <small className="text-muted">Histórico de cerrados</small>
               </div>
             </div>
           </div>
