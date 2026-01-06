@@ -252,7 +252,7 @@ export class IncidentsService {
       this.prisma.ticket.count(),
       this.prisma.ticket.count({ where: { estadoId: 1 } }),
       this.prisma.ticket.count({ where: { estadoId: 2 } }),
-      this.prisma.ticket.count({ where: { estadoId: 3 } }),
+      this.prisma.ticket.count({ where: { estadoId: { in: [3, 4] } } }),
     ]);
 
     return {
