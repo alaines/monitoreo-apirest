@@ -41,6 +41,18 @@ export class QueryIncidentsDto {
   @IsOptional()
   cruceId?: number;
 
+  @ApiPropertyOptional({ description: 'ID del administrador del cruce' })
+  @Type(() => Number)
+  @IsInt()
+  @IsOptional()
+  administradorId?: number;
+
+  @ApiPropertyOptional({ description: 'Año del ticket' })
+  @Type(() => Number)
+  @IsInt()
+  @IsOptional()
+  anho?: number;
+
   @ApiPropertyOptional({ description: 'Búsqueda en descripción' })
   @IsString()
   @IsOptional()

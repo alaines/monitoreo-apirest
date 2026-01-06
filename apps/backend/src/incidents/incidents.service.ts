@@ -33,7 +33,7 @@ export class IncidentsService {
   }
 
   async findAll(query: QueryIncidentsDto) {
-    const { page = 1, limit = 10, estadoId, incidenciaId, equipoId, cruceId, search } = query;
+    const { page = 1, limit = 10, estadoId, incidenciaId, equipoId, cruceId, administradorId, anho, search } = query;
     const skip = (page - 1) * limit;
 
     const where: any = {};
@@ -42,6 +42,15 @@ export class IncidentsService {
     if (incidenciaId) where.incidenciaId = incidenciaId;
     if (equipoId) where.equipoId = equipoId;
     if (cruceId) where.cruceId = cruceId;
+    if (anho) where.anho = anho;
+    
+    // Filtro por administrador a través de la relación con cruce
+    if (administradorId) {
+      where.cruce = {
+        administradorId: administradorId,
+      };
+    }
+    
     if (search) {
       where.descripcion = {
         contains: search,

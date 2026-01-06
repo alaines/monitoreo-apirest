@@ -67,6 +67,8 @@ export interface QueryIncidentsDto {
   estadoId?: number;
   incidenciaId?: number;
   equipoId?: number;
+  administradorId?: number;
+  anho?: number;
   search?: string;
 }
 

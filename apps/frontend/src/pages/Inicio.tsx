@@ -104,10 +104,13 @@ export function Inicio() {
   const { user } = useAuthStore();
   const [stats, setStats] = useState<InicioStats | null>(null);
   const [loading, setLoading] = useState(true);
+  const [loadingMarkers, setLoadingMarkers] = useState(false);
   const [activeIncidents, setActiveIncidents] = useState<Incident[]>([]);
   const [detailModalOpen, setDetailModalOpen] = useState(false);
   const [selectedIncidentId, setSelectedIncidentId] = useState<number | null>(null);
   const [selectedAdministrador, setSelectedAdministrador] = useState<number | null>(null);
+  const currentYear = new Date().getFullYear();
+  const [selectedAnho, setSelectedAnho] = useState<number>(currentYear);
   const [administradores, setAdministradores] = useState<Administrador[]>([]);
   const hasLoadedRef = useRef(false);
 
@@ -124,6 +127,13 @@ export function Inicio() {
     }
   }, [user]);
 
+  // Recargar markers cuando cambian los filtros
+  useEffect(() => {
+    if (hasLoadedRef.current && administradores.length > 0) {
+      loadActiveIncidents();
+    }
+  }, [selectedAnho, selectedAdministrador]);
+
   const loadInicioData = async () => {
     setLoading(true);
     try {
@@ -136,24 +146,17 @@ export function Inicio() {
       const todayStr = today.toISOString().split('T')[0];
       
       // Hacer peticiones en paralelo para optimizar
-      const [activeIncidentsData, todayIncidentsData, adminsData] = await Promise.all([
-        // Traer todas las incidencias activas (sin límite de paginación)
-        incidentsService.getIncidents({ 
-          page: 1, 
-          limit: 10000, // Límite alto para traer todas las activas
-          // No filtramos por estadoId para obtener todas y filtrar localmente por fecha
-        }),
+      const [todayIncidentsData, adminsData] = await Promise.all([
         // Incidencias de hoy para las estadísticas diarias
         incidentsService.getIncidents({ 
           page: 1, 
           limit: 1000,
-          // Aquí también traemos todas para filtrar por fecha localmente
         }),
         // Administradores
         administradoresService.getAdministradores()
       ]);
 
-      const allIncidents = activeIncidentsData.data;
+      const allIncidents = todayIncidentsData.data;
       
       // Filtrar incidencias de hoy
       const todayIncidents = allIncidents.filter((i: Incident) => {
@@ -195,18 +198,44 @@ export function Inicio() {
       };
 
       setStats(statsData);
-
-      // Solo incidencias activas con coordenadas para el mapa
-      const activeForMap = allIncidents.filter((i: Incident) => 
-        (i.estadoId === 1 || i.estadoId === 2) && i.latitude && i.longitude
-      );
-      
-      setActiveIncidents(activeForMap);
       setAdministradores(adminsData);
+      
+      // Cargar incidents activos del año actual
+      await loadActiveIncidents();
     } catch (error) {
       console.error('❌ Error cargando datos de inicio:', error);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const loadActiveIncidents = async () => {
+    try {
+      setLoadingMarkers(true);
+      
+      const params: any = {
+        page: 1,
+        limit: 10000,
+        anho: selectedAnho,
+      };
+      
+      // Solo agregar administradorId si está seleccionado
+      if (selectedAdministrador) {
+        params.administradorId = selectedAdministrador;
+      }
+      
+      const activeIncidentsData = await incidentsService.getIncidents(params);
+      
+      // Solo incidencias activas con coordenadas para el mapa
+      const activeForMap = activeIncidentsData.data.filter((i: Incident) => 
+        (i.estadoId === 1 || i.estadoId === 2) && i.latitude && i.longitude
+      );
+      
+      setActiveIncidents(activeForMap);
+    } catch (error) {
+      console.error('❌ Error cargando incidentes activos:', error);
+    } finally {
+      setLoadingMarkers(false);
     }
   };
 
@@ -303,7 +332,7 @@ export function Inicio() {
                     <p className="text-muted mb-0">Las incidencias deben tener ubicación geográfica para mostrarse en el mapa</p>
                   </div>
                 )}
-                {/* Filtro de administrador */}
+                {/* Filtro de administrador y año */}
                 <div style={{
                   position: 'absolute',
                   top: '20px',
@@ -316,13 +345,34 @@ export function Inicio() {
                   fontSize: '13px',
                   minWidth: '220px'
                 }}>
+                  <div style={{ marginBottom: '10px' }}>
+                    <label style={{ fontSize: '12px', color: '#333', fontWeight: 'bold', display: 'block', marginBottom: '6px' }}>
+                      <i className="fas fa-calendar-alt me-2"></i>
+                      Año:
+                    </label>
+                    <select 
+                      className="form-select form-select-sm"
+                      value={selectedAnho}
+                      onChange={(e) => setSelectedAnho(parseInt(e.target.value))}
+                      style={{ fontSize: '12px' }}
+                      disabled={loadingMarkers}
+                    >
+                      {Array.from({ length: 10 }, (_, i) => currentYear - i).map(year => (
+                        <option key={year} value={year}>{year}</option>
+                      ))}
+                    </select>
+                  </div>
                   <div style={{ marginBottom: '8px' }}>
-                    <label style={{ fontSize: '12px', color: '#333', fontWeight: 'bold', display: 'block', marginBottom: '6px' }}>Administrado por:</label>
+                    <label style={{ fontSize: '12px', color: '#333', fontWeight: 'bold', display: 'block', marginBottom: '6px' }}>
+                      <i className="fas fa-user-tie me-2"></i>
+                      Administrado por:
+                    </label>
                     <select 
                       className="form-select form-select-sm"
                       value={selectedAdministrador || ''}
                       onChange={(e) => setSelectedAdministrador(e.target.value ? parseInt(e.target.value) : null)}
                       style={{ fontSize: '12px' }}
+                      disabled={loadingMarkers}
                     >
                       <option value="">Todos</option>
                       {administradores.map(admin => (
@@ -330,8 +380,13 @@ export function Inicio() {
                       ))}
                     </select>
                   </div>
-                  <div style={{ fontSize: '11px', color: '#666', paddingTop: '8px', borderTop: '1px solid #eee' }}>
-                    {activeIncidents.filter(inc => !selectedAdministrador || inc.cruce?.administrador?.id === selectedAdministrador).length} incidencias
+                  <div style={{ fontSize: '11px', color: '#666', paddingTop: '8px', borderTop: '1px solid #eee', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                    <span>{activeIncidents.length} incidencias activas</span>
+                    {loadingMarkers && (
+                      <div className="spinner-border spinner-border-sm text-primary" role="status" style={{ width: '14px', height: '14px' }}>
+                        <span className="visually-hidden">Cargando...</span>
+                      </div>
+                    )}
                   </div>
                 </div>
                 <div style={{ height: '100%', width: '100%' }}>
@@ -341,9 +396,7 @@ export function Inicio() {
                   >
                     <MapResizer />
                     <TileLayer url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" />
-                    {activeIncidents
-                      .filter(inc => !selectedAdministrador || inc.cruce?.administrador?.id === selectedAdministrador)
-                      .map((incident) => {
+                    {activeIncidents.map((incident) => {
                       if (!incident.latitude || !incident.longitude) return null;
                       const markerIcon = getMarkerIcon(incident.incidencia?.prioridad?.id);
                       return (

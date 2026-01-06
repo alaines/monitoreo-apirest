@@ -66,79 +66,39 @@ export function CrucesMap() {
   const [cruces, setCruces] = useState<Cruce[]>([]);
   const [filteredCruces, setFilteredCruces] = useState<Cruce[]>([]);
   const [loading, setLoading] = useState(true);
-  const [loadingMarkers, setLoadingMarkers] = useState(false);
   const [tipos, setTipos] = useState<Tipo[]>([]);
   const [administradores, setAdministradores] = useState<Administrador[]>([]);
   
   // Filtros
-  const currentYear = new Date().getFullYear();
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedTipoGestion, setSelectedTipoGestion] = useState<number | null>(null);
   const [selectedTipoComunicacion, setSelectedTipoComunicacion] = useState<number | null>(null);
   const [selectedAdministrador, setSelectedAdministrador] = useState<number | null>(null);
-  const [selectedAnho, setSelectedAnho] = useState<number>(currentYear);
-  const [selectedEstadoId, setSelectedEstadoId] = useState<number[]>([1, 2]); // Por defecto: Pendiente y En Proceso
   
   // Centro del mapa (Lima, Perú)
   const [mapCenter] = useState<[number, number]>([-12.0464, -77.0428]);
 
   useEffect(() => {
-    loadInitialData();
+    loadData();
   }, []);
 
   useEffect(() => {
-    loadCruces();
-  }, [selectedAdministrador, selectedAnho]);
-
-  useEffect(() => {
     applyFilters();
-  }, [searchTerm, selectedTipoGestion, selectedTipoComunicacion, cruces]);
+  }, [searchTerm, selectedTipoGestion, selectedTipoComunicacion, selectedAdministrador, cruces]);
 
-  const loadInitialData = async () => {
+  const loadData = async () => {
     try {
       setLoading(true);
-      const [tiposData, adminsData] = await Promise.all([
+      const [crucesData, tiposData, adminsData] = await Promise.all([
+        crucesService.getCruces({ limit: 10000 }),
         tiposService.getTipos(),
         administradoresService.getAdministradores()
       ]);
       
-      setTipos(tiposData);
-      setAdministradores(adminsData);
-      
-      // Cargar cruces con filtros por defecto
-      await loadCruces();
-    } catch (error) {
-      console.error('Error loading initial data:', error);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const loadCruces = async () => {
-    try {
-      setLoadingMarkers(true);
-      
-      const params: any = { 
-        limit: 10000,
-        anho: selectedAnho
-      };
-      
-      // Solo agregar administradorId si está seleccionado
-      if (selectedAdministrador) {
-        params.administradorId = selectedAdministrador;
-      }
-      
-      // Filtrar por tickets activos (estados 1 y 2)
-      if (selectedEstadoId.length > 0) {
-        // Por ahora solo soportamos un estadoId en el backend
-        params.estadoId = selectedEstadoId[0];
-      }
-      
-      const crucesData = await crucesService.getCruces(params);
-      
       console.log('Datos cargados:', {
         cruces: crucesData,
-        filtros: params
+        tipos: tiposData,
+        administradores: adminsData
       });
       
       // Filtrar solo cruces con coordenadas
@@ -148,17 +108,21 @@ export function CrucesMap() {
       
       setCruces(crucesConCoordenadas);
       setFilteredCruces(crucesConCoordenadas);
+      setTipos(tiposData);
+      setAdministradores(adminsData);
       
       console.log('Estados actualizados:', {
-        cruces: crucesConCoordenadas.length
+        cruces: crucesConCoordenadas.length,
+        tipos: tiposData.length,
+        administradores: adminsData.length
       });
     } catch (error) {
-      console.error('Error loading cruces:', error);
+      console.error('Error loading data:', error);
       if (error instanceof Error) {
         console.error('Error details:', error.message, error.stack);
       }
     } finally {
-      setLoadingMarkers(false);
+      setLoading(false);
     }
   };
 
@@ -197,8 +161,6 @@ export function CrucesMap() {
     setSelectedTipoGestion(null);
     setSelectedTipoComunicacion(null);
     setSelectedAdministrador(null);
-    setSelectedAnho(currentYear);
-    setSelectedEstadoId([1, 2]);
   };
 
   const getTipoNombre = (id: number | undefined | null) => {
@@ -239,8 +201,7 @@ export function CrucesMap() {
             Mapa de Cruces
           </h2>
           <p className="text-muted mb-0">
-            Visualización de {filteredCruces.length} cruce{filteredCruces.length !== 1 ? 's' : ''} con tickets activos del año {selectedAnho}
-            {selectedAdministrador && ` - ${administradores.find(a => a.id === selectedAdministrador)?.nombre}`}
+            Visualización geográfica de {filteredCruces.length} cruce{filteredCruces.length !== 1 ? 's' : ''}
           </p>
         </div>
       </div>
@@ -249,7 +210,7 @@ export function CrucesMap() {
       <div className="card shadow-sm mb-3" style={{ flexShrink: 0 }}>
         <div className="card-body">
           <div className="row g-3">
-            <div className="col-md-2">
+            <div className="col-md-3">
               <label className="form-label fw-bold">
                 <i className="fas fa-search me-2"></i>
                 Búsqueda
@@ -257,48 +218,13 @@ export function CrucesMap() {
               <input
                 type="text"
                 className="form-control"
-                placeholder="Código, nombre..."
+                placeholder="Código, nombre o distrito..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
               />
             </div>
 
-            <div className="col-md-2">
-              <label className="form-label fw-bold">
-                <i className="fas fa-calendar-alt me-2"></i>
-                Año
-              </label>
-              <select
-                className="form-select"
-                value={selectedAnho}
-                onChange={(e) => setSelectedAnho(parseInt(e.target.value))}
-                disabled={loadingMarkers}
-              >
-                {Array.from({ length: 10 }, (_, i) => currentYear - i).map(year => (
-                  <option key={year} value={year}>{year}</option>
-                ))}
-              </select>
-            </div>
-
-            <div className="col-md-2">
-              <label className="form-label fw-bold">
-                <i className="fas fa-user-tie me-2"></i>
-                Administrador
-              </label>
-              <select
-                className="form-select"
-                value={selectedAdministrador || ''}
-                onChange={(e) => setSelectedAdministrador(e.target.value ? parseInt(e.target.value) : null)}
-                disabled={loadingMarkers}
-              >
-                <option value="">Todos</option>
-                {administradores.map(admin => (
-                  <option key={admin.id} value={admin.id}>{admin.nombre}</option>
-                ))}
-              </select>
-            </div>
-
-            <div className="col-md-2">
+            <div className="col-md-3">
               <label className="form-label fw-bold">
                 <i className="fas fa-cogs me-2"></i>
                 Tipo de Gestión
@@ -315,10 +241,10 @@ export function CrucesMap() {
               </select>
             </div>
 
-            <div className="col-md-2">
+            <div className="col-md-3">
               <label className="form-label fw-bold">
                 <i className="fas fa-wifi me-2"></i>
-                Comunicación
+                Tipo de Comunicación
               </label>
               <select
                 className="form-select"
@@ -332,20 +258,31 @@ export function CrucesMap() {
               </select>
             </div>
 
-            <div className="col-md-2 d-flex align-items-end gap-2">
+            <div className="col-md-2">
+              <label className="form-label fw-bold">
+                <i className="fas fa-user-tie me-2"></i>
+                Administrador
+              </label>
+              <select
+                className="form-select"
+                value={selectedAdministrador || ''}
+                onChange={(e) => setSelectedAdministrador(e.target.value ? parseInt(e.target.value) : null)}
+              >
+                <option value="">Todos</option>
+                {administradores.map(admin => (
+                  <option key={admin.id} value={admin.id}>{admin.nombre}</option>
+                ))}
+              </select>
+            </div>
+
+            <div className="col-md-1 d-flex align-items-end">
               <button
-                className="btn btn-outline-secondary flex-grow-1"
+                className="btn btn-outline-secondary w-100"
                 onClick={clearFilters}
                 title="Limpiar filtros"
-                disabled={loadingMarkers}
               >
                 <i className="fas fa-eraser"></i>
               </button>
-              {loadingMarkers && (
-                <div className="spinner-border spinner-border-sm text-primary" role="status">
-                  <span className="visually-hidden">Cargando...</span>
-                </div>
-              )}
             </div>
           </div>
         </div>

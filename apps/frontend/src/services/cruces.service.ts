@@ -70,9 +70,6 @@ export interface QueryCrucesParams {
   estado?: boolean;
   ubigeoId?: string;
   proyectoId?: number;
-  administradorId?: number;
-  anho?: number;
-  estadoId?: number;
   sortBy?: string;
   sortOrder?: 'asc' | 'desc';
 }
