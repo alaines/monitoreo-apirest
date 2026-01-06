@@ -130,7 +130,11 @@ export function Layout({ children }: { children: React.ReactNode }) {
                 href="#"
                 className="d-block p-3 text-decoration-none text-dark border-bottom"
                 style={{ fontSize: '14px' }}
-                onClick={(e) => e.preventDefault()}
+                onClick={(e) => {
+                  e.preventDefault();
+                  setShowUserMenu(false);
+                  navigate('/perfil');
+                }}
               >
                 <i className="fas fa-user me-2"></i>Mi Perfil
               </a>
@@ -138,7 +142,11 @@ export function Layout({ children }: { children: React.ReactNode }) {
                 href="#"
                 className="d-block p-3 text-decoration-none text-dark border-bottom"
                 style={{ fontSize: '14px' }}
-                onClick={(e) => e.preventDefault()}
+                onClick={(e) => {
+                  e.preventDefault();
+                  setShowUserMenu(false);
+                  navigate('/configuracion');
+                }}
               >
                 <i className="fas fa-cog me-2"></i>Configuración
               </a>

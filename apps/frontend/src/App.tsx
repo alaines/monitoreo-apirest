@@ -25,6 +25,8 @@ import AdministradoresManagement from './features/mantenimientos/administradores
 import EjesManagement from './features/mantenimientos/ejes/EjesManagement';
 import ProyectosManagement from './features/mantenimientos/proyectos/ProyectosManagement';
 import IncidenciasManagement from './features/mantenimientos/incidencias/IncidenciasManagement';
+import { MiPerfil } from './features/perfil/MiPerfil';
+import { Configuracion } from './features/configuracion/Configuracion';
 
 function App() {
   const { initialize, isAuthenticated } = useAuthStore();
@@ -288,6 +290,26 @@ function App() {
             <ProtectedRoute>
               <Layout>
                 <IncidenciasManagement />
+              </Layout>
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/perfil"
+          element={
+            <ProtectedRoute>
+              <Layout>
+                <MiPerfil />
+              </Layout>
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/configuracion"
+          element={
+            <ProtectedRoute>
+              <Layout>
+                <Configuracion />
               </Layout>
             </ProtectedRoute>
           }
