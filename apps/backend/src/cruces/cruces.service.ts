@@ -63,7 +63,7 @@ export class CrucesService {
   }
 
   async findAll(query: QueryCrucesDto) {
-    const { page = 1, limit = 10, search, codigo, estado, ubigeoId, proyectoId, sortBy = 'id', sortOrder = 'desc' } = query;
+    const { page = 1, limit = 10, search, codigo, estado, ubigeoId, proyectoId, administradorId, anho, estadoId, sortBy = 'id', sortOrder = 'desc' } = query;
 
     const where: any = {};
 
@@ -91,6 +91,20 @@ export class CrucesService {
 
     if (proyectoId) {
       where.proyectoId = proyectoId;
+    }
+
+    if (administradorId) {
+      where.administradorId = administradorId;
+    }
+
+    // Filtro por año y estado de tickets
+    if (anho !== undefined || estadoId !== undefined) {
+      where.tickets = {
+        some: {
+          ...(anho !== undefined && { anho }),
+          ...(estadoId !== undefined && { estadoId }),
+        },
+      };
     }
 
     const [total, data] = await Promise.all([

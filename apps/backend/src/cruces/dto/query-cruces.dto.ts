@@ -44,6 +44,24 @@ export class QueryCrucesDto {
   @IsNumber()
   proyectoId?: number;
 
+  @ApiPropertyOptional({ description: 'Filtrar por administrador' })
+  @IsOptional()
+  @Type(() => Number)
+  @IsNumber()
+  administradorId?: number;
+
+  @ApiPropertyOptional({ description: 'Filtrar por año de tickets' })
+  @IsOptional()
+  @Type(() => Number)
+  @IsNumber()
+  anho?: number;
+
+  @ApiPropertyOptional({ description: 'Filtrar por estado de tickets (1=Pendiente, 2=En Proceso)' })
+  @IsOptional()
+  @Type(() => Number)
+  @IsNumber()
+  estadoId?: number;
+
   @ApiPropertyOptional({ description: 'Campo para ordenar', default: 'id' })
   @IsOptional()
   @IsString()
