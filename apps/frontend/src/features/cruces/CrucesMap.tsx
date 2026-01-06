@@ -3,6 +3,7 @@ import { MapContainer, TileLayer, Marker, Popup } from 'react-leaflet';
 import { crucesService, Cruce } from '../../services/cruces.service';
 import { tiposService, Tipo } from '../../services/tipos.service';
 import { administradoresService, Administrador } from '../../services/administradores.service';
+import { CruceDetail } from './CruceDetail';
 import 'leaflet/dist/leaflet.css';
 import L from 'leaflet';
 
@@ -65,9 +66,13 @@ const getTrafficLightIcon = (administradorId?: number | null) => {
 export function CrucesMap() {
   const [cruces, setCruces] = useState<Cruce[]>([]);
   const [filteredCruces, setFilteredCruces] = useState<Cruce[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [loadingData, setLoadingData] = useState(true);
   const [tipos, setTipos] = useState<Tipo[]>([]);
   const [administradores, setAdministradores] = useState<Administrador[]>([]);
+  
+  // Estado para el modal de detalle
+  const [detailModalOpen, setDetailModalOpen] = useState(false);
+  const [selectedCruceId, setSelectedCruceId] = useState<number | null>(null);
   
   // Filtros
   const [searchTerm, setSearchTerm] = useState('');
@@ -88,7 +93,6 @@ export function CrucesMap() {
 
   const loadData = async () => {
     try {
-      setLoading(true);
       const [crucesData, tiposData, adminsData] = await Promise.all([
         crucesService.getCruces({ limit: 10000 }),
         tiposService.getTipos(),
@@ -122,7 +126,7 @@ export function CrucesMap() {
         console.error('Error details:', error.message, error.stack);
       }
     } finally {
-      setLoading(false);
+      setLoadingData(false);
     }
   };
 
@@ -180,18 +184,6 @@ export function CrucesMap() {
     administradores: administradores.length
   });
 
-  if (loading) {
-    return (
-      <div className="container-fluid p-4">
-        <div className="text-center py-5">
-          <div className="spinner-border text-primary" role="status">
-            <span className="visually-hidden">Cargando...</span>
-          </div>
-        </div>
-      </div>
-    );
-  }
-
   return (
     <div className="container-fluid" style={{ padding: '20px', height: 'calc(100vh - 120px)', display: 'flex', flexDirection: 'column' }}>
       <div className="row mb-3" style={{ flexShrink: 0 }}>
@@ -200,91 +192,143 @@ export function CrucesMap() {
             <i className="fas fa-map-marked-alt me-2"></i>
             Mapa de Cruces
           </h2>
-          <p className="text-muted mb-0">
-            Visualización geográfica de {filteredCruces.length} cruce{filteredCruces.length !== 1 ? 's' : ''}
-          </p>
+          {loadingData ? (
+            <div className="placeholder-glow">
+              <span className="placeholder col-4"></span>
+            </div>
+          ) : (
+            <p className="text-muted mb-0">
+              Visualización geográfica de {filteredCruces.length} cruce{filteredCruces.length !== 1 ? 's' : ''}
+            </p>
+          )}
         </div>
       </div>
 
       {/* Panel de Filtros */}
       <div className="card shadow-sm mb-3" style={{ flexShrink: 0 }}>
         <div className="card-body">
-          <div className="row g-3">
-            <div className="col-md-3">
-              <label className="form-label fw-bold">
-                <i className="fas fa-search me-2"></i>
-                Búsqueda
-              </label>
-              <input
-                type="text"
-                className="form-control"
-                placeholder="Código, nombre o distrito..."
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-              />
+          {loadingData ? (
+            <div className="row g-3">
+              <div className="col-md-3">
+                <label className="form-label fw-bold">
+                  <i className="fas fa-search me-2"></i>
+                  Búsqueda
+                </label>
+                <div className="placeholder-glow">
+                  <span className="placeholder col-12 form-control"></span>
+                </div>
+              </div>
+              <div className="col-md-3">
+                <label className="form-label fw-bold">
+                  <i className="fas fa-cogs me-2"></i>
+                  Tipo de Gestión
+                </label>
+                <div className="placeholder-glow">
+                  <span className="placeholder col-12 form-control"></span>
+                </div>
+              </div>
+              <div className="col-md-3">
+                <label className="form-label fw-bold">
+                  <i className="fas fa-wifi me-2"></i>
+                  Tipo de Comunicación
+                </label>
+                <div className="placeholder-glow">
+                  <span className="placeholder col-12 form-control"></span>
+                </div>
+              </div>
+              <div className="col-md-2">
+                <label className="form-label fw-bold">
+                  <i className="fas fa-user-tie me-2"></i>
+                  Administrador
+                </label>
+                <div className="placeholder-glow">
+                  <span className="placeholder col-12 form-control"></span>
+                </div>
+              </div>
+              <div className="col-md-1 d-flex align-items-end">
+                <div className="placeholder-glow w-100">
+                  <span className="placeholder col-12 btn"></span>
+                </div>
+              </div>
             </div>
+          ) : (
+            <div className="row g-3">
+              <div className="col-md-3">
+                <label className="form-label fw-bold">
+                  <i className="fas fa-search me-2"></i>
+                  Búsqueda
+                </label>
+                <input
+                  type="text"
+                  className="form-control"
+                  placeholder="Código, nombre o distrito..."
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                />
+              </div>
 
-            <div className="col-md-3">
-              <label className="form-label fw-bold">
-                <i className="fas fa-cogs me-2"></i>
-                Tipo de Gestión
-              </label>
-              <select
-                className="form-select"
-                value={selectedTipoGestion || ''}
-                onChange={(e) => setSelectedTipoGestion(e.target.value ? parseInt(e.target.value) : null)}
-              >
-                <option value="">Todos</option>
-                {tiposGestion.map(tipo => (
-                  <option key={tipo.id} value={tipo.id}>{tipo.name}</option>
-                ))}
-              </select>
-            </div>
+              <div className="col-md-3">
+                <label className="form-label fw-bold">
+                  <i className="fas fa-cogs me-2"></i>
+                  Tipo de Gestión
+                </label>
+                <select
+                  className="form-select"
+                  value={selectedTipoGestion || ''}
+                  onChange={(e) => setSelectedTipoGestion(e.target.value ? parseInt(e.target.value) : null)}
+                >
+                  <option value="">Todos</option>
+                  {tiposGestion.map(tipo => (
+                    <option key={tipo.id} value={tipo.id}>{tipo.name}</option>
+                  ))}
+                </select>
+              </div>
 
-            <div className="col-md-3">
-              <label className="form-label fw-bold">
-                <i className="fas fa-wifi me-2"></i>
-                Tipo de Comunicación
-              </label>
-              <select
-                className="form-select"
-                value={selectedTipoComunicacion || ''}
-                onChange={(e) => setSelectedTipoComunicacion(e.target.value ? parseInt(e.target.value) : null)}
-              >
-                <option value="">Todos</option>
-                {tiposComunicacion.map(tipo => (
-                  <option key={tipo.id} value={tipo.id}>{tipo.name}</option>
-                ))}
-              </select>
-            </div>
+              <div className="col-md-3">
+                <label className="form-label fw-bold">
+                  <i className="fas fa-wifi me-2"></i>
+                  Tipo de Comunicación
+                </label>
+                <select
+                  className="form-select"
+                  value={selectedTipoComunicacion || ''}
+                  onChange={(e) => setSelectedTipoComunicacion(e.target.value ? parseInt(e.target.value) : null)}
+                >
+                  <option value="">Todos</option>
+                  {tiposComunicacion.map(tipo => (
+                    <option key={tipo.id} value={tipo.id}>{tipo.name}</option>
+                  ))}
+                </select>
+              </div>
 
-            <div className="col-md-2">
-              <label className="form-label fw-bold">
-                <i className="fas fa-user-tie me-2"></i>
-                Administrador
-              </label>
-              <select
-                className="form-select"
-                value={selectedAdministrador || ''}
-                onChange={(e) => setSelectedAdministrador(e.target.value ? parseInt(e.target.value) : null)}
-              >
-                <option value="">Todos</option>
-                {administradores.map(admin => (
-                  <option key={admin.id} value={admin.id}>{admin.nombre}</option>
-                ))}
-              </select>
-            </div>
+              <div className="col-md-2">
+                <label className="form-label fw-bold">
+                  <i className="fas fa-user-tie me-2"></i>
+                  Administrador
+                </label>
+                <select
+                  className="form-select"
+                  value={selectedAdministrador || ''}
+                  onChange={(e) => setSelectedAdministrador(e.target.value ? parseInt(e.target.value) : null)}
+                >
+                  <option value="">Todos</option>
+                  {administradores.map(admin => (
+                    <option key={admin.id} value={admin.id}>{admin.nombre}</option>
+                  ))}
+                </select>
+              </div>
 
-            <div className="col-md-1 d-flex align-items-end">
-              <button
-                className="btn btn-outline-secondary w-100"
-                onClick={clearFilters}
-                title="Limpiar filtros"
-              >
-                <i className="fas fa-eraser"></i>
-              </button>
+              <div className="col-md-1 d-flex align-items-end">
+                <button
+                  className="btn btn-outline-secondary w-100"
+                  onClick={clearFilters}
+                  title="Limpiar filtros"
+                >
+                  <i className="fas fa-eraser"></i>
+                </button>
+              </div>
             </div>
-          </div>
+          )}
         </div>
       </div>
 
@@ -308,7 +352,14 @@ export function CrucesMap() {
             </h6>
           </div>
           <div className="card-body p-2" style={{ maxHeight: '300px', overflowY: 'auto' }}>
-            {administradores.length > 0 ? (
+            {loadingData ? (
+              <div className="placeholder-glow">
+                <span className="placeholder col-12 mb-2"></span>
+                <span className="placeholder col-10 mb-2"></span>
+                <span className="placeholder col-11 mb-2"></span>
+                <span className="placeholder col-9"></span>
+              </div>
+            ) : administradores.length > 0 ? (
               <div style={{ fontSize: '13px' }}>
                 {administradores.map((admin) => {
                   const colors: { [key: number]: string } = {
@@ -353,8 +404,21 @@ export function CrucesMap() {
           </div>
         </div>
 
-        <div className="card-body p-0" style={{ height: '100%' }}>
-          <div style={{ height: '100%', width: '100%' }}>
+        <div className="card-body p-0" style={{ height: '100%', position: 'relative' }}>
+          {loadingData && (
+            <div 
+              className="position-absolute top-50 start-50 translate-middle" 
+              style={{ zIndex: 1001 }}
+            >
+              <div className="text-center">
+                <div className="spinner-border text-primary mb-2" role="status">
+                  <span className="visually-hidden">Cargando cruces...</span>
+                </div>
+                <p className="text-muted">Cargando cruces...</p>
+              </div>
+            </div>
+          )}
+          <div style={{ height: '100%', width: '100%', opacity: loadingData ? 0.5 : 1, transition: 'opacity 0.3s' }}>
             <MapContainer
               center={mapCenter}
               zoom={12}
@@ -365,7 +429,7 @@ export function CrucesMap() {
                 attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
               />
               
-              {filteredCruces.map((cruce) => (
+              {!loadingData && filteredCruces.map((cruce) => (
                 <Marker
                   key={cruce.id}
                   position={[cruce.latitud!, cruce.longitud!]}
@@ -413,7 +477,10 @@ export function CrucesMap() {
                       </table>
                       <button
                         className="btn btn-sm btn-primary w-100"
-                        onClick={() => window.open(`/cruces/${cruce.id}`, '_blank')}
+                        onClick={() => {
+                          setSelectedCruceId(cruce.id);
+                          setDetailModalOpen(true);
+                        }}
                         style={{ fontSize: '12px' }}
                       >
                         <i className="fas fa-eye me-1"></i>
@@ -427,6 +494,29 @@ export function CrucesMap() {
           </div>
         </div>
       </div>
+
+      {/* Modal para visualizar detalle */}
+      {detailModalOpen && selectedCruceId && (
+        <div className="modal show d-block" style={{ backgroundColor: 'rgba(0,0,0,0.5)' }}>
+          <div className="modal-dialog modal-xl modal-dialog-scrollable">
+            <div className="modal-content">
+              <div className="modal-header bg-primary text-white">
+                <h5 className="modal-title">
+                  <i className="fas fa-eye me-2"></i>
+                  Ver Cruce
+                </h5>
+                <button type="button" className="btn-close btn-close-white" onClick={() => setDetailModalOpen(false)}></button>
+              </div>
+              <div className="modal-body">
+                <CruceDetail
+                  cruceId={selectedCruceId}
+                  onClose={() => setDetailModalOpen(false)}
+                />
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
