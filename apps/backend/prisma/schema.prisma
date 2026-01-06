@@ -20,7 +20,6 @@ model User {
   createdAt    DateTime?    @map("created") @db.Timestamp(6)
   updatedAt    DateTime?    @map("modified") @db.Timestamp(6)
   online       Boolean?
-  passwordHash String?      @map("password_hash")
   auditorias   Auditoria[]  @relation("usuario_auditor")
   area         Area?        @relation(fields: [areaId], references: [id], onDelete: Cascade, map: "usuarios_areas")
   grupo        Grupo?       @relation(fields: [grupoId], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "usuarios_grupos")
