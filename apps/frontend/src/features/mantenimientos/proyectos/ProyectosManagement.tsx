@@ -179,43 +179,32 @@ const ProyectosManagement: React.FC = () => {
         </div>
       ) : (
         <>
-          <div className="card mb-3">
-            <div className="card-header d-flex justify-content-between align-items-center">
-              <h5 className="mb-0">
+          <div className="card border-0 shadow-sm mb-3">
+            <div className="card-header bg-white border-bottom">
+              <button className="btn btn-sm btn-outline-secondary" onClick={() => setShowFilters(!showFilters)}>
                 <i className="fas fa-filter me-2"></i>
-                Filtros
-              </h5>
-              <button 
-                className="btn btn-sm btn-outline-secondary"
-                onClick={() => setShowFilters(!showFilters)}
-              >
-                <i className={`fas fa-chevron-${showFilters ? 'up' : 'down'}`}></i>
+                {showFilters ? 'Ocultar Filtros' : 'Mostrar Filtros'}
               </button>
             </div>
             {showFilters && (
               <div className="card-body">
-                <div className="row g-3">
-                  <div className="col-md-6">
-                    <label className="form-label">Buscar</label>
-                    <input
-                      type="text"
-                      className="form-control"
-                      placeholder="Buscar por siglas o nombre..."
-                      value={filters.search}
-                      onChange={(e) => handleFilterChange('search', e.target.value)}
-                    />
+                <div className="row g-2">
+                  <div className="col-md-8">
+                    <label className="form-label small">Buscar</label>
+                    <input type="text" className="form-control form-control-sm" placeholder="Siglas o nombre..." value={filters.search} onChange={(e) => handleFilterChange('search', e.target.value)} />
                   </div>
-                  <div className="col-md-3">
-                    <label className="form-label">Estado</label>
-                    <select
-                      className="form-select"
-                      value={filters.estado}
-                      onChange={(e) => handleFilterChange('estado', e.target.value)}
-                    >
+                  <div className="col-md-2">
+                    <label className="form-label small">Estado</label>
+                    <select className="form-select form-select-sm" value={filters.estado} onChange={(e) => handleFilterChange('estado', e.target.value)}>
                       <option value="">Todos</option>
                       <option value="true">Activos</option>
                       <option value="false">Inactivos</option>
                     </select>
+                  </div>
+                  <div className="col-md-2 d-flex align-items-end">
+                    <button className="btn btn-outline-secondary btn-sm w-100" onClick={() => { setFilters({ search: '', estado: '' }); setPage(1); }}>
+                      <i className="fas fa-eraser me-1"></i> Limpiar
+                    </button>
                   </div>
                 </div>
               </div>

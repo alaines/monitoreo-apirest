@@ -179,56 +179,41 @@ const ResponsablesManagement: React.FC = () => {
         </div>
       ) : (
         <>
-          <div className="card mb-3">
-            <div className="card-header d-flex justify-content-between align-items-center">
-              <h5 className="mb-0">
+          <div className="card border-0 shadow-sm mb-3">
+            <div className="card-header bg-white border-bottom">
+              <button className="btn btn-sm btn-outline-secondary" onClick={() => setShowFilters(!showFilters)}>
                 <i className="fas fa-filter me-2"></i>
-                Filtros
-              </h5>
-              <button 
-                className="btn btn-sm btn-outline-secondary"
-                onClick={() => setShowFilters(!showFilters)}
-              >
-                <i className={`fas fa-chevron-${showFilters ? 'up' : 'down'}`}></i>
+                {showFilters ? 'Ocultar Filtros' : 'Mostrar Filtros'}
               </button>
             </div>
             {showFilters && (
               <div className="card-body">
-                <div className="row g-3">
+                <div className="row g-2">
                   <div className="col-md-4">
-                    <label className="form-label">Buscar</label>
-                    <input
-                      type="text"
-                      className="form-control"
-                      placeholder="Buscar por nombre..."
-                      value={filters.search}
-                      onChange={(e) => handleFilterChange('search', e.target.value)}
-                    />
+                    <label className="form-label small">Buscar</label>
+                    <input type="text" className="form-control form-control-sm" placeholder="Nombre..." value={filters.search} onChange={(e) => handleFilterChange('search', e.target.value)} />
                   </div>
-                  <div className="col-md-4">
-                    <label className="form-label">Equipo</label>
-                    <select
-                      className="form-select"
-                      value={filters.equipoId}
-                      onChange={(e) => handleFilterChange('equipoId', e.target.value)}
-                    >
+                  <div className="col-md-3">
+                    <label className="form-label small">Equipo</label>
+                    <select className="form-select form-select-sm" value={filters.equipoId} onChange={(e) => handleFilterChange('equipoId', e.target.value)}>
                       <option value="">Todos</option>
                       {equipos.map(equipo => (
                         <option key={equipo.id} value={equipo.id}>{equipo.nombre}</option>
                       ))}
                     </select>
                   </div>
-                  <div className="col-md-4">
-                    <label className="form-label">Estado</label>
-                    <select
-                      className="form-select"
-                      value={filters.estado}
-                      onChange={(e) => handleFilterChange('estado', e.target.value)}
-                    >
+                  <div className="col-md-2">
+                    <label className="form-label small">Estado</label>
+                    <select className="form-select form-select-sm" value={filters.estado} onChange={(e) => handleFilterChange('estado', e.target.value)}>
                       <option value="">Todos</option>
                       <option value="true">Activos</option>
                       <option value="false">Inactivos</option>
                     </select>
+                  </div>
+                  <div className="col-md-3 d-flex align-items-end">
+                    <button className="btn btn-outline-secondary btn-sm w-100" onClick={() => { setFilters({ search: '', equipoId: '', estado: '' }); setPage(1); }}>
+                      <i className="fas fa-eraser me-1"></i> Limpiar
+                    </button>
                   </div>
                 </div>
               </div>
