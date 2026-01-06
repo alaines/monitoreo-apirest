@@ -1,34 +1,97 @@
 import React, { useState, useEffect } from 'react';
 import { ejesService, Eje } from '../../../services/admin.service';
 
+type SortField = 'id' | 'nombreVia' | 'tipoVia' | 'nroCarriles' | 'ciclovia';
+type SortOrder = 'asc' | 'desc';
+
 const EjesManagement: React.FC = () => {
   const [ejes, setEjes] = useState<Eje[]>([]);
+  const [allEjes, setAllEjes] = useState<Eje[]>([]);
   const [loading, setLoading] = useState(false);
   const [showModal, setShowModal] = useState(false);
   const [editingEje, setEditingEje] = useState<Eje | null>(null);
   const [formData, setFormData] = useState({
     nombreVia: '',
-    tipoVia: null as number | null,
+    tipoVia: '',
     nroCarriles: null as number | null,
     ciclovia: false,
     observaciones: ''
   });
+  const [page, setPage] = useState(1);
+  const [limit, setLimit] = useState(10);
+  const [total, setTotal] = useState(0);
+  const [totalPages, setTotalPages] = useState(0);
+  const [sortField, setSortField] = useState<SortField>('nombreVia');
+  const [sortOrder, setSortOrder] = useState<SortOrder>('asc');
+  const [showFilters, setShowFilters] = useState(false);
+  const [filters, setFilters] = useState({ search: '', ciclovia: '' as '' | 'true' | 'false' });
 
   useEffect(() => {
     loadData();
   }, []);
 
+  useEffect(() => {
+    applyFiltersAndPagination();
+  }, [page, limit, filters, sortField, sortOrder, allEjes]);
+
   const loadData = async () => {
     try {
       setLoading(true);
       const data = await ejesService.getAll();
-      setEjes(data);
+      setAllEjes(data);
     } catch (error) {
       console.error('Error al cargar ejes:', error);
       alert('Error al cargar ejes');
     } finally {
       setLoading(false);
     }
+  };
+
+  const applyFiltersAndPagination = () => {
+    let filtered = [...allEjes];
+    if (filters.search) {
+      const searchLower = filters.search.toLowerCase();
+      filtered = filtered.filter(e => e.nombreVia?.toLowerCase().includes(searchLower));
+    }
+    if (filters.ciclovia !== '') {
+      const cicloviaBool = filters.ciclovia === 'true';
+      filtered = filtered.filter(e => e.ciclovia === cicloviaBool);
+    }
+    filtered.sort((a, b) => {
+      let aVal: any, bVal: any;
+      switch (sortField) {
+        case 'id': aVal = a.id; bVal = b.id; break;
+        case 'nombreVia': aVal = a.nombreVia || ''; bVal = b.nombreVia || ''; break;
+        case 'tipoVia': aVal = a.tipoVia || ''; bVal = b.tipoVia || ''; break;
+        case 'nroCarriles': aVal = a.nroCarriles || 0; bVal = b.nroCarriles || 0; break;
+        case 'ciclovia': aVal = a.ciclovia ? 1 : 0; bVal = b.ciclovia ? 1 : 0; break;
+        default: return 0;
+      }
+      if (typeof aVal === 'string') return sortOrder === 'asc' ? aVal.localeCompare(bVal) : bVal.localeCompare(aVal);
+      return sortOrder === 'asc' ? aVal - bVal : bVal - aVal;
+    });
+    setTotal(filtered.length);
+    setTotalPages(Math.ceil(filtered.length / limit));
+    setEjes(filtered.slice((page - 1) * limit, page * limit));
+  };
+
+  const handleFilterChange = (key: string, value: string) => {
+    setFilters(prev => ({ ...prev, [key]: value }));
+    setPage(1);
+  };
+
+  const handleSort = (field: SortField) => {
+    if (sortField === field) {
+      setSortOrder(sortOrder === 'asc' ? 'desc' : 'asc');
+    } else {
+      setSortField(field);
+      setSortOrder('asc');
+    }
+  };
+
+  const getSortIcon = (field: SortField) => {
+    if (sortField !== field) return <i className="fas fa-sort text-muted ms-1"></i>;
+    return sortOrder === 'asc' ? <i className="fas fa-sort-up ms-1"></i> : <i className="fas fa-sort-down ms-1"></i>;
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -107,55 +170,166 @@ const EjesManagement: React.FC = () => {
           </div>
         </div>
       ) : (
-        <div className="card">
-          <div className="card-body">
-            <div className="table-responsive">
-              <table className="table table-hover">
-                <thead>
-                  <tr>
-                    <th>ID</th>
-                    <th>Nombre de Vía</th>
-                    <th>Tipo Vía</th>
-                    <th>Nro Carriles</th>
-                    <th>Ciclovía</th>
-                    <th>Observaciones</th>
-                    <th>Acciones</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {ejes.map(eje => (
-                    <tr key={eje.id}>
-                      <td>{eje.id}</td>
-                      <td>{eje.nombreVia || '-'}</td>
-                      <td>{eje.tipoVia || '-'}</td>
-                      <td>{eje.nroCarriles || '-'}</td>
-                      <td>
-                        <span className={`badge ${eje.ciclovia ? 'bg-success' : 'bg-secondary'}`}>
-                          {eje.ciclovia ? 'Sí' : 'No'}
-                        </span>
-                      </td>
-                      <td>{eje.observaciones ? eje.observaciones.substring(0, 50) + (eje.observaciones.length > 50 ? '...' : '') : '-'}</td>
-                      <td>
-                        <button
-                          className="btn btn-sm btn-outline-primary me-2"
-                          onClick={() => handleEdit(eje)}
-                        >
-                          <i className="fas fa-edit"></i>
-                        </button>
-                        <button
-                          className="btn btn-sm btn-outline-danger"
-                          onClick={() => handleDelete(eje.id)}
-                        >
-                          <i className="fas fa-trash"></i>
-                        </button>
-                      </td>
+        <>
+          <div className="card mb-3">
+            <div className="card-header d-flex justify-content-between align-items-center">
+              <h5 className="mb-0">
+                <i className="fas fa-filter me-2"></i>
+                Filtros
+              </h5>
+              <button 
+                className="btn btn-sm btn-outline-secondary"
+                onClick={() => setShowFilters(!showFilters)}
+              >
+                <i className={`fas fa-chevron-${showFilters ? 'up' : 'down'}`}></i>
+              </button>
+            </div>
+            {showFilters && (
+              <div className="card-body">
+                <div className="row g-3">
+                  <div className="col-md-6">
+                    <label className="form-label">Buscar</label>
+                    <input
+                      type="text"
+                      className="form-control"
+                      placeholder="Buscar por nombre de vía..."
+                      value={filters.search}
+                      onChange={(e) => handleFilterChange('search', e.target.value)}
+                    />
+                  </div>
+                  <div className="col-md-3">
+                    <label className="form-label">Ciclovía</label>
+                    <select
+                      className="form-select"
+                      value={filters.ciclovia}
+                      onChange={(e) => handleFilterChange('ciclovia', e.target.value)}
+                    >
+                      <option value="">Todos</option>
+                      <option value="true">Sí</option>
+                      <option value="false">No</option>
+                    </select>
+                  </div>
+                </div>
+              </div>
+            )}
+          </div>
+
+          <div className="card">
+            <div className="card-body">
+              <div className="d-flex justify-content-between align-items-center mb-3">
+                <div>
+                  Mostrando {ejes.length} de {total} registros
+                </div>
+                <div>
+                  <label className="me-2">Mostrar:</label>
+                  <select 
+                    className="form-select form-select-sm d-inline-block w-auto"
+                    value={limit}
+                    onChange={(e) => {
+                      setLimit(Number(e.target.value));
+                      setPage(1);
+                    }}
+                  >
+                    <option value={10}>10</option>
+                    <option value={25}>25</option>
+                    <option value={50}>50</option>
+                    <option value={100}>100</option>
+                  </select>
+                </div>
+              </div>
+              <div className="table-responsive">
+                <table className="table table-hover">
+                  <thead>
+                    <tr>
+                      <th style={{ cursor: 'pointer' }} onClick={() => handleSort('id')}>
+                        ID {getSortIcon('id')}
+                      </th>
+                      <th style={{ cursor: 'pointer' }} onClick={() => handleSort('nombreVia')}>
+                        Nombre de Vía {getSortIcon('nombreVia')}
+                      </th>
+                      <th style={{ cursor: 'pointer' }} onClick={() => handleSort('tipoVia')}>
+                        Tipo Vía {getSortIcon('tipoVia')}
+                      </th>
+                      <th style={{ cursor: 'pointer' }} onClick={() => handleSort('nroCarriles')}>
+                        Nro Carriles {getSortIcon('nroCarriles')}
+                      </th>
+                      <th style={{ cursor: 'pointer' }} onClick={() => handleSort('ciclovia')}>
+                        Ciclovía {getSortIcon('ciclovia')}
+                      </th>
+                      <th>Observaciones</th>
+                      <th>Acciones</th>
                     </tr>
-                  ))}
-                </tbody>
-              </table>
+                  </thead>
+                  <tbody>
+                    {ejes.map(eje => (
+                      <tr key={eje.id}>
+                        <td>{eje.id}</td>
+                        <td>{eje.nombreVia || '-'}</td>
+                        <td>{eje.tipoVia || '-'}</td>
+                        <td>{eje.nroCarriles || '-'}</td>
+                        <td>
+                          <span className={`badge ${eje.ciclovia ? 'bg-success' : 'bg-secondary'}`}>
+                            {eje.ciclovia ? 'Sí' : 'No'}
+                          </span>
+                        </td>
+                        <td>{eje.observaciones ? eje.observaciones.substring(0, 50) + (eje.observaciones.length > 50 ? '...' : '') : '-'}</td>
+                        <td>
+                          <button
+                            className="btn btn-sm btn-outline-primary me-2"
+                            onClick={() => handleEdit(eje)}
+                          >
+                            <i className="fas fa-edit"></i>
+                          </button>
+                          <button
+                            className="btn btn-sm btn-outline-danger"
+                            onClick={() => handleDelete(eje.id)}
+                          >
+                            <i className="fas fa-trash"></i>
+                          </button>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+              {totalPages > 1 && (
+                <nav>
+                  <ul className="pagination justify-content-center mb-0">
+                    <li className={`page-item ${page === 1 ? 'disabled' : ''}`}>
+                      <button className="page-link" onClick={() => setPage(page - 1)}>
+                        <i className="fas fa-chevron-left"></i>
+                      </button>
+                    </li>
+                    {[...Array(totalPages)].map((_, i) => {
+                      const pageNum = i + 1;
+                      if (
+                        pageNum === 1 ||
+                        pageNum === totalPages ||
+                        (pageNum >= page - 1 && pageNum <= page + 1)
+                      ) {
+                        return (
+                          <li key={pageNum} className={`page-item ${page === pageNum ? 'active' : ''}`}>
+                            <button className="page-link" onClick={() => setPage(pageNum)}>
+                              {pageNum}
+                            </button>
+                          </li>
+                        );
+                      } else if (pageNum === page - 2 || pageNum === page + 2) {
+                        return <li key={pageNum} className="page-item disabled"><span className="page-link">...</span></li>;
+                      }
+                      return null;
+                    })}
+                    <li className={`page-item ${page === totalPages ? 'disabled' : ''}`}>
+                      <button className="page-link" onClick={() => setPage(page + 1)}>
+                        <i className="fas fa-chevron-right"></i>
+                      </button>
+                    </li>
+                  </ul>
+                </nav>
+              )}
             </div>
           </div>
-        </div>
+        </>
       )}
 
       {showModal && (
