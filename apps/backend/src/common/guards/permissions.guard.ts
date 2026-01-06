@@ -62,19 +62,32 @@ export class PermissionsGuard implements CanActivate {
 
     // Caso 1: Permiso simple
     if (requiredPermissions.menuCodigo && requiredPermissions.accionCodigo) {
-      const hasPermission = await this.permisosService.verificarPermiso(
-        userId,
-        requiredPermissions.menuCodigo,
-        requiredPermissions.accionCodigo,
-      );
-
-      if (!hasPermission) {
-        throw new ForbiddenException(
-          `No tiene permiso para realizar esta acción (${requiredPermissions.accionCodigo}) en ${requiredPermissions.menuCodigo}`,
+      try {
+        console.log('[PermissionsGuard] Verificando permiso:', {
+          userId,
+          menuCodigo: requiredPermissions.menuCodigo,
+          accionCodigo: requiredPermissions.accionCodigo,
+        });
+        
+        const hasPermission = await this.permisosService.verificarPermiso(
+          userId,
+          requiredPermissions.menuCodigo,
+          requiredPermissions.accionCodigo,
         );
-      }
 
-      return true;
+        console.log('[PermissionsGuard] Resultado:', hasPermission);
+
+        if (!hasPermission) {
+          throw new ForbiddenException(
+            `No tiene permiso para realizar esta acción (${requiredPermissions.accionCodigo}) en ${requiredPermissions.menuCodigo}`,
+          );
+        }
+
+        return true;
+      } catch (error) {
+        console.error('[PermissionsGuard] Error verificando permiso:', error);
+        throw error;
+      }
     }
 
     // Caso 2: Requiere AL MENOS UNO de varios permisos
