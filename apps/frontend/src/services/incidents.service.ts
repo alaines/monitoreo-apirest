@@ -176,6 +176,16 @@ class IncidentsService {
     return response.data;
   }
 
+  async getAvailableYears(): Promise<number[]> {
+    const response = await api.get('/incidents/available-years');
+    return response.data;
+  }
+
+  async getMapMarkers(query?: QueryIncidentsDto): Promise<IncidentsResponse> {
+    const response = await api.get('/incidents/map-markers', { params: query });
+    return response.data;
+  }
+
   async getIncidenciasCatalog(): Promise<IncidenciaCatalog[]> {
     const response = await api.get('/incidents/catalogs/incidencias');
     return response.data;

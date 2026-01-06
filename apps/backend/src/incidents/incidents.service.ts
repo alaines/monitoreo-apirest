@@ -272,6 +272,114 @@ export class IncidentsService {
     };
   }
 
+  async getAvailableYears() {
+    const result = await this.prisma.$queryRaw<Array<{ anho: number }>>`
+      SELECT DISTINCT anho 
+      FROM tickets 
+      WHERE anho IS NOT NULL 
+      ORDER BY anho DESC
+    `;
+    
+    return result.map(r => r.anho);
+  }
+
+  async getMapMarkers(query: QueryIncidentsDto) {
+    const { page = 1, limit = 10000, estadoId, administradorId, anho } = query;
+    const skip = (page - 1) * limit;
+
+    const where: any = {};
+
+    // Solo tickets activos por defecto
+    if (estadoId) {
+      where.estadoId = estadoId;
+    } else {
+      where.estadoId = { in: [1, 2] }; // Pendiente y En Proceso
+    }
+
+    if (anho) where.anho = anho;
+    
+    // Filtro por administrador a través de la relación con cruce
+    if (administradorId) {
+      where.cruce = {
+        administradorId: administradorId,
+      };
+    }
+
+    // Consulta ligera - solo campos necesarios para markers
+    const tickets = await this.prisma.ticket.findMany({
+      where,
+      skip,
+      take: limit,
+      select: {
+        id: true,
+        incidenciaId: true,
+        prioridadId: true,
+        estadoId: true,
+        createdAt: true,
+        incidencia: {
+          select: {
+            id: true,
+            tipo: true,
+            prioridad: {
+              select: {
+                id: true,
+                nombre: true,
+              },
+            },
+          },
+        },
+        cruce: {
+          select: {
+            id: true,
+            nombre: true,
+            latitud: true,
+            longitud: true,
+            administrador: {
+              select: {
+                id: true,
+                nombre: true,
+              },
+            },
+          },
+        },
+      },
+    });
+
+    // Obtener coordenadas de los tickets que las tengan en geom
+    const ticketIds = tickets.map(t => t.id);
+    const ticketCoords: any = await this.prisma.$queryRawUnsafe(
+      `SELECT id, ST_X(geom) as longitude, ST_Y(geom) as latitude 
+       FROM tickets 
+       WHERE id = ANY($1) AND geom IS NOT NULL`,
+      ticketIds,
+    );
+    
+    const coordsMap = new Map();
+    ticketCoords.forEach((tc: any) => {
+      coordsMap.set(tc.id, {
+        latitude: parseFloat(tc.latitude),
+        longitude: parseFloat(tc.longitude),
+      });
+    });
+
+    // Combinar datos con coordenadas
+    const result = tickets.map(ticket => {
+      const coords = coordsMap.get(ticket.id);
+      return {
+        ...ticket,
+        latitude: coords?.latitude || ticket.cruce?.latitud || null,
+        longitude: coords?.longitude || ticket.cruce?.longitud || null,
+      };
+    });
+
+    return {
+      data: result,
+      meta: {
+        total: tickets.length,
+      },
+    };
+  }
+
   async getIncidenciasCatalog() {
     const incidencias = await this.prisma.incidencia.findMany({
       where: { estado: true },

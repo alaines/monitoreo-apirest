@@ -47,6 +47,20 @@ export class IncidentsController {
     return this.incidentsService.getStatistics();
   }
 
+  @Get('available-years')
+  @ApiOperation({ summary: 'Obtener años disponibles en tickets' })
+  @ApiResponse({ status: 200, description: 'Lista de años con tickets' })
+  getAvailableYears() {
+    return this.incidentsService.getAvailableYears();
+  }
+
+  @Get('map-markers')
+  @ApiOperation({ summary: 'Obtener datos ligeros para markers del mapa' })
+  @ApiResponse({ status: 200, description: 'Datos mínimos para renderizar markers' })
+  getMapMarkers(@Query() query: QueryIncidentsDto) {
+    return this.incidentsService.getMapMarkers(query);
+  }
+
   @Get('catalogs/incidencias')
   @ApiOperation({ summary: 'Obtener catálogo de tipos de incidencias' })
   @ApiResponse({ status: 200, description: 'Tipos de incidencias' })

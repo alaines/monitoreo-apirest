@@ -111,6 +111,7 @@ export function Inicio() {
   const [selectedAdministrador, setSelectedAdministrador] = useState<number | null>(null);
   const currentYear = new Date().getFullYear();
   const [selectedAnho, setSelectedAnho] = useState<number>(currentYear);
+  const [availableYears, setAvailableYears] = useState<number[]>([]);
   const [administradores, setAdministradores] = useState<Administrador[]>([]);
   const hasLoadedRef = useRef(false);
 
@@ -137,24 +138,22 @@ export function Inicio() {
   const loadInicioData = async () => {
     // No bloqueamos la UI con setLoading
     try {
-      // Obtener estadísticas generales del backend
-      const backendStats = await incidentsService.getStatistics();
+      // Obtener estadísticas generales del backend y años disponibles
+      const [backendStats, yearsData, adminsData] = await Promise.all([
+        incidentsService.getStatistics(),
+        incidentsService.getAvailableYears(),
+        administradoresService.getAdministradores()
+      ]);
       
       // Calcular fecha de hoy
       const today = new Date();
       today.setHours(0, 0, 0, 0);
-      const todayStr = today.toISOString().split('T')[0];
       
-      // Hacer peticiones en paralelo para optimizar
-      const [todayIncidentsData, adminsData] = await Promise.all([
-        // Incidencias de hoy para las estadísticas diarias
-        incidentsService.getIncidents({ 
-          page: 1, 
-          limit: 1000,
-        }),
-        // Administradores
-        administradoresService.getAdministradores()
-      ]);
+      // Incidencias de hoy para las estadísticas diarias
+      const todayIncidentsData = await incidentsService.getIncidents({ 
+        page: 1, 
+        limit: 1000,
+      });
 
       const allIncidents = todayIncidentsData.data;
       
@@ -198,7 +197,14 @@ export function Inicio() {
       };
 
       setStats(statsData);
+      setAvailableYears(yearsData);
       setAdministradores(adminsData);
+      
+      // Ajustar año seleccionado si no está en la lista
+      if (yearsData.length > 0 && !yearsData.includes(currentYear)) {
+        setSelectedAnho(yearsData[0]);
+      }
+      
       setLoading(false);
       
       // Cargar incidents activos del año actual
@@ -224,11 +230,12 @@ export function Inicio() {
         params.administradorId = selectedAdministrador;
       }
       
-      const activeIncidentsData = await incidentsService.getIncidents(params);
+      // Usar endpoint ligero para markers
+      const activeIncidentsData = await incidentsService.getMapMarkers(params);
       
-      // Solo incidencias activas con coordenadas para el mapa
+      // Solo incidencias con coordenadas para el mapa
       const activeForMap = activeIncidentsData.data.filter((i: Incident) => 
-        (i.estadoId === 1 || i.estadoId === 2) && i.latitude && i.longitude
+        i.latitude && i.longitude
       );
       
       setActiveIncidents(activeForMap);
@@ -371,7 +378,7 @@ export function Inicio() {
                       style={{ fontSize: '12px' }}
                       disabled={loadingMarkers}
                     >
-                      {Array.from({ length: 10 }, (_, i) => currentYear - i).map(year => (
+                      {availableYears.map(year => (
                         <option key={year} value={year}>{year}</option>
                       ))}
                     </select>
