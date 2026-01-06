@@ -35,7 +35,10 @@ export function LoginPage() {
         localStorage.removeItem('rememberedPassword');
       }
       
-      navigate('/');
+      // Redirigir a la p\u00e1gina guardada o a inicio
+      const redirectTo = localStorage.getItem('redirectAfterLogin') || '/';
+      localStorage.removeItem('redirectAfterLogin');
+      navigate(redirectTo);
     } catch (err) {
       // Error is handled in the store
     }

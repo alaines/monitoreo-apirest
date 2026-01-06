@@ -34,6 +34,8 @@ export const useAuthStore = create<AuthState>((set) => ({
         isLoading: false,
         error: null,
       });
+      
+      // No limpiar redirectAfterLogin aquí, lo manejará LoginPage
     } catch (error: any) {
       const errorMessage = error.response?.data?.message || 'Error al iniciar sesión';
       set({
@@ -48,6 +50,7 @@ export const useAuthStore = create<AuthState>((set) => ({
 
   logout: () => {
     authService.logout();
+    localStorage.removeItem('redirectAfterLogin');
     set({
       user: null,
       isAuthenticated: false,
