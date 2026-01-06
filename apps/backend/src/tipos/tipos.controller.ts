@@ -54,8 +54,15 @@ export class TiposController {
     description: 'Lista de tipos',
     type: [TipoResponseDto],
   })
-  findAll() {
-    return this.tiposService.findAll();
+  async findAll() {
+    try {
+      const result = await this.tiposService.findAll();
+      console.log('[TiposController] findAll resultado:', result?.length || 0, 'tipos');
+      return result;
+    } catch (error) {
+      console.error('[TiposController] Error en findAll:', error);
+      throw error;
+    }
   }
 
   @Get(':id')
