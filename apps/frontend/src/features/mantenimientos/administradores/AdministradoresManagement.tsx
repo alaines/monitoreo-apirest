@@ -328,12 +328,6 @@ const AdministradoresManagement: React.FC = () => {
           </div>
         </>
       )}
-                </tbody>
-              </table>
-            </div>
-          </div>
-        </div>
-      )}
 
       {showModal && (
         <div className="modal show d-block" tabIndex={-1} style={{ backgroundColor: 'rgba(0,0,0,0.5)' }}>
