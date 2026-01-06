@@ -99,6 +99,7 @@ export interface CreateUserDto {
   email?: string;
   telefono?: string;
   grupoId: number;
+  areaId?: number;
   estado?: boolean;
 }
 
@@ -107,6 +108,7 @@ export interface UpdateUserDto {
   email?: string;
   telefono?: string;
   grupoId?: number;
+  areaId?: number;
   estado?: boolean;
   clave?: string;
 }

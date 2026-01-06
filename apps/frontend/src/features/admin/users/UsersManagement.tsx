@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { usersService, gruposService, type User, type Grupo, type CreateUserDto, type UpdateUserDto } from '../../../services/admin.service';
+import { usersService, gruposService, areasService, type User, type Grupo, type Area, type CreateUserDto, type UpdateUserDto } from '../../../services/admin.service';
 
 type SortField = 'usuario' | 'nombreCompleto' | 'email' | 'grupo' | 'estado';
 type SortOrder = 'asc' | 'desc';
@@ -7,6 +7,7 @@ type SortOrder = 'asc' | 'desc';
 export function UsersManagement() {
   const [users, setUsers] = useState<User[]>([]);
   const [grupos, setGrupos] = useState<Grupo[]>([]);
+  const [areas, setAreas] = useState<Area[]>([]);
   const [loading, setLoading] = useState(true);
   const [showModal, setShowModal] = useState(false);
   const [editingUser, setEditingUser] = useState<User | null>(null);
@@ -17,6 +18,7 @@ export function UsersManagement() {
     email: '',
     telefono: '',
     grupoId: 0,
+    areaId: undefined,
     estado: true
   });
   const [errors, setErrors] = useState<string>('');
@@ -41,6 +43,7 @@ export function UsersManagement() {
 
   useEffect(() => {
     loadGrupos();
+    loadAreas();
     loadData();
   }, []);
 
@@ -58,6 +61,15 @@ export function UsersManagement() {
       setGrupos(uniqueGrupos);
     } catch (error: any) {
       console.error('Error loading grupos:', error);
+    }
+  };
+
+  const loadAreas = async () => {
+    try {
+      const areasData = await areasService.getAll();
+      setAreas(areasData.filter((area: Area) => area.estado));
+    } catch (error: any) {
+      console.error('Error loading areas:', error);
     }
   };
 
@@ -173,6 +185,7 @@ export function UsersManagement() {
         email: user.email || '',
         telefono: user.telefono || '',
         grupoId: user.grupoId,
+        areaId: (user as any).areaId || undefined,
         estado: user.estado
       });
     } else {
@@ -184,6 +197,7 @@ export function UsersManagement() {
         email: '',
         telefono: '',
         grupoId: grupos[0]?.id || 0,
+        areaId: undefined,
         estado: true
       });
     }
@@ -208,6 +222,7 @@ export function UsersManagement() {
           email: formData.email || undefined,
           telefono: formData.telefono || undefined,
           grupoId: formData.grupoId,
+          areaId: formData.areaId,
           estado: formData.estado
         };
         if (formData.clave) {
@@ -522,7 +537,7 @@ export function UsersManagement() {
                         onChange={(e) => setFormData({ ...formData, telefono: e.target.value })}
                       />
                     </div>
-                    <div className="col-md-6">
+                    <div className="col-md-4">
                       <label className="form-label">Grupo *</label>
                       <select
                         className="form-select"
@@ -538,7 +553,22 @@ export function UsersManagement() {
                         ))}
                       </select>
                     </div>
-                    <div className="col-md-6">
+                    <div className="col-md-4">
+                      <label className="form-label">Área</label>
+                      <select
+                        className="form-select"
+                        value={formData.areaId || ''}
+                        onChange={(e) => setFormData({ ...formData, areaId: e.target.value ? Number(e.target.value) : undefined })}
+                      >
+                        <option value="">Sin área</option>
+                        {areas.map((area) => (
+                          <option key={area.id} value={area.id}>
+                            {area.nombre}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+                    <div className="col-md-4">
                       <label className="form-label">Estado</label>
                       <select
                         className="form-select"
