@@ -65,7 +65,7 @@ export class UsersService {
     });
 
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    const { passwordHash: _, clave: __, ...result } = user;
+    const { clave: _, ...result } = user;
     return result;
   }
 
@@ -100,7 +100,7 @@ export class UsersService {
     ]);
 
     return {
-      data: users.map(({ passwordHash, clave, ...user }) => user),
+      data: users.map(({ clave, ...user }) => user),
       meta: {
         total,
         page,
@@ -124,7 +124,7 @@ export class UsersService {
     }
 
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    const { passwordHash, clave, ...result } = user;
+    const { clave, ...result } = user;
     return result;
   }
 
@@ -183,7 +183,7 @@ export class UsersService {
     });
 
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    const { passwordHash, clave, ...result } = user;
+    const { clave, ...result } = user;
     return result;
   }
 
