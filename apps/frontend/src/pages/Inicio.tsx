@@ -135,7 +135,7 @@ export function Inicio() {
   }, [selectedAnho, selectedAdministrador]);
 
   const loadInicioData = async () => {
-    setLoading(true);
+    // No bloqueamos la UI con setLoading
     try {
       // Obtener estadísticas generales del backend
       const backendStats = await incidentsService.getStatistics();
@@ -199,12 +199,12 @@ export function Inicio() {
 
       setStats(statsData);
       setAdministradores(adminsData);
+      setLoading(false);
       
       // Cargar incidents activos del año actual
       await loadActiveIncidents();
     } catch (error) {
       console.error('❌ Error cargando datos de inicio:', error);
-    } finally {
       setLoading(false);
     }
   };
@@ -239,16 +239,6 @@ export function Inicio() {
     }
   };
 
-  if (loading) {
-    return (
-      <div className="d-flex justify-content-center align-items-center" style={{ height: '100vh' }}>
-        <div className="spinner-border text-primary" role="status">
-          <span className="visually-hidden">Cargando...</span>
-        </div>
-      </div>
-    );
-  }
-
   return (
     <div className="container-fluid" style={{ padding: '20px', height: 'calc(100vh - 120px)', display: 'flex', flexDirection: 'column' }}>
         <div className="row g-3 mb-3" style={{ flexShrink: 0 }}>
@@ -259,9 +249,15 @@ export function Inicio() {
                   <h6 className="text-muted mb-0">Pendientes Hoy</h6>
                   <i className="fas fa-exclamation-circle" style={{ fontSize: '24px', color: '#ffc107' }}></i>
                 </div>
-                <h2 className="mb-0" style={{ fontSize: '2.5rem', fontWeight: 'bold' }}>
-                  {stats?.todayOpenTickets || 0}
-                </h2>
+                {loading ? (
+                  <div className="placeholder-glow">
+                    <span className="placeholder col-6" style={{ height: '2.5rem', display: 'block' }}></span>
+                  </div>
+                ) : (
+                  <h2 className="mb-0" style={{ fontSize: '2.5rem', fontWeight: 'bold' }}>
+                    {stats?.todayOpenTickets || 0}
+                  </h2>
+                )}
                 <small className="text-muted">Tickets sin atender del día</small>
               </div>
             </div>
@@ -273,9 +269,15 @@ export function Inicio() {
                   <h6 className="text-muted mb-0">Cerrados Hoy</h6>
                   <i className="fas fa-check-circle" style={{ fontSize: '24px', color: '#28a745' }}></i>
                 </div>
-                <h2 className="mb-0" style={{ fontSize: '2.5rem', fontWeight: 'bold' }}>
-                  {stats?.todayClosedTickets || 0}
-                </h2>
+                {loading ? (
+                  <div className="placeholder-glow">
+                    <span className="placeholder col-6" style={{ height: '2.5rem', display: 'block' }}></span>
+                  </div>
+                ) : (
+                  <h2 className="mb-0" style={{ fontSize: '2.5rem', fontWeight: 'bold' }}>
+                    {stats?.todayClosedTickets || 0}
+                  </h2>
+                )}
                 <small className="text-muted">Tickets resueltos del día</small>
               </div>
             </div>
@@ -287,9 +289,15 @@ export function Inicio() {
                   <h6 className="text-muted mb-0">Total Activos</h6>
                   <i className="fas fa-tasks" style={{ fontSize: '24px', color: '#0056b3' }}></i>
                 </div>
-                <h2 className="mb-0" style={{ fontSize: '2.5rem', fontWeight: 'bold' }}>
-                  {stats?.activeIncidents || 0}
-                </h2>
+                {loading ? (
+                  <div className="placeholder-glow">
+                    <span className="placeholder col-6" style={{ height: '2.5rem', display: 'block' }}></span>
+                  </div>
+                ) : (
+                  <h2 className="mb-0" style={{ fontSize: '2.5rem', fontWeight: 'bold' }}>
+                    {stats?.activeIncidents || 0}
+                  </h2>
+                )}
                 <small className="text-muted">Todos los tickets abiertos</small>
               </div>
             </div>
@@ -301,9 +309,15 @@ export function Inicio() {
                   <h6 className="text-muted mb-0">Total Resueltos</h6>
                   <i className="fas fa-check-double" style={{ fontSize: '24px', color: '#17a2b8' }}></i>
                 </div>
-                <h2 className="mb-0" style={{ fontSize: '2.5rem', fontWeight: 'bold' }}>
-                  {stats?.closedTickets || 0}
-                </h2>
+                {loading ? (
+                  <div className="placeholder-glow">
+                    <span className="placeholder col-6" style={{ height: '2.5rem', display: 'block' }}></span>
+                  </div>
+                ) : (
+                  <h2 className="mb-0" style={{ fontSize: '2.5rem', fontWeight: 'bold' }}>
+                    {stats?.closedTickets || 0}
+                  </h2>
+                )}
                 <small className="text-muted">Histórico de cerrados</small>
               </div>
             </div>
