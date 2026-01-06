@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
 import { reportesService, PeriodoReporte, FiltrosReporte, EstadisticasReporte } from '../../services/reportes.service';
-import { tiposService, Tipo } from '../../services/tipos.service';
+import { incidentsService } from '../../services/incidents.service';
 import { administradoresService, Administrador } from '../../services/administradores.service';
 
 export function ReporteIncidencias() {
@@ -11,7 +11,8 @@ export function ReporteIncidencias() {
   const [estadisticas, setEstadisticas] = useState<EstadisticasReporte | null>(null);
   
   // Catálogos
-  const [tipos, setTipos] = useState<Tipo[]>([]);
+  const [tiposIncidencia, setTiposIncidencia] = useState<any[]>([]);
+  const [tiposEstado, setTiposEstado] = useState<any[]>([]);
   const [administradores, setAdministradores] = useState<Administrador[]>([]);
   
   // Filtros
@@ -29,18 +30,20 @@ export function ReporteIncidencias() {
   }, []);
 
   useEffect(() => {
-    if (tipos.length > 0) {
+    if (tiposIncidencia.length > 0) {
       loadEstadisticas();
     }
-  }, [periodo, mes, anio, fechaInicio, fechaFin, tipoIncidencia, estadoId, administradorId, tipos]);
+  }, [periodo, mes, anio, fechaInicio, fechaFin, tipoIncidencia, estadoId, administradorId, tiposIncidencia]);
 
   const loadCatalogos = async () => {
     try {
-      const [tiposData, adminsData] = await Promise.all([
-        tiposService.getTipos(),
+      const [incidenciasData, estadosData, adminsData] = await Promise.all([
+        incidentsService.getIncidenciasCatalog(),
+        incidentsService.getEstadosCatalog(),
         administradoresService.getAdministradores()
       ]);
-      setTipos(tiposData);
+      setTiposIncidencia(incidenciasData);
+      setTiposEstado(estadosData);
       setAdministradores(adminsData);
     } catch (error) {
       console.error('Error loading catalogos:', error);
@@ -260,9 +263,6 @@ export function ReporteIncidencias() {
     setAdministradorId(undefined);
   };
 
-  const tiposIncidencia = tipos.filter(t => t.parent_id === 5); // INCIDENCIA
-  const tiposEstado = tipos.filter(t => t.parent_id === 7); // ESTADO
-
   const meses = [
     { value: 1, label: 'Enero' },
     { value: 2, label: 'Febrero' },
@@ -421,7 +421,7 @@ export function ReporteIncidencias() {
               >
                 <option value="">Todos</option>
                 {tiposIncidencia.map(tipo => (
-                  <option key={tipo.id} value={tipo.id}>{tipo.name}</option>
+                  <option key={tipo.id} value={tipo.id}>{tipo.tipo}</option>
                 ))}
               </select>
             </div>
@@ -437,8 +437,8 @@ export function ReporteIncidencias() {
                 onChange={(e) => setEstadoId(e.target.value ? parseInt(e.target.value) : undefined)}
               >
                 <option value="">Todos</option>
-                {tiposEstado.map(tipo => (
-                  <option key={tipo.id} value={tipo.id}>{tipo.name}</option>
+                {tiposEstado.map(estado => (
+                  <option key={estado.id} value={estado.id}>{estado.nombre}</option>
                 ))}
               </select>
             </div>

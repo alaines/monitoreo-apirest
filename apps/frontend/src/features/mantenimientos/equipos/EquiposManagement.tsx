@@ -1,8 +1,12 @@
 import React, { useState, useEffect } from 'react';
 import { equiposService, Equipo } from '../../../services/admin.service';
 
+type SortField = 'id' | 'nombre' | 'estado';
+type SortOrder = 'asc' | 'desc';
+
 const EquiposManagement: React.FC = () => {
   const [equipos, setEquipos] = useState<Equipo[]>([]);
+  const [allEquipos, setAllEquipos] = useState<Equipo[]>([]);
   const [loading, setLoading] = useState(false);
   const [showModal, setShowModal] = useState(false);
   const [editingEquipo, setEditingEquipo] = useState<Equipo | null>(null);
@@ -11,21 +15,82 @@ const EquiposManagement: React.FC = () => {
     estado: true
   });
 
+  const [page, setPage] = useState(1);
+  const [limit, setLimit] = useState(10);
+  const [total, setTotal] = useState(0);
+  const [totalPages, setTotalPages] = useState(0);
+  const [sortField, setSortField] = useState<SortField>('nombre');
+  const [sortOrder, setSortOrder] = useState<SortOrder>('asc');
+  const [showFilters, setShowFilters] = useState(false);
+  const [filters, setFilters] = useState({
+    search: '',
+    estado: '' as '' | 'true' | 'false',
+  });
+
   useEffect(() => {
     loadData();
   }, []);
+
+  useEffect(() => {
+    applyFiltersAndPagination();
+  }, [page, limit, filters, sortField, sortOrder, allEquipos]);
 
   const loadData = async () => {
     try {
       setLoading(true);
       const data = await equiposService.getAll();
-      setEquipos(data);
+      setAllEquipos(data);
     } catch (error) {
       console.error('Error al cargar equipos:', error);
       alert('Error al cargar equipos');
     } finally {
       setLoading(false);
     }
+  };
+
+  const applyFiltersAndPagination = () => {
+    let filtered = [...allEquipos];
+    if (filters.search) {
+      const searchLower = filters.search.toLowerCase();
+      filtered = filtered.filter(eq => eq.nombre?.toLowerCase().includes(searchLower));
+    }
+    if (filters.estado !== '') {
+      const estadoBool = filters.estado === 'true';
+      filtered = filtered.filter(eq => eq.estado === estadoBool);
+    }
+    filtered.sort((a, b) => {
+      let aVal: any, bVal: any;
+      switch (sortField) {
+        case 'id': aVal = a.id; bVal = b.id; break;
+        case 'nombre': aVal = a.nombre || ''; bVal = b.nombre || ''; break;
+        case 'estado': aVal = a.estado ? 1 : 0; bVal = b.estado ? 1 : 0; break;
+        default: return 0;
+      }
+      if (typeof aVal === 'string') return sortOrder === 'asc' ? aVal.localeCompare(bVal) : bVal.localeCompare(aVal);
+      return sortOrder === 'asc' ? aVal - bVal : bVal - aVal;
+    });
+    setTotal(filtered.length);
+    setTotalPages(Math.ceil(filtered.length / limit));
+    setEquipos(filtered.slice((page - 1) * limit, page * limit));
+  };
+
+  const handleFilterChange = (key: string, value: string) => {
+    setFilters(prev => ({ ...prev, [key]: value }));
+    setPage(1);
+  };
+
+  const handleSort = (field: SortField) => {
+    if (sortField === field) {
+      setSortOrder(sortOrder === 'asc' ? 'desc' : 'asc');
+    } else {
+      setSortField(field);
+      setSortOrder('asc');
+    }
+  };
+
+  const getSortIcon = (field: SortField) => {
+    if (sortField !== field) return <i className="fas fa-sort text-muted ms-1"></i>;
+    return sortOrder === 'asc' ? <i className="fas fa-sort-up ms-1"></i> : <i className="fas fa-sort-down ms-1"></i>;
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -101,20 +166,52 @@ const EquiposManagement: React.FC = () => {
           </div>
         </div>
       ) : (
-        <div className="card">
-          <div className="card-body">
-            <div className="table-responsive">
-              <table className="table table-hover">
-                <thead>
-                  <tr>
-                    <th>ID</th>
-                    <th>Nombre</th>
-                    <th>Estado</th>
-                    <th>Acciones</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {equipos.map(equipo => (
+        <>
+          <div className="card border-0 shadow-sm mb-3">
+            <div className="card-header bg-white border-bottom">
+              <button className="btn btn-sm btn-outline-secondary" onClick={() => setShowFilters(!showFilters)}>
+                <i className="fas fa-filter me-2"></i>
+                {showFilters ? 'Ocultar Filtros' : 'Mostrar Filtros'}
+              </button>
+            </div>
+            {showFilters && (
+              <div className="card-body">
+                <div className="row g-2">
+                  <div className="col-md-8">
+                    <label className="form-label small">Buscar</label>
+                    <input type="text" className="form-control form-control-sm" placeholder="Nombre..." value={filters.search} onChange={(e) => handleFilterChange('search', e.target.value)} />
+                  </div>
+                  <div className="col-md-2">
+                    <label className="form-label small">Estado</label>
+                    <select className="form-select form-select-sm" value={filters.estado} onChange={(e) => handleFilterChange('estado', e.target.value)}>
+                      <option value="">Todos</option>
+                      <option value="true">Activos</option>
+                      <option value="false">Inactivos</option>
+                    </select>
+                  </div>
+                  <div className="col-md-2 d-flex align-items-end">
+                    <button className="btn btn-outline-secondary btn-sm w-100" onClick={() => { setFilters({ search: '', estado: '' }); setPage(1); }}>
+                      <i className="fas fa-eraser me-1"></i> Limpiar
+                    </button>
+                  </div>
+                </div>
+              </div>
+            )}
+          </div>
+          <div className="card">
+            <div className="card-body">
+              <div className="table-responsive">
+                <table className="table table-hover">
+                  <thead>
+                    <tr>
+                      <th onClick={() => handleSort('id')} style={{ cursor: 'pointer' }}>ID {getSortIcon('id')}</th>
+                      <th onClick={() => handleSort('nombre')} style={{ cursor: 'pointer' }}>Nombre {getSortIcon('nombre')}</th>
+                      <th onClick={() => handleSort('estado')} style={{ cursor: 'pointer' }}>Estado {getSortIcon('estado')}</th>
+                      <th>Acciones</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {equipos.map(equipo => (
                     <tr key={equipo.id}>
                       <td>{equipo.id}</td>
                       <td>{equipo.nombre}</td>
@@ -144,8 +241,35 @@ const EquiposManagement: React.FC = () => {
                 </tbody>
               </table>
             </div>
+            {totalPages > 1 && (
+              <div className="d-flex justify-content-between align-items-center mt-3">
+                <span className="text-muted">Mostrando {(page - 1) * limit + 1} - {Math.min(page * limit, total)} de {total}</span>
+                <div className="d-flex gap-2 align-items-center">
+                  <select className="form-select form-select-sm" style={{ width: 'auto' }} value={limit} onChange={(e) => { setLimit(Number(e.target.value)); setPage(1); }}>
+                    <option value={10}>10 por página</option>
+                    <option value={25}>25 por página</option>
+                    <option value={50}>50 por página</option>
+                  </select>
+                  <nav>
+                    <ul className="pagination pagination-sm mb-0">
+                      <li className={`page-item ${page === 1 ? 'disabled' : ''}`}>
+                        <button className="page-link" onClick={() => setPage(page - 1)} disabled={page === 1}>Anterior</button>
+                      </li>
+                      {Array.from({ length: Math.min(totalPages, 5) }, (_, i) => {
+                        let pageNum = totalPages <= 5 ? i + 1 : page <= 3 ? i + 1 : page >= totalPages - 2 ? totalPages - 4 + i : page - 2 + i;
+                        return <li key={pageNum} className={`page-item ${page === pageNum ? 'active' : ''}`}><button className="page-link" onClick={() => setPage(pageNum)}>{pageNum}</button></li>;
+                      })}
+                      <li className={`page-item ${page === totalPages ? 'disabled' : ''}`}>
+                        <button className="page-link" onClick={() => setPage(page + 1)} disabled={page === totalPages}>Siguiente</button>
+                      </li>
+                    </ul>
+                  </nav>
+                </div>
+              </div>
+            )}
           </div>
         </div>
+        </>
       )}
 
       {showModal && (

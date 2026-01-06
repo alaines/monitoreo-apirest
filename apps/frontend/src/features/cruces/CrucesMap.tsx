@@ -74,6 +74,9 @@ export function CrucesMap() {
   const [detailModalOpen, setDetailModalOpen] = useState(false);
   const [selectedCruceId, setSelectedCruceId] = useState<number | null>(null);
   
+  // Mostrar/ocultar filtros
+  const [showFilters, setShowFilters] = useState(false);
+  
   // Filtros
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedTipoGestion, setSelectedTipoGestion] = useState<number | null>(null);
@@ -206,130 +209,141 @@ export function CrucesMap() {
 
       {/* Panel de Filtros */}
       <div className="card shadow-sm mb-3" style={{ flexShrink: 0 }}>
-        <div className="card-body">
-          {loadingData ? (
-            <div className="row g-3">
-              <div className="col-md-3">
-                <label className="form-label fw-bold">
-                  <i className="fas fa-search me-2"></i>
-                  Búsqueda
-                </label>
-                <div className="placeholder-glow">
-                  <span className="placeholder col-12 form-control"></span>
-                </div>
-              </div>
-              <div className="col-md-3">
-                <label className="form-label fw-bold">
-                  <i className="fas fa-cogs me-2"></i>
-                  Tipo de Gestión
-                </label>
-                <div className="placeholder-glow">
-                  <span className="placeholder col-12 form-control"></span>
-                </div>
-              </div>
-              <div className="col-md-3">
-                <label className="form-label fw-bold">
-                  <i className="fas fa-wifi me-2"></i>
-                  Tipo de Comunicación
-                </label>
-                <div className="placeholder-glow">
-                  <span className="placeholder col-12 form-control"></span>
-                </div>
-              </div>
-              <div className="col-md-2">
-                <label className="form-label fw-bold">
-                  <i className="fas fa-user-tie me-2"></i>
-                  Administrador
-                </label>
-                <div className="placeholder-glow">
-                  <span className="placeholder col-12 form-control"></span>
-                </div>
-              </div>
-              <div className="col-md-1 d-flex align-items-end">
-                <div className="placeholder-glow w-100">
-                  <span className="placeholder col-12 btn"></span>
-                </div>
-              </div>
-            </div>
-          ) : (
-            <div className="row g-3">
-              <div className="col-md-3">
-                <label className="form-label fw-bold">
-                  <i className="fas fa-search me-2"></i>
-                  Búsqueda
-                </label>
-                <input
-                  type="text"
-                  className="form-control"
-                  placeholder="Código, nombre o distrito..."
-                  value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
-                />
-              </div>
-
-              <div className="col-md-3">
-                <label className="form-label fw-bold">
-                  <i className="fas fa-cogs me-2"></i>
-                  Tipo de Gestión
-                </label>
-                <select
-                  className="form-select"
-                  value={selectedTipoGestion || ''}
-                  onChange={(e) => setSelectedTipoGestion(e.target.value ? parseInt(e.target.value) : null)}
-                >
-                  <option value="">Todos</option>
-                  {tiposGestion.map(tipo => (
-                    <option key={tipo.id} value={tipo.id}>{tipo.name}</option>
-                  ))}
-                </select>
-              </div>
-
-              <div className="col-md-3">
-                <label className="form-label fw-bold">
-                  <i className="fas fa-wifi me-2"></i>
-                  Tipo de Comunicación
-                </label>
-                <select
-                  className="form-select"
-                  value={selectedTipoComunicacion || ''}
-                  onChange={(e) => setSelectedTipoComunicacion(e.target.value ? parseInt(e.target.value) : null)}
-                >
-                  <option value="">Todos</option>
-                  {tiposComunicacion.map(tipo => (
-                    <option key={tipo.id} value={tipo.id}>{tipo.name}</option>
-                  ))}
-                </select>
-              </div>
-
-              <div className="col-md-2">
-                <label className="form-label fw-bold">
-                  <i className="fas fa-user-tie me-2"></i>
-                  Administrador
-                </label>
-                <select
-                  className="form-select"
-                  value={selectedAdministrador || ''}
-                  onChange={(e) => setSelectedAdministrador(e.target.value ? parseInt(e.target.value) : null)}
-                >
-                  <option value="">Todos</option>
-                  {administradores.map(admin => (
-                    <option key={admin.id} value={admin.id}>{admin.nombre}</option>
-                  ))}
-                </select>
-              </div>
-
-              <div className="col-md-1 d-flex align-items-end">
-                <button
-                  className="btn btn-outline-secondary w-100"
-                  onClick={clearFilters}
-                  title="Limpiar filtros"
-                >
-                  <i className="fas fa-eraser"></i>
-                </button>
-              </div>
-            </div>
-          )}
+        <div className="card-header bg-white border-bottom">
+          <button 
+            className="btn btn-sm btn-outline-secondary"
+            onClick={() => setShowFilters(!showFilters)}
+          >
+            <i className="fas fa-filter me-2"></i>
+            {showFilters ? 'Ocultar Filtros' : 'Mostrar Filtros'}
+          </button>
         </div>
+        {showFilters && (
+          <div className="card-body">
+            {loadingData ? (
+              <div className="row g-3">
+                <div className="col-md-3">
+                  <label className="form-label fw-bold">
+                    <i className="fas fa-search me-2"></i>
+                    Búsqueda
+                  </label>
+                  <div className="placeholder-glow">
+                    <span className="placeholder col-12 form-control"></span>
+                  </div>
+                </div>
+                <div className="col-md-3">
+                  <label className="form-label fw-bold">
+                    <i className="fas fa-cogs me-2"></i>
+                    Tipo de Gestión
+                  </label>
+                  <div className="placeholder-glow">
+                    <span className="placeholder col-12 form-control"></span>
+                  </div>
+                </div>
+                <div className="col-md-3">
+                  <label className="form-label fw-bold">
+                    <i className="fas fa-wifi me-2"></i>
+                    Tipo de Comunicación
+                  </label>
+                  <div className="placeholder-glow">
+                    <span className="placeholder col-12 form-control"></span>
+                  </div>
+                </div>
+                <div className="col-md-2">
+                  <label className="form-label fw-bold">
+                    <i className="fas fa-user-tie me-2"></i>
+                    Administrador
+                  </label>
+                  <div className="placeholder-glow">
+                    <span className="placeholder col-12 form-control"></span>
+                  </div>
+                </div>
+                <div className="col-md-1 d-flex align-items-end">
+                  <div className="placeholder-glow w-100">
+                    <span className="placeholder col-12 btn"></span>
+                  </div>
+                </div>
+              </div>
+            ) : (
+              <div className="row g-3">
+                <div className="col-md-3">
+                  <label className="form-label fw-bold">
+                    <i className="fas fa-search me-2"></i>
+                    Búsqueda
+                  </label>
+                  <input
+                    type="text"
+                    className="form-control"
+                    placeholder="Código, nombre o distrito..."
+                    value={searchTerm}
+                    onChange={(e) => setSearchTerm(e.target.value)}
+                  />
+                </div>
+
+                <div className="col-md-3">
+                  <label className="form-label fw-bold">
+                    <i className="fas fa-cogs me-2"></i>
+                    Tipo de Gestión
+                  </label>
+                  <select
+                    className="form-select"
+                    value={selectedTipoGestion || ''}
+                    onChange={(e) => setSelectedTipoGestion(e.target.value ? parseInt(e.target.value) : null)}
+                  >
+                    <option value="">Todos</option>
+                    {tiposGestion.map(tipo => (
+                      <option key={tipo.id} value={tipo.id}>{tipo.name}</option>
+                    ))}
+                  </select>
+                </div>
+
+                <div className="col-md-3">
+                  <label className="form-label fw-bold">
+                    <i className="fas fa-wifi me-2"></i>
+                    Tipo de Comunicación
+                  </label>
+                  <select
+                    className="form-select"
+                    value={selectedTipoComunicacion || ''}
+                    onChange={(e) => setSelectedTipoComunicacion(e.target.value ? parseInt(e.target.value) : null)}
+                  >
+                    <option value="">Todos</option>
+                    {tiposComunicacion.map(tipo => (
+                      <option key={tipo.id} value={tipo.id}>{tipo.name}</option>
+                    ))}
+                  </select>
+                </div>
+
+                <div className="col-md-2">
+                  <label className="form-label fw-bold">
+                    <i className="fas fa-user-tie me-2"></i>
+                    Administrador
+                  </label>
+                  <select
+                    className="form-select"
+                    value={selectedAdministrador || ''}
+                    onChange={(e) => setSelectedAdministrador(e.target.value ? parseInt(e.target.value) : null)}
+                  >
+                    <option value="">Todos</option>
+                    {administradores.map(admin => (
+                      <option key={admin.id} value={admin.id}>{admin.nombre}</option>
+                    ))}
+                  </select>
+                </div>
+
+                <div className="col-md-1 d-flex align-items-end">
+                  <button
+                    className="btn btn-outline-secondary w-100"
+                    onClick={clearFilters}
+                    title="Limpiar filtros"
+                  >
+                    <i className="fas fa-eraser"></i>
+                  </button>
+                </div>
+              </div>
+            )}
+          </div>
+        )}
       </div>
 
       {/* Mapa */}
