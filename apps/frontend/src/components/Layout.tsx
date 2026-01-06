@@ -79,7 +79,84 @@ export function Layout({ children }: { children: React.ReactNode }) {
           {isActive('/users') && 'Gestión de Usuarios'}
         </div>
 
-        <div style={{ width: '48px' }}></div>
+        {/* Usuario en header */}
+        <div style={{ position: 'relative' }}>
+          <button
+            onClick={() => setShowUserMenu(!showUserMenu)}
+            className="btn btn-light d-flex align-items-center gap-2"
+            style={{
+              padding: '6px 12px',
+              border: '1px solid #dee2e6',
+              borderRadius: '8px'
+            }}
+          >
+            <div style={{ 
+              width: '32px', 
+              height: '32px', 
+              borderRadius: '50%', 
+              backgroundColor: 'var(--primary)', 
+              display: 'flex', 
+              alignItems: 'center', 
+              justifyContent: 'center',
+              color: 'white'
+            }}>
+              <i className="fas fa-user" style={{ fontSize: '14px' }}></i>
+            </div>
+            <div style={{ textAlign: 'left' }}>
+              <div style={{ fontSize: '13px', fontWeight: '500', lineHeight: '1.2' }}>
+                {user?.usuario || 'Usuario'}
+              </div>
+              <div style={{ fontSize: '11px', color: '#6c757d', lineHeight: '1.2' }}>
+                {user?.grupo?.nombre || 'Usuario'}
+              </div>
+            </div>
+            <i className="fas fa-chevron-down" style={{ fontSize: '10px', marginLeft: '4px' }}></i>
+          </button>
+
+          {/* Dropdown usuario */}
+          {showUserMenu && (
+            <div
+              className="bg-white border rounded shadow"
+              style={{
+                position: 'absolute',
+                top: '100%',
+                right: '0',
+                marginTop: '8px',
+                minWidth: '200px',
+                zIndex: 1001
+              }}
+            >
+              <a
+                href="#"
+                className="d-block p-3 text-decoration-none text-dark border-bottom"
+                style={{ fontSize: '14px' }}
+                onClick={(e) => e.preventDefault()}
+              >
+                <i className="fas fa-user me-2"></i>Mi Perfil
+              </a>
+              <a
+                href="#"
+                className="d-block p-3 text-decoration-none text-dark border-bottom"
+                style={{ fontSize: '14px' }}
+                onClick={(e) => e.preventDefault()}
+              >
+                <i className="fas fa-cog me-2"></i>Configuración
+              </a>
+              <a
+                href="#"
+                className="d-block p-3 text-decoration-none"
+                style={{ fontSize: '14px', color: 'var(--danger)' }}
+                onClick={(e) => {
+                  e.preventDefault();
+                  logout();
+                  navigate('/login');
+                }}
+              >
+                <i className="fas fa-sign-out-alt me-2"></i>Cerrar Sesión
+              </a>
+            </div>
+          )}
+        </div>
       </header>
 
       {/* Contenedor con Sidebar y Contenido */}
@@ -634,91 +711,6 @@ export function Layout({ children }: { children: React.ReactNode }) {
             </div>
           )}
         </nav>
-
-        {/* Usuario en sidebar */}
-        <div style={{ borderTop: '1px solid rgba(255,255,255,0.1)', padding: '15px 20px', position: 'relative' }}>
-          <button
-            onClick={() => setShowUserMenu(!showUserMenu)}
-            style={{
-              width: '100%',
-              padding: '10px',
-              border: 'none',
-              background: 'rgba(255,255,255,0.1)',
-              color: 'white',
-              borderRadius: '8px',
-              cursor: 'pointer',
-              display: 'flex',
-              alignItems: 'center',
-              gap: '10px',
-              fontSize: '14px'
-            }}
-          >
-            <div style={{ 
-              width: '32px', 
-              height: '32px', 
-              borderRadius: '50%', 
-              backgroundColor: 'var(--primary)', 
-              display: 'flex', 
-              alignItems: 'center', 
-              justifyContent: 'center',
-              flexShrink: 0
-            }}>
-              <i className="fas fa-user" style={{ fontSize: '14px' }}></i>
-            </div>
-            <div style={{ flex: 1, textAlign: 'left', overflow: 'hidden' }}>
-              <div style={{ fontSize: '13px', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
-                {user?.usuario || 'Usuario'}
-              </div>
-              <div style={{ fontSize: '11px', opacity: 0.7, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
-                {user?.grupo?.nombre || 'Usuario'}
-              </div>
-            </div>
-          </button>
-
-          {/* Dropdown usuario */}
-          {showUserMenu && (
-            <div
-              className="bg-white border rounded shadow"
-              style={{
-                position: 'absolute',
-                bottom: '100%',
-                left: '20px',
-                right: '20px',
-                marginBottom: '8px',
-                zIndex: 1001
-              }}
-            >
-              <a
-                href="#"
-                className="d-block p-3 text-decoration-none text-dark border-bottom"
-                style={{ fontSize: '14px' }}
-                onClick={(e) => e.preventDefault()}
-              >
-                <i className="fas fa-user me-2"></i>Mi Perfil
-              </a>
-              <a
-                href="#"
-                className="d-block p-3 text-decoration-none text-dark border-bottom"
-                style={{ fontSize: '14px' }}
-                onClick={(e) => e.preventDefault()}
-              >
-                <i className="fas fa-cog me-2"></i>Configuración
-              </a>
-              <a
-                href="#"
-                className="d-block p-3 text-decoration-none"
-                style={{ fontSize: '14px', color: 'var(--danger)' }}
-                onClick={(e) => {
-                  e.preventDefault();
-                  logout();
-                  navigate('/login');
-                }}
-              >
-                <i className="fas fa-sign-out-alt me-2"></i>Cerrar Sesión
-              </a>
-            </div>
-          )}
-        </div>
       </aside>
 
       {/* Contenedor principal */}
