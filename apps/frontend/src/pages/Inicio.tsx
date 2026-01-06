@@ -165,10 +165,10 @@ export function Inicio() {
       // Estadísticas de hoy
       const todayOpenTickets = todayIncidents.filter((t: Incident) => t.estadoId === 1).length;
       const todayInProgressTickets = todayIncidents.filter((t: Incident) => t.estadoId === 2).length;
-      const todayClosedTickets = todayIncidents.filter((t: Incident) => t.estadoId === 3).length;
+      const todayClosedTickets = todayIncidents.filter((t: Incident) => t.estadoId === 3 || t.estadoId === 4).length;
 
       // Calcular tiempo promedio de resolución (solo de las incidencias resueltas que tenemos)
-      const resolvedIncidents = allIncidents.filter((t: Incident) => t.estadoId === 3);
+      const resolvedIncidents = allIncidents.filter((t: Incident) => t.estadoId === 3 || t.estadoId === 4);
       const totalResolutionTime = resolvedIncidents.reduce((acc: number, inc: Incident) => {
         if (inc.updatedAt) {
           const created = new Date(inc.createdAt).getTime();
