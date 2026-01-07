@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
-import { MapContainer, TileLayer, Circle, useMap } from 'react-leaflet';
+import { MapContainer, TileLayer, useMap } from 'react-leaflet';
 import { incidentsService } from '../../services/incidents.service';
+import { HeatmapLayer } from '../../components/HeatmapLayer';
 import 'leaflet/dist/leaflet.css';
 
 // Interface simplificada para data del mapa
@@ -142,35 +143,24 @@ export function MapaCalor() {
     });
   };
 
-  // Calcular intensidad del calor basado en la densidad
-  const getHeatIntensity = (lat: number, lng: number) => {
-    const radius = 0.01; // aproximadamente 1km
+  // Convertir incidencias a puntos para heatmap
+  const heatmapPoints: Array<[number, number, number]> = filteredIncidents.map(incident => {
+    // Calcular intensidad local para este punto
     const nearby = filteredIncidents.filter(i => {
       const distance = Math.sqrt(
-        Math.pow(i.latitude - lat, 2) + Math.pow(i.longitude - lng, 2)
+        Math.pow(i.latitude - incident.latitude, 2) + 
+        Math.pow(i.longitude - incident.longitude, 2)
       );
-      return distance <= radius;
+      return distance <= 0.01; // radio ~1km
     });
-    return nearby.length;
-  };
+    const intensity = Math.min(nearby.length / 10, 1); // normalizar 0-1
+    return [incident.latitude, incident.longitude, intensity];
+  });
 
-  const getColorByIntensity = (intensity: number): string => {
-    if (intensity >= 10) return '#8b0000'; // rojo oscuro
-    if (intensity >= 7) return '#dc143c'; // rojo
-    if (intensity >= 5) return '#ff6347'; // tomate
-    if (intensity >= 3) return '#ffa500'; // naranja
-    if (intensity >= 2) return '#ffd700'; // dorado
-    return '#ffff00'; // amarillo
-  };
-
-  const getRadiusByIntensity = (intensity: number): number => {
-    if (intensity >= 10) return 300;
-    if (intensity >= 7) return 250;
-    if (intensity >= 5) return 200;
-    if (intensity >= 3) return 150;
-    if (intensity >= 2) return 100;
-    return 80;
-  };
+  // Stats
+  const maxDensity = filteredIncidents.length > 0
+    ? Math.max(...heatmapPoints.map(p => p[2]))
+    : 0;
 
   return (
     <div className="container-fluid" style={{ padding: '20px', height: 'calc(100vh - 120px)', display: 'flex', flexDirection: 'column' }}>
@@ -213,25 +203,17 @@ export function MapaCalor() {
           
           {filteredIncidents.length > 0 && <FitBounds incidents={filteredIncidents} />}
 
-          {filteredIncidents.map((incident) => {
-            const intensity = getHeatIntensity(incident.latitude, incident.longitude);
-            const color = getColorByIntensity(intensity);
-            const radius = getRadiusByIntensity(intensity);
-
-            return (
-              <Circle
-                key={incident.id}
-                center={[incident.latitude, incident.longitude]}
-                radius={radius}
-                pathOptions={{
-                  color: color,
-                  fillColor: color,
-                  fillOpacity: 0.4,
-                  weight: 2,
-                }}
-              />
-            );
-          })}
+          {/* Capa de heatmap */}
+          <HeatmapLayer 
+            points={heatmapPoints}
+            options={{
+              radius: 30,
+              blur: 20,
+              maxZoom: 17,
+              max: 1.0,
+              minOpacity: 0.5,
+            }}
+          />
         </MapContainer>
 
         {/* Panel de filtros sobre el mapa */}
@@ -344,32 +326,16 @@ export function MapaCalor() {
           {showFilters && (
             <div className="card shadow-sm mt-2">
               <div className="card-body p-2">
-                <small className="fw-bold d-block mb-1">Intensidad:</small>
-                <div className="d-flex flex-column gap-1">
-                  <div className="d-flex align-items-center gap-1">
-                    <div style={{ width: '15px', height: '15px', borderRadius: '50%', backgroundColor: '#ffff00', flexShrink: 0 }}></div>
-                    <small style={{ fontSize: '11px' }}>Baja (1-2)</small>
-                  </div>
-                  <div className="d-flex align-items-center gap-1">
-                    <div style={{ width: '15px', height: '15px', borderRadius: '50%', backgroundColor: '#ffd700', flexShrink: 0 }}></div>
-                    <small style={{ fontSize: '11px' }}>Media-Baja (2-3)</small>
-                  </div>
-                  <div className="d-flex align-items-center gap-1">
-                    <div style={{ width: '15px', height: '15px', borderRadius: '50%', backgroundColor: '#ffa500', flexShrink: 0 }}></div>
-                    <small style={{ fontSize: '11px' }}>Media (3-5)</small>
-                  </div>
-                  <div className="d-flex align-items-center gap-1">
-                    <div style={{ width: '15px', height: '15px', borderRadius: '50%', backgroundColor: '#ff6347', flexShrink: 0 }}></div>
-                    <small style={{ fontSize: '11px' }}>Media-Alta (5-7)</small>
-                  </div>
-                  <div className="d-flex align-items-center gap-1">
-                    <div style={{ width: '15px', height: '15px', borderRadius: '50%', backgroundColor: '#dc143c', flexShrink: 0 }}></div>
-                    <small style={{ fontSize: '11px' }}>Alta (7-10)</small>
-                  </div>
-                  <div className="d-flex align-items-center gap-1">
-                    <div style={{ width: '15px', height: '15px', borderRadius: '50%', backgroundColor: '#8b0000', flexShrink: 0 }}></div>
-                    <small style={{ fontSize: '11px' }}>Muy Alta (10+)</small>
-                  </div>
+                <small className="fw-bold d-block mb-2">Gradiente de calor:</small>
+                <div style={{ 
+                  height: '20px', 
+                  background: 'linear-gradient(to right, #ffff00, #ffd700, #ffa500, #ff6347, #dc143c, #8b0000)',
+                  borderRadius: '3px',
+                  marginBottom: '8px'
+                }}></div>
+                <div className="d-flex justify-content-between">
+                  <small style={{ fontSize: '10px' }}>Baja</small>
+                  <small style={{ fontSize: '10px' }}>Alta</small>
                 </div>
               </div>
             </div>
@@ -427,11 +393,9 @@ export function MapaCalor() {
                 <i className="fas fa-fire text-danger"></i>
                 <div>
                   <h5 className="mb-0">
-                    {filteredIncidents.length > 0
-                      ? Math.max(...filteredIncidents.map(i => getHeatIntensity(i.latitude, i.longitude)))
-                      : 0}
+                    {(maxDensity * 100).toFixed(0)}%
                   </h5>
-                  <small className="text-muted">Max Densidad</small>
+                  <small className="text-muted">Max Intensidad</small>
                 </div>
               </div>
             </div>
