@@ -22,6 +22,8 @@ import { ReportadoresModule } from './reportadores/reportadores.module';
 import { ResponsablesModule } from './responsables/responsables.module';
 import { ProyectosModule } from './proyectos/proyectos.module';
 import { IncidenciasModule } from './incidencias/incidencias.module';
+import { TipoDocsModule } from './tipo-docs/tipo-docs.module';
+import { EstadoCivilsModule } from './estado-civils/estado-civils.module';
 import { CommonModule } from './common/common.module';
 import { JwtAuthGuard } from './auth/guards/jwt-auth.guard';
 import { PermissionsGuard } from './common/guards/permissions.guard';
@@ -53,6 +55,8 @@ import { PermissionsGuard } from './common/guards/permissions.guard';
     ResponsablesModule,
     ProyectosModule,
     IncidenciasModule,
+    TipoDocsModule,
+    EstadoCivilsModule,
   ],
   providers: [
     {

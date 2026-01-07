@@ -563,23 +563,13 @@ export const proyectosService = {
 // CATÁLOGOS PERSONAS
 export const catalogosPersonasService = {
   async getTiposDocumento() {
-    const { data } = await api.get(`/tipos/roots`);
-    // Filtrar solo tipos de documento (padre = null y nombre contiene DNI, RUC, etc)
-    return data.filter((tipo: any) => 
-      ['DNI', 'RUC', 'CARNET', 'EXTRANJERIA', 'PASAPORTE'].some(t => 
-        tipo.nombre?.toUpperCase().includes(t)
-      )
-    );
+    const { data } = await api.get(`/tipo-docs`);
+    return data;
   },
   
   async getEstadosCiviles() {
-    const { data } = await api.get(`/tipos/roots`);
-    // Filtrar solo estados civiles
-    return data.filter((tipo: any) => 
-      ['SOLTERO', 'CASADO', 'DIVORCIADO', 'VIUDO', 'CONVIVIENTE'].some(t => 
-        tipo.nombre?.toUpperCase().includes(t)
-      )
-    );
+    const { data } = await api.get(`/estado-civils`);
+    return data;
   }
 };
 
