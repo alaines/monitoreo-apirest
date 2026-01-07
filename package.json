@@ -8,7 +8,12 @@
     "packages/*"
   ],
   "scripts": {
-    "dev": "npm run dev --workspaces --if-present",
+    "dev": "pm2 start ecosystem.config.js",
+    "dev:stop": "pm2 stop ecosystem.config.js",
+    "dev:restart": "pm2 restart ecosystem.config.js",
+    "dev:delete": "pm2 delete ecosystem.config.js",
+    "dev:logs": "pm2 logs",
+    "dev:status": "pm2 status",
     "build": "npm run build --workspaces --if-present",
     "test": "npm run test --workspaces --if-present",
     "lint": "npm run lint --workspaces --if-present",

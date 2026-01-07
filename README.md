@@ -14,7 +14,7 @@ Aland Laines Calonge
 
 ## ⚡ Instalación Rápida
 
-### Desarrollo Local (5 minutos)
+### Desarrollo Local (Con PM2 - Recomendado)
 ```bash
 # 1. Clonar y entrar al proyecto
 git clone https://github.com/alaines/monitoreo-apirest.git
@@ -32,9 +32,15 @@ psql -d monitoreo -f database/init.sql
 cp .env.example .env
 # Editar .env con tus valores
 
-# 5. Iniciar aplicación
-npm run backend:dev  # Terminal 1
-npm run frontend:dev # Terminal 2
+# 5. Iniciar aplicación con PM2
+npm run dev
+
+# Comandos útiles de PM2:
+npm run dev:status   # Ver estado de los servicios
+npm run dev:logs     # Ver logs en tiempo real
+npm run dev:restart  # Reiniciar servicios
+npm run dev:stop     # Detener servicios
+npm run dev:delete   # Eliminar servicios de PM2
 ```
 
 **Acceder:** http://localhost:5173  
