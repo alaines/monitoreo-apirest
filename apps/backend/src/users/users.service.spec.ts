@@ -71,13 +71,20 @@ describe('UsersService', () => {
           usuario: 'testuser',
           password: 'password',
           grupoId: 1,
+          tipoDocId: 1,
+          nroDoc: '12345678',
+          nombres: 'Test',
+          apellidoP: 'User',
+          apellidoM: 'Test',
         }),
       ).rejects.toThrow(ConflictException);
     });
 
     it('should create a new user successfully', async () => {
       jest.spyOn(prismaService.user, 'findUnique').mockResolvedValue(null);
+      jest.spyOn(prismaService.persona, 'findFirst').mockResolvedValue(null);
       jest.spyOn(prismaService.grupo, 'findUnique').mockResolvedValue({ id: 1, nombre: 'OPERADOR' } as any);
+      jest.spyOn(prismaService.persona, 'create').mockResolvedValue({ id: 1 } as any);
       jest.spyOn(authService, 'hashPassword').mockReturnValue('hashed-password');
       jest.spyOn(prismaService.user, 'create').mockResolvedValue(mockUser as any);
 
@@ -85,6 +92,11 @@ describe('UsersService', () => {
         usuario: 'newuser',
         password: 'password123',
         grupoId: 1,
+        tipoDocId: 1,
+        nroDoc: '12345678',
+        nombres: 'Test',
+        apellidoP: 'User',
+        apellidoM: 'Test',
       });
 
       expect(result).toBeDefined();
