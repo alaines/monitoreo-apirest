@@ -72,7 +72,7 @@ const getTrafficLightIcon = (administradorId?: number | null, zoom: number = 13)
 
 // Componente para rastrear cambios de zoom
 function ZoomTracker({ onZoomChange }: { onZoomChange: (zoom: number) => void }) {
-  const map = L.useMap();
+  const map = useMap();
   
   useEffect(() => {
     const handleZoom = () => {
