@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { MapContainer, TileLayer, Marker, Popup } from 'react-leaflet';
+import { MapContainer, TileLayer, Marker, Popup, useMap } from 'react-leaflet';
 import { crucesService, Cruce } from '../../services/cruces.service';
 import { tiposService, Tipo } from '../../services/tipos.service';
 import { administradoresService, Administrador } from '../../services/administradores.service';
@@ -15,8 +15,8 @@ L.Icon.Default.mergeOptions({
   shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-shadow.png',
 });
 
-// Función para obtener icono personalizado por administrador
-const getTrafficLightIcon = (administradorId?: number | null) => {
+// Función para obtener icono personalizado por administrador con escalado por zoom
+const getTrafficLightIcon = (administradorId?: number | null, zoom: number = 13) => {
   // Colores diferenciados por administrador
   const colors: { [key: number]: string } = {
     1: '#dc3545',  // Rojo
@@ -31,16 +31,23 @@ const getTrafficLightIcon = (administradorId?: number | null) => {
   
   const color = administradorId ? (colors[administradorId] || '#6c757d') : '#6c757d'; // Gris por defecto
   
+  // Escalar el tamaño del icono basado en el zoom
+  // zoom < 10: iconos pequeños, zoom > 15: iconos grandes
+  const scale = Math.max(0.4, Math.min(1.2, (zoom - 8) / 8));
+  const size = Math.round(32 * scale);
+  const fontSize = Math.round(14 * scale);
+  const borderWidth = Math.max(2, Math.round(3 * scale));
+  
   return L.divIcon({
     className: 'custom-marker',
     html: `
       <div style="
         background-color: ${color};
-        width: 32px;
-        height: 32px;
+        width: ${size}px;
+        height: ${size}px;
         border-radius: 50% 50% 50% 0;
         transform: rotate(-45deg);
-        border: 3px solid white;
+        border: ${borderWidth}px solid white;
         box-shadow: 0 2px 5px rgba(0,0,0,0.3);
       ">
         <div style="
@@ -51,17 +58,37 @@ const getTrafficLightIcon = (administradorId?: number | null) => {
           justify-content: center;
           transform: rotate(45deg);
           color: white;
-          font-size: 14px;
+          font-size: ${fontSize}px;
         ">
           <i class="fas fa-traffic-light"></i>
         </div>
       </div>
     `,
-    iconSize: [32, 32],
-    iconAnchor: [16, 32],
-    popupAnchor: [0, -32]
+    iconSize: [size, size],
+    iconAnchor: [size / 2, size],
+    popupAnchor: [0, -size]
   });
 };
+
+// Componente para rastrear cambios de zoom
+function ZoomTracker({ onZoomChange }: { onZoomChange: (zoom: number) => void }) {
+  const map = L.useMap();
+  
+  useEffect(() => {
+    const handleZoom = () => {
+      onZoomChange(map.getZoom());
+    };
+    
+    map.on('zoomend', handleZoom);
+    handleZoom(); // Establecer zoom inicial
+    
+    return () => {
+      map.off('zoomend', handleZoom);
+    };
+  }, [map, onZoomChange]);
+
+  return null;
+}
 
 export function CrucesMap() {
   const [cruces, setCruces] = useState<Cruce[]>([]);
@@ -69,6 +96,7 @@ export function CrucesMap() {
   const [loadingData, setLoadingData] = useState(true);
   const [tipos, setTipos] = useState<Tipo[]>([]);
   const [administradores, setAdministradores] = useState<Administrador[]>([]);
+  const [currentZoom, setCurrentZoom] = useState(13);
   
   // Estado para el modal de detalle
   const [detailModalOpen, setDetailModalOpen] = useState(false);
@@ -442,12 +470,13 @@ export function CrucesMap() {
                 url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
                 attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
               />
+              <ZoomTracker onZoomChange={setCurrentZoom} />
               
               {!loadingData && filteredCruces.map((cruce) => (
                 <Marker
                   key={cruce.id}
                   position={[cruce.latitud!, cruce.longitud!]}
-                  icon={getTrafficLightIcon(cruce.administradorId)}
+                  icon={getTrafficLightIcon(cruce.administradorId, currentZoom)}
                 >
                   <Popup maxWidth={300}>
                     <div style={{ minWidth: '250px', fontSize: '13px' }}>

@@ -41,8 +41,29 @@ function MapResizer() {
   return null;
 }
 
-// Función para obtener el icono del marcador según la prioridad
-const getMarkerIcon = (prioridadId?: number) => {
+// Componente para actualizar iconos cuando cambia el zoom
+function MarkerManager({ incidents, onZoomChange }: { incidents: Incident[], onZoomChange: (zoom: number) => void }) {
+  const map = useMap();
+  
+  useEffect(() => {
+    const handleZoom = () => {
+      onZoomChange(map.getZoom());
+    };
+    
+    map.on('zoomend', handleZoom);
+    // Llamar una vez al inicio para establecer el zoom inicial
+    handleZoom();
+    
+    return () => {
+      map.off('zoomend', handleZoom);
+    };
+  }, [map, onZoomChange]);
+
+  return null;
+}
+
+// Función para obtener el icono del marcador según la prioridad y zoom
+const getMarkerIcon = (prioridadId?: number, zoom: number = 13) => {
   let color = '#FFA500'; // Naranja por defecto (MEDIA o sin prioridad)
   
   if (prioridadId === 1) {
@@ -53,16 +74,23 @@ const getMarkerIcon = (prioridadId?: number) => {
     color = '#28A745'; // Verde para BAJA
   }
 
+  // Escalar el tamaño del icono basado en el zoom
+  // zoom < 10: iconos pequeños, zoom > 15: iconos grandes
+  const scale = Math.max(0.4, Math.min(1.2, (zoom - 8) / 8));
+  const size = Math.round(28 * scale);
+  const fontSize = Math.round(14 * scale);
+  const borderWidth = Math.max(2, Math.round(3 * scale));
+
   return L.divIcon({
     className: 'custom-marker',
     html: `
       <div style="
         background-color: ${color};
-        width: 28px;
-        height: 28px;
+        width: ${size}px;
+        height: ${size}px;
         border-radius: 50% 50% 50% 0;
         transform: rotate(-45deg);
-        border: 3px solid white;
+        border: ${borderWidth}px solid white;
         box-shadow: 0 2px 5px rgba(0,0,0,0.3);
       ">
         <div style="
@@ -74,13 +102,13 @@ const getMarkerIcon = (prioridadId?: number) => {
           transform: rotate(45deg);
           color: white;
           font-weight: bold;
-          font-size: 14px;
+          font-size: ${fontSize}px;
         ">!</div>
       </div>
     `,
-    iconSize: [28, 28],
-    iconAnchor: [14, 28],
-    popupAnchor: [0, -28]
+    iconSize: [size, size],
+    iconAnchor: [size / 2, size],
+    popupAnchor: [0, -size]
   });
 };
 
@@ -111,6 +139,7 @@ export function Inicio() {
   const [selectedAdministrador, setSelectedAdministrador] = useState<number | null>(null);
   const currentYear = new Date().getFullYear();
   const [selectedAnho, setSelectedAnho] = useState<number>(currentYear);
+  const [currentZoom, setCurrentZoom] = useState(13);
   const [availableYears, setAvailableYears] = useState<number[]>([]);
   const [administradores, setAdministradores] = useState<Administrador[]>([]);
   const hasLoadedRef = useRef(false);
@@ -416,10 +445,11 @@ export function Inicio() {
                     style={{ height: '100%', width: '100%' }}
                   >
                     <MapResizer />
+                    <MarkerManager incidents={activeIncidents} onZoomChange={setCurrentZoom} />
                     <TileLayer url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" />
                     {activeIncidents.map((incident) => {
                       if (!incident.latitude || !incident.longitude) return null;
-                      const markerIcon = getMarkerIcon(incident.incidencia?.prioridad?.id);
+                      const markerIcon = getMarkerIcon(incident.incidencia?.prioridad?.id, currentZoom);
                       return (
                         <Marker 
                           key={incident.id} 
