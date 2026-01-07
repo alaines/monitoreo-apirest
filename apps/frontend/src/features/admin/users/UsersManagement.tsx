@@ -89,8 +89,6 @@ export function UsersManagement() {
         catalogosPersonasService.getTiposDocumento(),
         catalogosPersonasService.getEstadosCiviles()
       ]);
-      console.log('Tipos de documento cargados:', tiposDocData);
-      console.log('Estados civiles cargados:', estadosCivilesData);
       setTiposDoc(tiposDocData);
       setEstadosCiviles(estadosCivilesData);
     } catch (error: any) {
