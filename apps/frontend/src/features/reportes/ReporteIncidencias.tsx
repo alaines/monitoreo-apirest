@@ -9,6 +9,7 @@ export function ReporteIncidencias() {
   const [loading, setLoading] = useState(false);
   const [exporting, setExporting] = useState(false);
   const [estadisticas, setEstadisticas] = useState<EstadisticasReporte | null>(null);
+  const [showFilters, setShowFilters] = useState(true);
   
   // Catálogos
   const [tiposIncidencia, setTiposIncidencia] = useState<any[]>([]);
@@ -312,23 +313,27 @@ export function ReporteIncidencias() {
       </div>
 
       {/* Panel de Filtros */}
-      <div className="card shadow-sm mb-4">
-        <div className="card-header bg-primary text-white">
-          <h5 className="mb-0">
+      <div className="card border-0 shadow-sm mb-4">
+        <div className="card-header bg-white border-bottom">
+          <button 
+            className="btn btn-sm btn-outline-secondary"
+            onClick={() => setShowFilters(!showFilters)}
+          >
             <i className="fas fa-filter me-2"></i>
-            Filtros de Reporte
-          </h5>
+            {showFilters ? 'Ocultar Filtros' : 'Mostrar Filtros'}
+          </button>
         </div>
+        {showFilters && (
         <div className="card-body">
           {/* Primera fila: Periodo */}
-          <div className="row g-3 mb-3">
+          <div className="row g-2 mb-3">
             <div className="col-md-3">
-              <label className="form-label fw-bold">
+              <label className="form-label small">
                 <i className="fas fa-calendar me-2"></i>
                 Periodo
               </label>
               <select
-                className="form-select"
+                className="form-select form-select-sm"
                 value={periodo}
                 onChange={(e) => setPeriodo(e.target.value as PeriodoReporte)}
               >
@@ -342,9 +347,9 @@ export function ReporteIncidencias() {
             {periodo === PeriodoReporte.MES && (
               <>
                 <div className="col-md-3">
-                  <label className="form-label fw-bold">Mes</label>
+                  <label className="form-label small">Mes</label>
                   <select
-                    className="form-select"
+                    className="form-select form-select-sm"
                     value={mes}
                     onChange={(e) => setMes(parseInt(e.target.value))}
                   >
@@ -354,9 +359,9 @@ export function ReporteIncidencias() {
                   </select>
                 </div>
                 <div className="col-md-3">
-                  <label className="form-label fw-bold">Año</label>
+                  <label className="form-label small">Año</label>
                   <select
-                    className="form-select"
+                    className="form-select form-select-sm"
                     value={anio}
                     onChange={(e) => setAnio(parseInt(e.target.value))}
                   >
@@ -370,9 +375,9 @@ export function ReporteIncidencias() {
 
             {periodo === PeriodoReporte.ANIO && (
               <div className="col-md-3">
-                <label className="form-label fw-bold">Año</label>
+                <label className="form-label small">Año</label>
                 <select
-                  className="form-select"
+                  className="form-select form-select-sm"
                   value={anio}
                   onChange={(e) => setAnio(parseInt(e.target.value))}
                 >
@@ -386,19 +391,19 @@ export function ReporteIncidencias() {
             {periodo === PeriodoReporte.PERSONALIZADO && (
               <>
                 <div className="col-md-3">
-                  <label className="form-label fw-bold">Fecha Inicio</label>
+                  <label className="form-label small">Fecha Inicio</label>
                   <input
                     type="date"
-                    className="form-control"
+                    className="form-control form-control-sm"
                     value={fechaInicio}
                     onChange={(e) => setFechaInicio(e.target.value)}
                   />
                 </div>
                 <div className="col-md-3">
-                  <label className="form-label fw-bold">Fecha Fin</label>
+                  <label className="form-label small">Fecha Fin</label>
                   <input
                     type="date"
-                    className="form-control"
+                    className="form-control form-control-sm"
                     value={fechaFin}
                     onChange={(e) => setFechaFin(e.target.value)}
                   />
@@ -410,12 +415,12 @@ export function ReporteIncidencias() {
           {/* Segunda fila: Filtros adicionales */}
           <div className="row g-2">
             <div className="col-md-3">
-              <label className="form-label fw-bold">
+              <label className="form-label small">
                 <i className="fas fa-exclamation-triangle me-2"></i>
                 Tipo de Incidencia
               </label>
               <select
-                className="form-select"
+                className="form-select form-select-sm"
                 value={tipoIncidencia || ''}
                 onChange={(e) => setTipoIncidencia(e.target.value ? parseInt(e.target.value) : undefined)}
               >
@@ -426,13 +431,13 @@ export function ReporteIncidencias() {
               </select>
             </div>
 
-            <div className="col-md-2">
-              <label className="form-label fw-bold">
+            <div className="col-md-3">
+              <label className="form-label small">
                 <i className="fas fa-info-circle me-2"></i>
                 Estado
               </label>
               <select
-                className="form-select"
+                className="form-select form-select-sm"
                 value={estadoId || ''}
                 onChange={(e) => setEstadoId(e.target.value ? parseInt(e.target.value) : undefined)}
               >
@@ -444,12 +449,12 @@ export function ReporteIncidencias() {
             </div>
 
             <div className="col-md-3">
-              <label className="form-label fw-bold">
+              <label className="form-label small">
                 <i className="fas fa-user-tie me-2"></i>
                 Administrador
               </label>
               <select
-                className="form-select"
+                className="form-select form-select-sm"
                 value={administradorId || ''}
                 onChange={(e) => setAdministradorId(e.target.value ? parseInt(e.target.value) : undefined)}
               >
@@ -460,9 +465,9 @@ export function ReporteIncidencias() {
               </select>
             </div>
 
-            <div className="col-md-1 d-flex align-items-end">
+            <div className="col-md-2 d-flex align-items-end">
               <button
-                className="btn btn-outline-secondary w-100"
+                className="btn btn-sm btn-outline-secondary w-100"
                 onClick={clearFilters}
                 title="Limpiar filtros"
               >
@@ -471,6 +476,7 @@ export function ReporteIncidencias() {
             </div>
           </div>
         </div>
+        )}
       </div>
 
       {/* Estadísticas */}

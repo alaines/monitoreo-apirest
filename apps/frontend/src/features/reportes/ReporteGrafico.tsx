@@ -45,6 +45,7 @@ const ReporteGrafico: React.FC = () => {
 
   const [datos, setDatos] = useState<ReporteGraficoResponse | null>(null);
   const [loading, setLoading] = useState(false);
+  const [showFilters, setShowFilters] = useState(true);
 
   // Referencias a los gráficos
   const chartTipoRef = useRef<any>(null);
@@ -435,24 +436,28 @@ const ReporteGrafico: React.FC = () => {
       </div>
 
       {/* Panel de filtros */}
-      <div className="card shadow-sm mb-4">
-        <div className="card-header bg-primary text-white">
-          <h5 className="mb-0">
+      <div className="card border-0 shadow-sm mb-4">
+        <div className="card-header bg-white border-bottom">
+          <button 
+            className="btn btn-sm btn-outline-secondary"
+            onClick={() => setShowFilters(!showFilters)}
+          >
             <i className="fas fa-filter me-2"></i>
-            Filtros de Reporte
-          </h5>
+            {showFilters ? 'Ocultar Filtros' : 'Mostrar Filtros'}
+          </button>
         </div>
+        {showFilters && (
         <div className="card-body">
           <form onSubmit={handleBuscar}>
-            <div className="row g-3">
+            <div className="row g-2">
               {/* Periodo */}
               <div className="col-md-3">
-                <label className="form-label fw-bold">
+                <label className="form-label small">
                   <i className="fas fa-calendar-alt me-2"></i>
                   Periodo
                 </label>
                 <select
-                  className="form-select"
+                  className="form-select form-select-sm"
                   value={filtros.periodo}
                   onChange={(e) =>
                     setFiltros({
@@ -470,13 +475,13 @@ const ReporteGrafico: React.FC = () => {
               {/* Día */}
               {filtros.periodo === 'DIA' && (
                 <div className="col-md-3">
-                  <label className="form-label fw-bold">
+                  <label className="form-label small">
                     <i className="fas fa-calendar-day me-2"></i>
                     Día
                   </label>
                   <input
                     type="number"
-                    className="form-control"
+                    className="form-control form-control-sm"
                     min="1"
                     max="31"
                     value={filtros.dia || ''}
@@ -493,12 +498,12 @@ const ReporteGrafico: React.FC = () => {
               {/* Mes */}
               {(filtros.periodo === 'DIA' || filtros.periodo === 'MES') && (
                 <div className="col-md-3">
-                  <label className="form-label fw-bold">
+                  <label className="form-label small">
                     <i className="fas fa-calendar-alt me-2"></i>
                     Mes
                   </label>
                   <select
-                    className="form-select"
+                    className="form-select form-select-sm"
                     value={filtros.mes}
                     onChange={(e) =>
                       setFiltros({
@@ -525,12 +530,12 @@ const ReporteGrafico: React.FC = () => {
 
               {/* Año */}
               <div className="col-md-3">
-                <label className="form-label fw-bold">
+                <label className="form-label small">
                   <i className="fas fa-calendar me-2"></i>
                   Año
                 </label>
                 <select
-                  className="form-select"
+                  className="form-select form-select-sm"
                   value={filtros.anio}
                   onChange={(e) =>
                     setFiltros({
@@ -546,10 +551,10 @@ const ReporteGrafico: React.FC = () => {
               </div>
 
               {/* Botones */}
-              <div className="col-md-12">
+              <div className="col-12 d-flex gap-2">
                 <button
                   type="submit"
-                  className="btn btn-primary me-2"
+                  className="btn btn-sm btn-primary"
                   disabled={loading}
                 >
                   {loading ? (
@@ -566,7 +571,7 @@ const ReporteGrafico: React.FC = () => {
                 </button>
                 <button
                   type="button"
-                  className="btn btn-danger"
+                  className="btn btn-sm btn-danger"
                   onClick={handleExportarPDF}
                   disabled={!datos || loading}
                 >
@@ -577,6 +582,7 @@ const ReporteGrafico: React.FC = () => {
             </div>
           </form>
         </div>
+        )}
       </div>
 
       {/* Resumen */}
