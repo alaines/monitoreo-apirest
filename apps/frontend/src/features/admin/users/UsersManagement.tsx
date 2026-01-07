@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { usersService, gruposService, areasService, type User, type Grupo, type Area, type CreateUserDto, type UpdateUserDto } from '../../../services/admin.service';
+import { usersService, gruposService, areasService, catalogosPersonasService, type User, type Grupo, type Area, type CreateUserDto, type UpdateUserDto, type Tipo } from '../../../services/admin.service';
 
 type SortField = 'usuario' | 'nombreCompleto' | 'email' | 'grupo' | 'estado';
 type SortOrder = 'asc' | 'desc';
@@ -8,13 +8,22 @@ export function UsersManagement() {
   const [users, setUsers] = useState<User[]>([]);
   const [grupos, setGrupos] = useState<Grupo[]>([]);
   const [areas, setAreas] = useState<Area[]>([]);
+  const [tiposDoc, setTiposDoc] = useState<Tipo[]>([]);
+  const [estadosCiviles, setEstadosCiviles] = useState<Tipo[]>([]);
   const [loading, setLoading] = useState(true);
   const [showModal, setShowModal] = useState(false);
   const [editingUser, setEditingUser] = useState<User | null>(null);
   const [formData, setFormData] = useState<CreateUserDto>({
     usuario: '',
-    clave: '',
-    nombreCompleto: '',
+    password: '',
+    tipoDocId: 0,
+    nroDoc: '',
+    nombres: '',
+    apellidoP: '',
+    apellidoM: '',
+    fechaNacimiento: '',
+    genero: 'M',
+    estadoCivilId: undefined,
     email: '',
     telefono: '',
     grupoId: 0,
@@ -44,6 +53,7 @@ export function UsersManagement() {
   useEffect(() => {
     loadGrupos();
     loadAreas();
+    loadCatalogos();
     loadData();
   }, []);
 
@@ -73,21 +83,47 @@ export function UsersManagement() {
     }
   };
 
+  const loadCatalogos = async () => {
+    try {
+      const [tiposDocData, estadosCivilesData] = await Promise.all([
+        catalogosPersonasService.getTiposDocumento(),
+        catalogosPersonasService.getEstadosCiviles()
+      ]);
+      setTiposDoc(tiposDocData);
+      setEstadosCiviles(estadosCivilesData);
+    } catch (error: any) {
+      console.error('Error loading catálogos:', error);
+    }
+  };
+
   const loadData = async () => {
     try {
       setLoading(true);
       // Cargar todos los usuarios para filtrar/paginar en el cliente
       const usersResponse = await usersService.getAll(1, 1000);
       
-      let filteredUsers = usersResponse.data || usersResponse;
+      let filteredUsers = (usersResponse.data || usersResponse).map((user: User) => {
+        // Calcular nombreCompleto desde persona si existe
+        const nombreCompleto = user.persona 
+          ? `${user.persona.apePat || ''} ${user.persona.apeMat || ''} ${user.persona.nombres || ''}`.trim()
+          : '';
+        
+        return {
+          ...user,
+          nombreCompleto,
+          email: user.persona?.email || user.email,
+          telefono: user.persona?.movil1 || user.telefono
+        };
+      });
       
       // Aplicar filtros en el cliente
       if (filters.search) {
         const searchLower = filters.search.toLowerCase();
         filteredUsers = filteredUsers.filter((user: User) =>
           user.usuario.toLowerCase().includes(searchLower) ||
-          user.nombreCompleto.toLowerCase().includes(searchLower) ||
-          (user.email && user.email.toLowerCase().includes(searchLower))
+          (user.nombreCompleto && user.nombreCompleto.toLowerCase().includes(searchLower)) ||
+          (user.email && user.email.toLowerCase().includes(searchLower)) ||
+          (user.persona?.numDoc && user.persona.numDoc.includes(filters.search))
         );
       }
       
@@ -178,22 +214,37 @@ export function UsersManagement() {
   const handleOpenModal = (user?: User) => {
     if (user) {
       setEditingUser(user);
+      const persona = user.persona;
       setFormData({
         usuario: user.usuario,
-        clave: '',
-        nombreCompleto: user.nombreCompleto,
-        email: user.email || '',
-        telefono: user.telefono || '',
+        password: '',
+        tipoDocId: persona?.tipoDocId || 0,
+        nroDoc: persona?.numDoc || '',
+        nombres: persona?.nombres || '',
+        apellidoP: persona?.apePat || '',
+        apellidoM: persona?.apeMat || '',
+        fechaNacimiento: persona?.fecnac ? persona.fecnac.toString().split('T')[0] : '',
+        genero: persona?.genero || 'M',
+        estadoCivilId: persona?.estadoCivilId,
+        email: persona?.email || '',
+        telefono: persona?.movil1 || '',
         grupoId: user.grupoId,
-        areaId: (user as any).areaId || undefined,
+        areaId: user.areaId,
         estado: user.estado
       });
     } else {
       setEditingUser(null);
       setFormData({
         usuario: '',
-        clave: '',
-        nombreCompleto: '',
+        password: '',
+        tipoDocId: tiposDoc[0]?.id || 0,
+        nroDoc: '',
+        nombres: '',
+        apellidoP: '',
+        apellidoM: '',
+        fechaNacimiento: '',
+        genero: 'M',
+        estadoCivilId: undefined,
         email: '',
         telefono: '',
         grupoId: grupos[0]?.id || 0,
@@ -218,15 +269,23 @@ export function UsersManagement() {
     try {
       if (editingUser) {
         const updateData: UpdateUserDto = {
-          nombreCompleto: formData.nombreCompleto,
+          usuario: formData.usuario,
+          tipoDocId: formData.tipoDocId,
+          nroDoc: formData.nroDoc,
+          nombres: formData.nombres,
+          apellidoP: formData.apellidoP,
+          apellidoM: formData.apellidoM,
+          fechaNacimiento: formData.fechaNacimiento || undefined,
+          genero: formData.genero,
+          estadoCivilId: formData.estadoCivilId,
           email: formData.email || undefined,
           telefono: formData.telefono || undefined,
           grupoId: formData.grupoId,
           areaId: formData.areaId,
           estado: formData.estado
         };
-        if (formData.clave) {
-          updateData.clave = formData.clave;
+        if (formData.password) {
+          updateData.password = formData.password;
         }
         await usersService.update(editingUser.id, updateData);
       } else {
@@ -474,7 +533,7 @@ export function UsersManagement() {
       {/* Modal */}
       {showModal && (
         <div className="modal show d-block" style={{ backgroundColor: 'rgba(0,0,0,0.5)' }}>
-          <div className="modal-dialog modal-lg">
+          <div className="modal-dialog modal-xl">
             <div className="modal-content">
               <div className="modal-header">
                 <h5 className="modal-title">
@@ -485,7 +544,14 @@ export function UsersManagement() {
               <form onSubmit={handleSubmit}>
                 <div className="modal-body">
                   <div className="row g-3">
-                    <div className="col-md-6">
+                    {/* Datos del Usuario */}
+                    <div className="col-12">
+                      <h6 className="border-bottom pb-2 mb-3">
+                        <i className="fas fa-user me-2"></i>
+                        Datos de Usuario
+                      </h6>
+                    </div>
+                    <div className="col-md-4">
                       <label className="form-label">Usuario *</label>
                       <input
                         type="text"
@@ -496,49 +562,21 @@ export function UsersManagement() {
                         disabled={!!editingUser}
                       />
                     </div>
-                    <div className="col-md-6">
+                    <div className="col-md-4">
                       <label className="form-label">
                         Contraseña {editingUser ? '(dejar vacío para no cambiar)' : '*'}
                       </label>
                       <input
                         type="password"
                         className="form-control"
-                        value={formData.clave}
-                        onChange={(e) => setFormData({ ...formData, clave: e.target.value })}
+                        value={formData.password}
+                        onChange={(e) => setFormData({ ...formData, password: e.target.value })}
                         required={!editingUser}
                         minLength={6}
                       />
                     </div>
-                    <div className="col-md-12">
-                      <label className="form-label">Nombre Completo *</label>
-                      <input
-                        type="text"
-                        className="form-control"
-                        value={formData.nombreCompleto}
-                        onChange={(e) => setFormData({ ...formData, nombreCompleto: e.target.value })}
-                        required
-                      />
-                    </div>
-                    <div className="col-md-6">
-                      <label className="form-label">Email</label>
-                      <input
-                        type="email"
-                        className="form-control"
-                        value={formData.email}
-                        onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                      />
-                    </div>
-                    <div className="col-md-6">
-                      <label className="form-label">Teléfono</label>
-                      <input
-                        type="tel"
-                        className="form-control"
-                        value={formData.telefono}
-                        onChange={(e) => setFormData({ ...formData, telefono: e.target.value })}
-                      />
-                    </div>
                     <div className="col-md-4">
-                      <label className="form-label">Grupo *</label>
+                      <label className="form-label">Grupo / Perfil *</label>
                       <select
                         className="form-select"
                         value={formData.grupoId}
@@ -578,6 +616,133 @@ export function UsersManagement() {
                         <option value="true">Activo</option>
                         <option value="false">Inactivo</option>
                       </select>
+                    </div>
+
+                    {/* Datos Personales */}
+                    <div className="col-12 mt-4">
+                      <h6 className="border-bottom pb-2 mb-3">
+                        <i className="fas fa-id-card me-2"></i>
+                        Datos Personales
+                      </h6>
+                    </div>
+                    <div className="col-md-4">
+                      <label className="form-label">Tipo de Documento *</label>
+                      <select
+                        className="form-select"
+                        value={formData.tipoDocId}
+                        onChange={(e) => setFormData({ ...formData, tipoDocId: Number(e.target.value) })}
+                        required
+                      >
+                        <option value="">Seleccione tipo</option>
+                        {tiposDoc.map((tipo) => (
+                          <option key={tipo.id} value={tipo.id}>
+                            {tipo.nombre}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+                    <div className="col-md-4">
+                      <label className="form-label">Número de Documento *</label>
+                      <input
+                        type="text"
+                        className="form-control"
+                        value={formData.nroDoc}
+                        onChange={(e) => setFormData({ ...formData, nroDoc: e.target.value })}
+                        required
+                        maxLength={15}
+                      />
+                    </div>
+                    <div className="col-md-4">
+                      <label className="form-label">Género</label>
+                      <select
+                        className="form-select"
+                        value={formData.genero}
+                        onChange={(e) => setFormData({ ...formData, genero: e.target.value })}
+                      >
+                        <option value="M">Masculino</option>
+                        <option value="F">Femenino</option>
+                      </select>
+                    </div>
+                    <div className="col-md-4">
+                      <label className="form-label">Nombres *</label>
+                      <input
+                        type="text"
+                        className="form-control"
+                        value={formData.nombres}
+                        onChange={(e) => setFormData({ ...formData, nombres: e.target.value })}
+                        required
+                      />
+                    </div>
+                    <div className="col-md-4">
+                      <label className="form-label">Apellido Paterno *</label>
+                      <input
+                        type="text"
+                        className="form-control"
+                        value={formData.apellidoP}
+                        onChange={(e) => setFormData({ ...formData, apellidoP: e.target.value })}
+                        required
+                      />
+                    </div>
+                    <div className="col-md-4">
+                      <label className="form-label">Apellido Materno *</label>
+                      <input
+                        type="text"
+                        className="form-control"
+                        value={formData.apellidoM}
+                        onChange={(e) => setFormData({ ...formData, apellidoM: e.target.value })}
+                        required
+                      />
+                    </div>
+                    <div className="col-md-4">
+                      <label className="form-label">Fecha de Nacimiento</label>
+                      <input
+                        type="date"
+                        className="form-control"
+                        value={formData.fechaNacimiento}
+                        onChange={(e) => setFormData({ ...formData, fechaNacimiento: e.target.value })}
+                      />
+                    </div>
+                    <div className="col-md-4">
+                      <label className="form-label">Estado Civil</label>
+                      <select
+                        className="form-select"
+                        value={formData.estadoCivilId || ''}
+                        onChange={(e) => setFormData({ ...formData, estadoCivilId: e.target.value ? Number(e.target.value) : undefined })}
+                      >
+                        <option value="">Sin especificar</option>
+                        {estadosCiviles.map((estado) => (
+                          <option key={estado.id} value={estado.id}>
+                            {estado.nombre}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+
+                    {/* Datos de Contacto */}
+                    <div className="col-12 mt-4">
+                      <h6 className="border-bottom pb-2 mb-3">
+                        <i className="fas fa-phone me-2"></i>
+                        Datos de Contacto
+                      </h6>
+                    </div>
+                    <div className="col-md-6">
+                      <label className="form-label">Email</label>
+                      <input
+                        type="email"
+                        className="form-control"
+                        value={formData.email}
+                        onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+                      />
+                    </div>
+                    <div className="col-md-6">
+                      <label className="form-label">Teléfono / Celular</label>
+                      <input
+                        type="tel"
+                        className="form-control"
+                        value={formData.telefono}
+                        onChange={(e) => setFormData({ ...formData, telefono: e.target.value })}
+                        maxLength={15}
+                      />
                     </div>
                   </div>
                 </div>

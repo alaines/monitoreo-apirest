@@ -78,10 +78,9 @@ export const tiposService = {
 export interface User {
   id: number;
   usuario: string;
-  nombreCompleto: string;
-  email: string | null;
-  telefono: string | null;
   grupoId: number;
+  areaId?: number;
+  personaId?: number;
   estado: boolean;
   created: string;
   modified: string;
@@ -90,27 +89,67 @@ export interface User {
     nombre: string;
     descripcion: string;
   };
+  area?: {
+    id: number;
+    nombre: string;
+  };
+  persona?: {
+    id: number;
+    tipoDocId?: number;
+    numDoc?: string;
+    nombres?: string;
+    apePat?: string;
+    apeMat?: string;
+    genero?: string;
+    fecnac?: string;
+    estadoCivilId?: number;
+    email?: string;
+    movil1?: string;
+  };
+  // Campos calculados para compatibilidad
+  nombreCompleto?: string;
+  email?: string | null;
+  telefono?: string | null;
 }
 
 export interface CreateUserDto {
+  // Campos de usuario
   usuario: string;
-  clave: string;
-  nombreCompleto: string;
-  email?: string;
-  telefono?: string;
+  password: string;
   grupoId: number;
   areaId?: number;
   estado?: boolean;
+  // Campos de persona
+  tipoDocId: number;
+  nroDoc: string;
+  nombres: string;
+  apellidoP: string;
+  apellidoM: string;
+  fechaNacimiento?: string;
+  genero?: string;
+  estadoCivilId?: number;
+  email?: string;
+  telefono?: string;
 }
 
 export interface UpdateUserDto {
-  nombreCompleto?: string;
-  email?: string;
-  telefono?: string;
+  // Campos de usuario
+  usuario?: string;
+  password?: string;
   grupoId?: number;
   areaId?: number;
   estado?: boolean;
-  clave?: string;
+  // Campos de persona
+  tipoDocId?: number;
+  nroDoc?: string;
+  nombres?: string;
+  apellidoP?: string;
+  apellidoM?: string;
+  fechaNacimiento?: string;
+  genero?: string;
+  estadoCivilId?: number;
+  email?: string;
+  telefono?: string;
 }
 
 export const usersService = {
@@ -518,6 +557,29 @@ export const proyectosService = {
   async delete(id: number) {
     const { data } = await api.delete(`/proyectos/${id}`);
     return data;
+  }
+};
+
+// CATÁLOGOS PERSONAS
+export const catalogosPersonasService = {
+  async getTiposDocumento() {
+    const { data } = await api.get(`/tipos/roots`);
+    // Filtrar solo tipos de documento (padre = null y nombre contiene DNI, RUC, etc)
+    return data.filter((tipo: any) => 
+      ['DNI', 'RUC', 'CARNET', 'EXTRANJERIA', 'PASAPORTE'].some(t => 
+        tipo.nombre?.toUpperCase().includes(t)
+      )
+    );
+  },
+  
+  async getEstadosCiviles() {
+    const { data } = await api.get(`/tipos/roots`);
+    // Filtrar solo estados civiles
+    return data.filter((tipo: any) => 
+      ['SOLTERO', 'CASADO', 'DIVORCIADO', 'VIUDO', 'CONVIVIENTE'].some(t => 
+        tipo.nombre?.toUpperCase().includes(t)
+      )
+    );
   }
 };
 

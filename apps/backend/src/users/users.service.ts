@@ -25,6 +25,15 @@ export class UsersService {
       throw new ConflictException('El usuario ya existe');
     }
 
+    // Check if document number already exists
+    const existingPersona = await this.prisma.persona.findFirst({
+      where: { numDoc: createUserDto.nroDoc },
+    });
+
+    if (existingPersona) {
+      throw new ConflictException('El número de documento ya está registrado');
+    }
+
     // Validate grupo exists
     const grupo = await this.prisma.grupo.findUnique({
       where: { id: createUserDto.grupoId },
@@ -34,17 +43,51 @@ export class UsersService {
       throw new BadRequestException('El grupo especificado no existe');
     }
 
+    // Validate area if provided
+    if (createUserDto.areaId) {
+      const area = await this.prisma.area.findUnique({
+        where: { id: createUserDto.areaId },
+      });
+
+      if (!area) {
+        throw new BadRequestException('El área especificada no existe');
+      }
+    }
+
     // Hash password
     const clave = this.authService.hashPassword(createUserDto.password);
 
-    // Create user
+    // Create persona first
+    const persona = await this.prisma.persona.create({
+      data: {
+        tipoDocId: createUserDto.tipoDocId,
+        numDoc: createUserDto.nroDoc,
+        nombres: createUserDto.nombres,
+        apePat: createUserDto.apellidoP,
+        apeMat: createUserDto.apellidoM,
+        genero: createUserDto.genero,
+        fecnac: createUserDto.fechaNacimiento,
+        estadoCivilId: createUserDto.estadoCivilId,
+        email: createUserDto.email,
+        movil1: createUserDto.telefono,
+        nomcomp: `${createUserDto.apellidoP} ${createUserDto.apellidoM} ${createUserDto.nombres}`,
+        estado: true,
+        created: new Date(),
+        modified: new Date(),
+      },
+    });
+
+    // Create user with persona reference
     const user = await this.prisma.user.create({
       data: {
         usuario: createUserDto.usuario,
         clave,
         grupoId: createUserDto.grupoId,
-        personaId: createUserDto.personaId,
+        areaId: createUserDto.areaId,
+        personaId: persona.id,
         estado: createUserDto.estado ?? true,
+        created: new Date(),
+        modified: new Date(),
       },
       include: {
         grupo: {
@@ -53,14 +96,13 @@ export class UsersService {
             nombre: true,
           },
         },
-        persona: {
+        area: {
           select: {
             id: true,
-            nombres: true,
-            ape_pat: true,
-            ape_mat: true,
+            nombre: true,
           },
         },
+        persona: true,
       },
     });
 
@@ -83,14 +125,13 @@ export class UsersService {
               nombre: true,
             },
           },
-          persona: {
+          area: {
             select: {
               id: true,
-              nombres: true,
-              ape_pat: true,
-              ape_mat: true,
+              nombre: true,
             },
           },
+          persona: true,
         },
         orderBy: {
           createdAt: 'desc',
@@ -115,6 +156,7 @@ export class UsersService {
       where: { id },
       include: {
         grupo: true,
+        area: true,
         persona: true,
       },
     });
@@ -129,25 +171,31 @@ export class UsersService {
   }
 
   async update(id: number, updateUserDto: UpdateUserDto) {
-    await this.findOne(id); // Validate user exists
-
-    const dataToUpdate: any = { ...updateUserDto };
+    const existingUser = await this.findOne(id); // Validate user exists
 
     // If username is being updated, check if it's available
     if (updateUserDto.usuario) {
-      const existingUser = await this.prisma.user.findUnique({
+      const userWithSameUsername = await this.prisma.user.findUnique({
         where: { usuario: updateUserDto.usuario },
       });
 
-      if (existingUser && existingUser.id !== id) {
+      if (userWithSameUsername && userWithSameUsername.id !== id) {
         throw new ConflictException('El nombre de usuario ya está en uso');
       }
     }
 
-    // If password is being updated, hash it
-    if (updateUserDto.password) {
-      dataToUpdate.clave = this.authService.hashPassword(updateUserDto.password);
-      delete dataToUpdate.password;
+    // If document number is being updated, check if it's available
+    if (updateUserDto.nroDoc && existingUser.personaId) {
+      const personaWithSameDoc = await this.prisma.persona.findFirst({
+        where: {
+          numDoc: updateUserDto.nroDoc,
+          id: { not: existingUser.personaId },
+        },
+      });
+
+      if (personaWithSameDoc) {
+        throw new ConflictException('El número de documento ya está registrado');
+      }
     }
 
     // Validate grupo if provided
@@ -161,9 +209,69 @@ export class UsersService {
       }
     }
 
+    // Validate area if provided
+    if (updateUserDto.areaId) {
+      const area = await this.prisma.area.findUnique({
+        where: { id: updateUserDto.areaId },
+      });
+
+      if (!area) {
+        throw new BadRequestException('El área especificada no existe');
+      }
+    }
+
+    // Update persona if exists and persona fields are provided
+    if (existingUser.personaId) {
+      const personaData: any = {};
+      if (updateUserDto.tipoDocId !== undefined) personaData.tipoDocId = updateUserDto.tipoDocId;
+      if (updateUserDto.nroDoc !== undefined) personaData.numDoc = updateUserDto.nroDoc;
+      if (updateUserDto.nombres !== undefined) personaData.nombres = updateUserDto.nombres;
+      if (updateUserDto.apellidoP !== undefined) personaData.apePat = updateUserDto.apellidoP;
+      if (updateUserDto.apellidoM !== undefined) personaData.apeMat = updateUserDto.apellidoM;
+      if (updateUserDto.genero !== undefined) personaData.genero = updateUserDto.genero;
+      if (updateUserDto.fechaNacimiento !== undefined) personaData.fecnac = updateUserDto.fechaNacimiento;
+      if (updateUserDto.estadoCivilId !== undefined) personaData.estadoCivilId = updateUserDto.estadoCivilId;
+      if (updateUserDto.email !== undefined) personaData.email = updateUserDto.email;
+      if (updateUserDto.telefono !== undefined) personaData.movil1 = updateUserDto.telefono;
+
+      if (Object.keys(personaData).length > 0) {
+        // Update nomcomp if any name field changed
+        const currentPersona = await this.prisma.persona.findUnique({
+          where: { id: existingUser.personaId },
+        });
+
+        const apePat = personaData.apePat ?? currentPersona?.apePat ?? '';
+        const apeMat = personaData.apeMat ?? currentPersona?.apeMat ?? '';
+        const nombres = personaData.nombres ?? currentPersona?.nombres ?? '';
+        personaData.nomcomp = `${apePat} ${apeMat} ${nombres}`.trim();
+        personaData.modified = new Date();
+
+        await this.prisma.persona.update({
+          where: { id: existingUser.personaId },
+          data: personaData,
+        });
+      }
+    }
+
+    // Update user
+    const userDataToUpdate: any = {};
+    if (updateUserDto.usuario !== undefined) userDataToUpdate.usuario = updateUserDto.usuario;
+    if (updateUserDto.grupoId !== undefined) userDataToUpdate.grupoId = updateUserDto.grupoId;
+    if (updateUserDto.areaId !== undefined) userDataToUpdate.areaId = updateUserDto.areaId;
+    if (updateUserDto.estado !== undefined) userDataToUpdate.estado = updateUserDto.estado;
+
+    // Hash password if provided
+    if (updateUserDto.password) {
+      userDataToUpdate.clave = this.authService.hashPassword(updateUserDto.password);
+    }
+
+    if (Object.keys(userDataToUpdate).length > 0) {
+      userDataToUpdate.modified = new Date();
+    }
+
     const user = await this.prisma.user.update({
       where: { id },
-      data: dataToUpdate,
+      data: userDataToUpdate,
       include: {
         grupo: {
           select: {
@@ -171,14 +279,13 @@ export class UsersService {
             nombre: true,
           },
         },
-        persona: {
+        area: {
           select: {
             id: true,
-            nombres: true,
-            ape_pat: true,
-            ape_mat: true,
+            nombre: true,
           },
         },
+        persona: true,
       },
     });
 
