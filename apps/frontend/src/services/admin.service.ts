@@ -561,6 +561,18 @@ export const proyectosService = {
 };
 
 // CATÁLOGOS PERSONAS
+export interface TipoDoc {
+  id: number;
+  nombre: string;
+  estado: boolean;
+}
+
+export interface EstadoCivil {
+  id: number;
+  nombre: string;
+  estado: boolean;
+}
+
 export const catalogosPersonasService = {
   async getTiposDocumento() {
     const { data } = await api.get(`/tipo-docs`);

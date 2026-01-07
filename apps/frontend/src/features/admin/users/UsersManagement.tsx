@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { usersService, gruposService, areasService, catalogosPersonasService, type User, type Grupo, type Area, type CreateUserDto, type UpdateUserDto, type Tipo } from '../../../services/admin.service';
+import { usersService, gruposService, areasService, catalogosPersonasService, type User, type Grupo, type Area, type CreateUserDto, type UpdateUserDto, type TipoDoc, type EstadoCivil } from '../../../services/admin.service';
 
 type SortField = 'usuario' | 'nombreCompleto' | 'email' | 'grupo' | 'estado';
 type SortOrder = 'asc' | 'desc';
@@ -8,8 +8,8 @@ export function UsersManagement() {
   const [users, setUsers] = useState<User[]>([]);
   const [grupos, setGrupos] = useState<Grupo[]>([]);
   const [areas, setAreas] = useState<Area[]>([]);
-  const [tiposDoc, setTiposDoc] = useState<Tipo[]>([]);
-  const [estadosCiviles, setEstadosCiviles] = useState<Tipo[]>([]);
+  const [tiposDoc, setTiposDoc] = useState<TipoDoc[]>([]);
+  const [estadosCiviles, setEstadosCiviles] = useState<EstadoCivil[]>([]);
   const [loading, setLoading] = useState(true);
   const [showModal, setShowModal] = useState(false);
   const [editingUser, setEditingUser] = useState<User | null>(null);
@@ -89,6 +89,8 @@ export function UsersManagement() {
         catalogosPersonasService.getTiposDocumento(),
         catalogosPersonasService.getEstadosCiviles()
       ]);
+      console.log('Tipos de documento cargados:', tiposDocData);
+      console.log('Estados civiles cargados:', estadosCivilesData);
       setTiposDoc(tiposDocData);
       setEstadosCiviles(estadosCivilesData);
     } catch (error: any) {
