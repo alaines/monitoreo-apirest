@@ -27,7 +27,7 @@ export class UsersService {
 
     // Check if document number already exists
     const existingPersona = await this.prisma.persona.findFirst({
-      where: { numDoc: createUserDto.nroDoc },
+      where: { num_doc: createUserDto.nroDoc },
     });
 
     if (existingPersona) {
@@ -61,10 +61,10 @@ export class UsersService {
     const persona = await this.prisma.persona.create({
       data: {
         tipoDocId: createUserDto.tipoDocId,
-        numDoc: createUserDto.nroDoc,
+        num_doc: createUserDto.nroDoc,
         nombres: createUserDto.nombres,
-        apePat: createUserDto.apellidoP,
-        apeMat: createUserDto.apellidoM,
+        ape_pat: createUserDto.apellidoP,
+        ape_mat: createUserDto.apellidoM,
         genero: createUserDto.genero,
         fecnac: createUserDto.fechaNacimiento,
         estadoCivilId: createUserDto.estadoCivilId,
@@ -72,8 +72,8 @@ export class UsersService {
         movil1: createUserDto.telefono,
         nomcomp: `${createUserDto.apellidoP} ${createUserDto.apellidoM} ${createUserDto.nombres}`,
         estado: true,
-        created: new Date(),
-        modified: new Date(),
+        createdAt: new Date(),
+        updatedAt: new Date(),
       },
     });
 
@@ -86,8 +86,8 @@ export class UsersService {
         areaId: createUserDto.areaId,
         personaId: persona.id,
         estado: createUserDto.estado ?? true,
-        created: new Date(),
-        modified: new Date(),
+        createdAt: new Date(),
+        updatedAt: new Date(),
       },
       include: {
         grupo: {
@@ -188,7 +188,7 @@ export class UsersService {
     if (updateUserDto.nroDoc && existingUser.personaId) {
       const personaWithSameDoc = await this.prisma.persona.findFirst({
         where: {
-          numDoc: updateUserDto.nroDoc,
+          num_doc: updateUserDto.nroDoc,
           id: { not: existingUser.personaId },
         },
       });
@@ -224,10 +224,10 @@ export class UsersService {
     if (existingUser.personaId) {
       const personaData: any = {};
       if (updateUserDto.tipoDocId !== undefined) personaData.tipoDocId = updateUserDto.tipoDocId;
-      if (updateUserDto.nroDoc !== undefined) personaData.numDoc = updateUserDto.nroDoc;
+      if (updateUserDto.nroDoc !== undefined) personaData.num_doc = updateUserDto.nroDoc;
       if (updateUserDto.nombres !== undefined) personaData.nombres = updateUserDto.nombres;
-      if (updateUserDto.apellidoP !== undefined) personaData.apePat = updateUserDto.apellidoP;
-      if (updateUserDto.apellidoM !== undefined) personaData.apeMat = updateUserDto.apellidoM;
+      if (updateUserDto.apellidoP !== undefined) personaData.ape_pat = updateUserDto.apellidoP;
+      if (updateUserDto.apellidoM !== undefined) personaData.ape_mat = updateUserDto.apellidoM;
       if (updateUserDto.genero !== undefined) personaData.genero = updateUserDto.genero;
       if (updateUserDto.fechaNacimiento !== undefined) personaData.fecnac = updateUserDto.fechaNacimiento;
       if (updateUserDto.estadoCivilId !== undefined) personaData.estadoCivilId = updateUserDto.estadoCivilId;
@@ -240,11 +240,11 @@ export class UsersService {
           where: { id: existingUser.personaId },
         });
 
-        const apePat = personaData.apePat ?? currentPersona?.apePat ?? '';
-        const apeMat = personaData.apeMat ?? currentPersona?.apeMat ?? '';
+        const apePat = personaData.ape_pat ?? currentPersona?.ape_pat ?? '';
+        const apeMat = personaData.ape_mat ?? currentPersona?.ape_mat ?? '';
         const nombres = personaData.nombres ?? currentPersona?.nombres ?? '';
         personaData.nomcomp = `${apePat} ${apeMat} ${nombres}`.trim();
-        personaData.modified = new Date();
+        personaData.updatedAt = new Date();
 
         await this.prisma.persona.update({
           where: { id: existingUser.personaId },
@@ -266,7 +266,7 @@ export class UsersService {
     }
 
     if (Object.keys(userDataToUpdate).length > 0) {
-      userDataToUpdate.modified = new Date();
+      userDataToUpdate.updatedAt = new Date();
     }
 
     const user = await this.prisma.user.update({
