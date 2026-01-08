@@ -23,14 +23,15 @@ CREATE TABLE IF NOT EXISTS notifications (
   title VARCHAR(255) NOT NULL,
   message TEXT NOT NULL,
   data JSONB,
-  link VARCHAR(500),
-  read_at TIMESTAMP,
-  created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
+  is_read BOOLEAN NOT NULL DEFAULT false,
+  created_at TIMESTAMP(6) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  read_at TIMESTAMP(6)
 );
 
 CREATE INDEX IF NOT EXISTS idx_notifications_user_id ON notifications(user_id);
 CREATE INDEX IF NOT EXISTS idx_notifications_created_at ON notifications(created_at DESC);
 CREATE INDEX IF NOT EXISTS idx_notifications_type ON notifications(type);
+CREATE INDEX IF NOT EXISTS idx_notifications_is_read ON notifications(is_read);
 
 COMMENT ON TABLE user_sessions IS 'Sesiones activas de WebSocket de los usuarios';
 COMMENT ON TABLE notifications IS 'Notificaciones en tiempo real para los usuarios';
