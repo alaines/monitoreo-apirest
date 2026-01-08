@@ -9,15 +9,15 @@ Sistema integral de gestion y monitoreo de cruces semaforizados e incidencias de
 
 Aland Laines Calonge
 
-## 📚 Documentación de Instalación
+## Documentación de Instalación
 
-- **[📖 Guía de Instalación Completa](docs/INSTALLATION.md)** - Instalación detallada para desarrollo y producción
-- **[⚡ Guía Rápida](docs/guides/GUIA-RAPIDA.md)** - Inicio rápido para desarrollo
-- **[🔧 Configuración de Servidor](docs/architecture/SERVER-CONFIG.md)** - Configuración técnica de servidores
-- **[📋 CHANGELOG](CHANGELOG.md)** - Historial de cambios y versiones
-- **[🏷️ Versionado](docs/guides/VERSIONING.md)** - Guía de versionado y releases
+- **[Guía de Instalación Completa](docs/INSTALLATION.md)** - Instalación detallada para desarrollo y producción
+- **[Guía Rápida](docs/guides/GUIA-RAPIDA.md)** - Inicio rápido para desarrollo
+- **[Configuración de Servidor](docs/architecture/SERVER-CONFIG.md)** - Configuración técnica de servidores
+- **[CHANGELOG](CHANGELOG.md)** - Historial de cambios y versiones
+- **[Versionado](docs/guides/VERSIONING.md)** - Guía de versionado y releases
 
-## ⚡ Instalación Rápida
+## Instalación Rápida
 
 ### Desarrollo Local (Con PM2 - Recomendado)
 ```bash
@@ -62,11 +62,11 @@ sudo ./scripts/install-production.sh
 ```
 
 El script instalará automáticamente:
-- ✅ Node.js 20
-- ✅ PostgreSQL + PostGIS
-- ✅ PM2 (gestor de procesos)
-- ✅ Base de datos con usuario admin
-- ✅ Servicios configurados y corriendo
+- Node.js 20
+- PostgreSQL + PostGIS
+- PM2 (gestor de procesos)
+- Base de datos con usuario admin
+- Servicios configurados y corriendo
 
 Ver [Guía de Instalación](docs/INSTALLATION.md) para instalación manual o personalización.
 
