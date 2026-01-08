@@ -125,6 +125,8 @@ interface InicioStats {
   todayOpenTickets: number;
   todayInProgressTickets: number;
   todayClosedTickets: number;
+  // Cruces apagados
+  crucesApagadosCount: number;
 }
 
 export function Inicio() {
@@ -164,14 +166,40 @@ export function Inicio() {
     }
   }, [selectedAnho, selectedAdministrador]);
 
+  // Listen for real-time incident updates
+  useEffect(() => {
+    const handleIncidentCreated = () => {
+      if (hasLoadedRef.current) {
+        loadInicioData();
+        loadActiveIncidents();
+      }
+    };
+
+    const handleIncidentUpdated = () => {
+      if (hasLoadedRef.current) {
+        loadInicioData();
+        loadActiveIncidents();
+      }
+    };
+
+    window.addEventListener('incidentCreated', handleIncidentCreated);
+    window.addEventListener('incidentUpdated', handleIncidentUpdated);
+
+    return () => {
+      window.removeEventListener('incidentCreated', handleIncidentCreated);
+      window.removeEventListener('incidentUpdated', handleIncidentUpdated);
+    };
+  }, []);
+
   const loadInicioData = async () => {
     // No bloqueamos la UI con setLoading
     try {
       // Obtener estadísticas generales del backend y años disponibles
-      const [backendStats, yearsData, adminsData] = await Promise.all([
+      const [backendStats, yearsData, adminsData, crucesApagados] = await Promise.all([
         incidentsService.getStatistics(),
         incidentsService.getAvailableYears(),
-        administradoresService.getAdministradores()
+        administradoresService.getAdministradores(),
+        incidentsService.getCrucesApagadosCount()
       ]);
       
       // Calcular fecha de hoy
@@ -223,6 +251,7 @@ export function Inicio() {
         todayOpenTickets,
         todayInProgressTickets,
         todayClosedTickets,
+        crucesApagadosCount: crucesApagados.count,
       };
 
       setStats(statsData);
@@ -278,7 +307,7 @@ export function Inicio() {
   return (
     <div className="container-fluid" style={{ padding: '20px', height: 'calc(100vh - 120px)', display: 'flex', flexDirection: 'column' }}>
         <div className="row g-3 mb-3" style={{ flexShrink: 0 }}>
-          <div className="col-md-3">
+          <div className="col">
             <div className="card border-0 shadow-sm h-100">
               <div className="card-body">
                 <div className="d-flex justify-content-between align-items-start mb-2">
@@ -298,7 +327,7 @@ export function Inicio() {
               </div>
             </div>
           </div>
-          <div className="col-md-3">
+          <div className="col">
             <div className="card border-0 shadow-sm h-100">
               <div className="card-body">
                 <div className="d-flex justify-content-between align-items-start mb-2">
@@ -318,7 +347,7 @@ export function Inicio() {
               </div>
             </div>
           </div>
-          <div className="col-md-3">
+          <div className="col">
             <div className="card border-0 shadow-sm h-100">
               <div className="card-body">
                 <div className="d-flex justify-content-between align-items-start mb-2">
@@ -338,7 +367,7 @@ export function Inicio() {
               </div>
             </div>
           </div>
-          <div className="col-md-3">
+          <div className="col">
             <div className="card border-0 shadow-sm h-100">
               <div className="card-body">
                 <div className="d-flex justify-content-between align-items-start mb-2">
@@ -355,6 +384,36 @@ export function Inicio() {
                   </h2>
                 )}
                 <small className="text-muted">Histórico de cerrados</small>
+              </div>
+            </div>
+          </div>
+          <div className="col">
+            <div 
+              className="card border-0 shadow-sm h-100" 
+              style={{ cursor: 'pointer', transition: 'transform 0.2s' }}
+              onMouseEnter={(e) => e.currentTarget.style.transform = 'translateY(-2px)'}
+              onMouseLeave={(e) => e.currentTarget.style.transform = 'translateY(0)'}
+              onClick={() => navigate('/incidents?incidenciaId=66&estadoId=1,2,5')}
+            >
+              <div className="card-body">
+                <div className="d-flex justify-content-between align-items-start mb-2">
+                  <h6 className="text-muted mb-0">Cruces Apagados</h6>
+                  <i className="fas fa-traffic-light" style={{ fontSize: '24px', color: '#dc3545' }}></i>
+                </div>
+                {loading ? (
+                  <div className="placeholder-glow">
+                    <span className="placeholder col-6" style={{ height: '2.5rem', display: 'block' }}></span>
+                  </div>
+                ) : (
+                  <h2 className="mb-0" style={{ fontSize: '2.5rem', fontWeight: 'bold', color: '#dc3545' }}>
+                    {stats?.crucesApagadosCount || 0}
+                  </h2>
+                )}
+                <small className="text-muted d-block">Pendiente, En Proceso, Reasignado</small>
+                <small className="text-primary">
+                  <i className="fas fa-arrow-right me-1"></i>
+                  Click para ver detalles
+                </small>
               </div>
             </div>
           </div>

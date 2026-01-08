@@ -24,6 +24,8 @@ model User {
   area         Area?        @relation(fields: [areaId], references: [id], onDelete: Cascade, map: "usuarios_areas")
   grupo        Grupo?       @relation(fields: [grupoId], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "usuarios_grupos")
   persona      Persona?     @relation(fields: [personaId], references: [id], onDelete: Cascade, map: "usuarios_personas")
+  userSessions  UserSession[]
+  notifications Notification[]
 
   @@map("users")
 }
@@ -485,4 +487,41 @@ model grupos_menus_backup {
   menu_id  Int
   grupo_id Int
   grupos   Grupo @relation(fields: [grupo_id], references: [id], onDelete: Cascade, map: "Ref_menus_has_grupos_to_grupos")
+}
+
+model UserSession {
+  id              Int       @id @default(autoincrement())
+  userId          Int       @map("user_id")
+  socketId        String    @unique @map("socket_id") @db.VarChar(255)
+  ipAddress       String?   @map("ip_address") @db.VarChar(45)
+  userAgent       String?   @map("user_agent") @db.Text
+  connectedAt     DateTime  @default(now()) @map("connected_at") @db.Timestamp(6)
+  lastActivity    DateTime  @default(now()) @map("last_activity") @db.Timestamp(6)
+  disconnectedAt  DateTime? @map("disconnected_at") @db.Timestamp(6)
+  isActive        Boolean   @default(true) @map("is_active")
+  user            User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId], map: "idx_user_sessions_user_id")
+  @@index([socketId], map: "idx_user_sessions_socket_id")
+  @@index([isActive], map: "idx_user_sessions_is_active")
+  @@map("user_sessions")
+}
+
+model Notification {
+  id        Int       @id @default(autoincrement())
+  userId    Int       @map("user_id")
+  type      String    @db.VarChar(50)
+  title     String    @db.VarChar(255)
+  message   String    @db.Text
+  data      Json?     @db.JsonB
+  isRead    Boolean   @default(false) @map("is_read")
+  createdAt DateTime  @default(now()) @map("created_at") @db.Timestamp(6)
+  readAt    DateTime? @map("read_at") @db.Timestamp(6)
+  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId], map: "idx_notifications_user_id")
+  @@index([createdAt(sort: Desc)], map: "idx_notifications_created_at")
+  @@index([type], map: "idx_notifications_type")
+  @@index([isRead], map: "idx_notifications_is_read")
+  @@map("notifications")
 }

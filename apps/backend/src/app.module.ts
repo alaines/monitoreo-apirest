@@ -27,6 +27,7 @@ import { EstadoCivilsModule } from './estado-civils/estado-civils.module';
 import { CommonModule } from './common/common.module';
 import { JwtAuthGuard } from './auth/guards/jwt-auth.guard';
 import { PermissionsGuard } from './common/guards/permissions.guard';
+import { NotificationsModule } from './notifications/notifications.module';
 
 @Module({
   imports: [
@@ -57,6 +58,7 @@ import { PermissionsGuard } from './common/guards/permissions.guard';
     IncidenciasModule,
     TipoDocsModule,
     EstadoCivilsModule,
+    NotificationsModule,
   ],
   providers: [
     {

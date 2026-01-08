@@ -8,7 +8,9 @@ import {
   EstadoCatalog,
   CruceCatalog,
   EquipoCatalog,
+  ReportadorCatalog,
 } from '../../services/incidents.service';
+import { useAuthStore } from '../auth/authStore';
 
 interface IncidentFormProps {
   incidentId: number | null;
@@ -18,6 +20,7 @@ interface IncidentFormProps {
 
 export function IncidentForm({ incidentId, onClose, onSave }: IncidentFormProps) {
   const isEditing = Boolean(incidentId);
+  const { user } = useAuthStore();
 
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -26,6 +29,7 @@ export function IncidentForm({ incidentId, onClose, onSave }: IncidentFormProps)
   const [estados, setEstados] = useState<EstadoCatalog[]>([]);
   const [cruces, setCruces] = useState<CruceCatalog[]>([]);
   const [equipos, setEquipos] = useState<EquipoCatalog[]>([]);
+  const [reportadores, setReportadores] = useState<ReportadorCatalog[]>([]);
   const [incidentLocation, setIncidentLocation] = useState<{ latitude: number; longitude: number } | null>(null);
   
   // Para autocomplete de cruces
@@ -34,6 +38,12 @@ export function IncidentForm({ incidentId, onClose, onSave }: IncidentFormProps)
   const [showCruceDropdown, setShowCruceDropdown] = useState(false);
   const [selectedCruce, setSelectedCruce] = useState<CruceCatalog | null>(null);
   
+  // Para autocomplete de incidencias
+  const [incidenciaSearch, setIncidenciaSearch] = useState('');
+  const [filteredIncidencias, setFilteredIncidencias] = useState<IncidenciaCatalog[]>([]);
+  const [showIncidenciaDropdown, setShowIncidenciaDropdown] = useState(false);
+  const [selectedIncidencia, setSelectedIncidencia] = useState<IncidenciaCatalog | null>(null);
+  
   const [formData, setFormData] = useState({
     incidenciaId: '',
     prioridadId: '',
@@ -41,6 +51,7 @@ export function IncidentForm({ incidentId, onClose, onSave }: IncidentFormProps)
     equipoId: '',
     estadoId: '',
     descripcion: '',
+    reportadorId: '',
     reportadorNombres: '',
     reportadorDatoContacto: '',
   });
@@ -51,11 +62,14 @@ export function IncidentForm({ incidentId, onClose, onSave }: IncidentFormProps)
       loadIncident(incidentId);
     }
     
-    // Cerrar dropdown de cruces al hacer clic fuera
+    // Cerrar dropdowns al hacer clic fuera
     const handleClickOutside = (e: MouseEvent) => {
       const target = e.target as HTMLElement;
       if (!target.closest('.cruce-autocomplete')) {
         setShowCruceDropdown(false);
+      }
+      if (!target.closest('.incidencia-autocomplete')) {
+        setShowIncidenciaDropdown(false);
       }
     };
     document.addEventListener('click', handleClickOutside);
@@ -74,21 +88,36 @@ export function IncidentForm({ incidentId, onClose, onSave }: IncidentFormProps)
     }
   }, [cruceSearch, cruces]);
 
+  useEffect(() => {
+    // Filtrar incidencias basado en búsqueda
+    if (incidenciaSearch.trim() === '') {
+      setFilteredIncidencias(incidencias.slice(0, 20));
+    } else {
+      const filtered = incidencias.filter(inc => 
+        inc.tipo.toLowerCase().includes(incidenciaSearch.toLowerCase())
+      ).slice(0, 20);
+      setFilteredIncidencias(filtered);
+    }
+  }, [incidenciaSearch, incidencias]);
+
   const loadCatalogs = async () => {
     try {
-      const [incidenciasData, prioridadesData, estadosData, crucesData, equiposData] = await Promise.all([
+      const [incidenciasData, prioridadesData, estadosData, crucesData, equiposData, reportadoresData] = await Promise.all([
         incidentsService.getIncidenciasCatalog(),
         incidentsService.getPrioridadesCatalog(),
         incidentsService.getEstadosCatalog(),
         incidentsService.getCrucesCatalog(),
         incidentsService.getEquiposCatalog(),
+        incidentsService.getReportadoresCatalog(),
       ]);
       setIncidencias(incidenciasData);
       setPrioridades(prioridadesData);
       setEstados(estadosData);
       setCruces(crucesData);
       setEquipos(equiposData);
+      setReportadores(reportadoresData);
       setFilteredCruces(crucesData.slice(0, 20));
+      setFilteredIncidencias(incidenciasData.slice(0, 20));
     } catch (error) {
       console.error('Error loading catalogs:', error);
     }
@@ -104,6 +133,7 @@ export function IncidentForm({ incidentId, onClose, onSave }: IncidentFormProps)
         equipoId: incident.equipoId?.toString() || '',
         estadoId: incident.estadoId?.toString() || '',
         descripcion: incident.descripcion || '',
+        reportadorId: incident.reportador?.id?.toString() || '',
         reportadorNombres: incident.reportadorNombres || '',
         reportadorDatoContacto: incident.reportadorDatoContacto || '',
       });
@@ -114,11 +144,21 @@ export function IncidentForm({ incidentId, onClose, onSave }: IncidentFormProps)
         setCruceSearch(incident.cruce.nombre || '');
       }
       
+      // Cargar incidencia seleccionada
+      if (incident.incidencia) {
+        setSelectedIncidencia({ 
+          id: incident.incidencia.id, 
+          tipo: incident.incidencia.tipo,
+          prioridadeId: incident.incidencia.prioridad?.id
+        });
+        setIncidenciaSearch(incident.incidencia.tipo);
+      }
+      
       if (incident.latitude && incident.longitude) {
         setIncidentLocation({ latitude: incident.latitude, longitude: incident.longitude });
       }
     } catch (error) {
-      console.error('Error loading incident:', error);
+      console.error('Error loading incident:',error);
       setError('Error al cargar la incidencia');
     }
   };
@@ -145,7 +185,25 @@ export function IncidentForm({ incidentId, onClose, onSave }: IncidentFormProps)
     setFormData({ ...formData, cruceId: cruce.id.toString() });
     setShowCruceDropdown(false);
   };
+  const handleIncidenciaSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setIncidenciaSearch(e.target.value);
+    setShowIncidenciaDropdown(true);
+    if (!e.target.value.trim()) {
+      setSelectedIncidencia(null);
+      setFormData({ ...formData, incidenciaId: '', prioridadId: '' });
+    }
+  };
 
+  const handleIncidenciaSelect = (incidencia: IncidenciaCatalog) => {
+    setSelectedIncidencia(incidencia);
+    setIncidenciaSearch(incidencia.tipo);
+    setFormData({ 
+      ...formData, 
+      incidenciaId: incidencia.id.toString(),
+      prioridadId: incidencia.prioridadeId?.toString() || ''
+    });
+    setShowIncidenciaDropdown(false);
+  };
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError(null);
@@ -168,6 +226,7 @@ export function IncidentForm({ incidentId, onClose, onSave }: IncidentFormProps)
         prioridadId: formData.prioridadId ? parseInt(formData.prioridadId) : undefined,
         cruceId: parseInt(formData.cruceId),
         descripcion: formData.descripcion,
+        reportadorId: formData.reportadorId ? parseInt(formData.reportadorId) : undefined,
         reportadorNombres: formData.reportadorNombres,
         reportadorDatoContacto: formData.reportadorDatoContacto,
       };
@@ -204,43 +263,67 @@ export function IncidentForm({ incidentId, onClose, onSave }: IncidentFormProps)
           <div className="card-body">
             <h6 className="card-title mb-3">Información de la Incidencia</h6>
 
-            <div className="mb-3">
+            <div className="mb-3 incidencia-autocomplete">
               <label className="form-label">Tipo de Incidencia *</label>
-                  <select
-                    className="form-select"
-                    name="incidenciaId"
-                    value={formData.incidenciaId}
-                    onChange={handleChange}
-                    required
+              <div className="position-relative">
+                <input
+                  type="text"
+                  className="form-control"
+                  placeholder="Buscar tipo de incidencia..."
+                  value={incidenciaSearch}
+                  onChange={handleIncidenciaSearchChange}
+                  onFocus={() => setShowIncidenciaDropdown(true)}
+                  required
+                />
+                {showIncidenciaDropdown && filteredIncidencias.length > 0 && (
+                  <div 
+                    className="position-absolute w-100 bg-white border rounded shadow-sm mt-1" 
+                    style={{ maxHeight: '200px', overflowY: 'auto', zIndex: 1000 }}
                   >
-                    <option value="">Seleccionar...</option>
-                    {incidencias.map((inc) => (
-                      <option key={inc.id} value={inc.id}>
-                        {inc.tipo}
-                      </option>
+                    {filteredIncidencias.map((inc) => (
+                      <div
+                        key={inc.id}
+                        className="p-2 cursor-pointer hover-bg-light"
+                        style={{ cursor: 'pointer' }}
+                        onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#f8f9fa'}
+                        onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'white'}
+                        onClick={() => handleIncidenciaSelect(inc)}
+                      >
+                        <small>{inc.tipo}</small>
+                      </div>
                     ))}
-                  </select>
-                </div>
-
-                <div className="row">
-                  <div className="col-md-6 mb-3">
-                    <label className="form-label">Prioridad</label>
-                    <select
-                      className="form-select"
-                      name="prioridadId"
-                      value={formData.prioridadId}
-                      onChange={handleChange}
-                    >
-                      <option value="">Sin prioridad</option>
-                      {prioridades.map((prio) => (
-                        <option key={prio.id} value={prio.id}>
-                          {prio.nombre}
-                        </option>
-                      ))}
-                    </select>
                   </div>
+                )}
+              </div>
+              {selectedIncidencia && (
+                <small className="text-success">
+                  <i className="fas fa-check-circle me-1"></i>
+                  Seleccionado: {selectedIncidencia.tipo}
+                </small>
+              )}
+            </div>
 
-                  <div className="col-md-6 mb-3 cruce-autocomplete">
+            <div className="row">
+              <div className="col-md-6 mb-3">
+                <label className="form-label">Prioridad (auto-asignada)</label>
+                <select
+                  className="form-select"
+                  name="prioridadId"
+                  value={formData.prioridadId}
+                  disabled
+                  style={{ backgroundColor: '#e9ecef', cursor: 'not-allowed' }}
+                >
+                  <option value="">Sin prioridad</option>
+                  {prioridades.map((prio) => (
+                    <option key={prio.id} value={prio.id}>
+                      {prio.nombre}
+                    </option>
+                  ))}
+                </select>
+                <small className="text-muted">La prioridad se asigna automáticamente según el tipo de incidencia</small>
+              </div>
+
+              <div className="col-md-6 mb-3 cruce-autocomplete">
                     <label className="form-label">Cruce/Semáforo *</label>
                     <div className="position-relative">
                       <input
@@ -281,25 +364,25 @@ export function IncidentForm({ incidentId, onClose, onSave }: IncidentFormProps)
                   </div>
                 </div>
 
-                {isEditing && (
-                  <div className="row">
-                    <div className="col-md-6 mb-3">
-                      <label className="form-label">Equipo Asignado</label>
-                      <select
-                        className="form-select"
-                        name="equipoId"
-                        value={formData.equipoId}
-                        onChange={handleChange}
-                      >
-                        <option value="">Sin equipo asignado</option>
-                        {equipos.map((equipo) => (
-                          <option key={equipo.id} value={equipo.id}>
-                            {equipo.nombre}
-                          </option>
-                        ))}
-                      </select>
-                    </div>
+                <div className="row">
+                  <div className="col-md-6 mb-3">
+                    <label className="form-label">Equipo Asignado</label>
+                    <select
+                      className="form-select"
+                      name="equipoId"
+                      value={formData.equipoId}
+                      onChange={handleChange}
+                    >
+                      <option value="">Sin equipo asignado</option>
+                      {equipos.map((equipo) => (
+                        <option key={equipo.id} value={equipo.id}>
+                          {equipo.nombre}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
 
+                  {isEditing && (
                     <div className="col-md-6 mb-3">
                       <label className="form-label">Estado</label>
                       <select
@@ -316,8 +399,8 @@ export function IncidentForm({ incidentId, onClose, onSave }: IncidentFormProps)
                         ))}
                       </select>
                     </div>
-                  </div>
-                )}
+                  )}
+                </div>
 
                 <div className="mb-3">
                   <label className="form-label">Descripción</label>
@@ -335,7 +418,24 @@ export function IncidentForm({ incidentId, onClose, onSave }: IncidentFormProps)
                 </div>
 
                 <div className="row">
-                  <div className="col-md-6 mb-3">
+                  <div className="col-md-4 mb-3">
+                    <label className="form-label">Tipo de Reportador</label>
+                    <select
+                      className="form-select"
+                      name="reportadorId"
+                      value={formData.reportadorId}
+                      onChange={handleChange}
+                    >
+                      <option value="">Seleccionar...</option>
+                      {reportadores.map((rep) => (
+                        <option key={rep.id} value={rep.id}>
+                          {rep.nombre}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+
+                  <div className="col-md-4 mb-3">
                     <label className="form-label">Nombre del Reportador</label>
                     <input
                       type="text"
@@ -350,7 +450,7 @@ export function IncidentForm({ incidentId, onClose, onSave }: IncidentFormProps)
                     />
                   </div>
 
-                  <div className="col-md-6 mb-3">
+                  <div className="col-md-4 mb-3">
                     <label className="form-label">Contacto del Reportador</label>
                     <input
                       type="text"

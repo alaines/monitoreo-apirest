@@ -54,6 +54,13 @@ export class IncidentsController {
     return this.incidentsService.getAvailableYears();
   }
 
+  @Get('cruces-apagados/count')
+  @ApiOperation({ summary: 'Obtener conteo de cruces apagados en estados críticos' })
+  @ApiResponse({ status: 200, description: 'Conteo de tickets en estados 1, 2 y 5' })
+  getCrucesApagadosCount() {
+    return this.incidentsService.getCrucesApagadosCount();
+  }
+
   @Get('map-markers')
   @ApiOperation({ summary: 'Obtener datos ligeros para markers del mapa' })
   @ApiResponse({ status: 200, description: 'Datos mínimos para renderizar markers' })
@@ -94,6 +101,13 @@ export class IncidentsController {
   @ApiResponse({ status: 200, description: 'Equipos' })
   async getEquiposCatalog() {
     return this.incidentsService.getEquiposCatalog();
+  }
+
+  @Get('catalogs/reportadores')
+  @ApiOperation({ summary: 'Obtener catálogo de reportadores' })
+  @ApiResponse({ status: 200, description: 'Reportadores' })
+  async getReportadoresCatalog() {
+    return this.incidentsService.getReportadoresCatalog();
   }
 
   @Get(':id/trackings')

@@ -66,6 +66,8 @@ async function bootstrap() {
     .addTag('perifericos', 'Gestión de Periféricos')
     .addTag('📊 Reportes', '')
     .addTag('reportes', 'Reportes y Estadísticas')
+    .addTag('🔔 Notificaciones', '')
+    .addTag('notifications', 'Notificaciones en Tiempo Real')
     .build();
 
   const document = SwaggerModule.createDocument(app, config, {

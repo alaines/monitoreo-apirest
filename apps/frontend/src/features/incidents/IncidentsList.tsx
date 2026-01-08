@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { incidentsService, Incident } from '../../services/incidents.service';
 import { IncidentDetail } from './IncidentDetail';
 import { IncidentForm } from './IncidentForm';
@@ -7,16 +7,17 @@ import { IncidentForm } from './IncidentForm';
 interface Filters {
   incidenciaId?: number;
   cruceId?: number;
-  estadoId?: number;
+  estadoId?: number[];
   fechaDesde?: string;
   fechaHasta?: string;
 }
 
-type SortField = 'id' | 'tipo' | 'cruce' | 'estado' | 'fecha';
+type SortField = 'id' | 'tipo' | 'cruce' | 'estado' | 'fecha' | 'tiempo';
 type SortOrder = 'asc' | 'desc';
 
 export function IncidentsList() {
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
   const [incidents, setIncidents] = useState<Incident[]>([]);
   const [loading, setLoading] = useState(true);
   const [currentPage, setCurrentPage] = useState(1);
@@ -38,25 +39,86 @@ export function IncidentsList() {
   
   // Catálogos para filtros
   const [tiposIncidencia, setTiposIncidencia] = useState<any[]>([]);
+  const [incidenciaSearch, setIncidenciaSearch] = useState('');
+  const [filteredIncidencias, setFilteredIncidencias] = useState<any[]>([]);
+  const [showIncidenciaDropdown, setShowIncidenciaDropdown] = useState(false);
   const [cruces, setCruces] = useState<any[]>([]);
   const [cruceSearch, setCruceSearch] = useState('');
   const [filteredCruces, setFilteredCruces] = useState<any[]>([]);
   const [showCruceDropdown, setShowCruceDropdown] = useState(false);
+  const [estados, setEstados] = useState<any[]>([]);
+  const [showEstadoDropdown, setShowEstadoDropdown] = useState(false);
+  const [catalogsLoaded, setCatalogsLoaded] = useState(false);
 
   useEffect(() => {
-    loadCatalogs();
+    const init = async () => {
+      await loadCatalogs();
+    };
     
-    // Cerrar dropdown de cruces al hacer clic fuera
+    init();
+    
+    // Cerrar dropdowns al hacer clic fuera
     const handleClickOutside = (e: MouseEvent) => {
       const target = e.target as HTMLElement;
-      if (!target.closest('.position-relative')) {
+      if (!target.closest('.incidencia-dropdown')) {
+        setShowIncidenciaDropdown(false);
+      }
+      if (!target.closest('.cruce-dropdown')) {
         setShowCruceDropdown(false);
+      }
+      if (!target.closest('.estado-dropdown')) {
+        setShowEstadoDropdown(false);
       }
     };
     
     document.addEventListener('click', handleClickOutside);
     return () => document.removeEventListener('click', handleClickOutside);
   }, []);
+
+  // Aplicar filtro desde URL después de que los catálogos estén cargados
+  useEffect(() => {
+    if (!catalogsLoaded) return;
+    
+    const incidenciaIdParam = searchParams.get('incidenciaId');
+    const estadoIdParam = searchParams.get('estadoId');
+    
+    if (incidenciaIdParam || estadoIdParam) {
+      const newFilters: Filters = {};
+      
+      // Procesar incidenciaId
+      if (incidenciaIdParam) {
+        const incidenciaId = parseInt(incidenciaIdParam);
+        newFilters.incidenciaId = incidenciaId;
+        
+        // Buscar el nombre del tipo de incidencia para mostrarlo en el input
+        const tipo = tiposIncidencia.find(t => t.id === incidenciaId);
+        if (tipo) {
+          setIncidenciaSearch(tipo.tipo);
+        }
+      }
+      
+      // Procesar estadoId (puede ser una lista separada por comas)
+      if (estadoIdParam) {
+        const estadoIds = estadoIdParam.split(',').map(id => parseInt(id.trim()));
+        newFilters.estadoId = estadoIds;
+      }
+      
+      setFilters(newFilters);
+      setShowFilters(true);
+    }
+  }, [catalogsLoaded, searchParams, tiposIncidencia]);
+
+  useEffect(() => {
+    // Filtrar incidencias basado en búsqueda
+    if (incidenciaSearch.trim() === '') {
+      setFilteredIncidencias(tiposIncidencia.slice(0, 20));
+    } else {
+      const filtered = tiposIncidencia.filter(inc => 
+        inc.tipo.toLowerCase().includes(incidenciaSearch.toLowerCase())
+      ).slice(0, 20);
+      setFilteredIncidencias(filtered);
+    }
+  }, [incidenciaSearch, tiposIncidencia]);
 
   useEffect(() => {
     // Filtrar cruces basado en búsqueda
@@ -74,14 +136,36 @@ export function IncidentsList() {
     loadIncidents();
   }, [currentPage, pageSize, filters, sortField, sortOrder]);
 
+  // Listen for real-time incident updates
+  useEffect(() => {
+    const handleIncidentCreated = () => {
+      loadIncidents();
+    };
+
+    const handleIncidentUpdated = () => {
+      loadIncidents();
+    };
+
+    window.addEventListener('incidentCreated', handleIncidentCreated);
+    window.addEventListener('incidentUpdated', handleIncidentUpdated);
+
+    return () => {
+      window.removeEventListener('incidentCreated', handleIncidentCreated);
+      window.removeEventListener('incidentUpdated', handleIncidentUpdated);
+    };
+  }, [currentPage, pageSize, filters, sortField, sortOrder]);
+
   const loadCatalogs = async () => {
     try {
-      const [tipos, crucesData] = await Promise.all([
+      const [tipos, crucesData, estadosData] = await Promise.all([
         incidentsService.getIncidenciasCatalog(),
-        incidentsService.getCrucesCatalog()
+        incidentsService.getCrucesCatalog(),
+        incidentsService.getEstadosCatalog()
       ]);
       setTiposIncidencia(tipos);
       setCruces(crucesData);
+      setEstados(estadosData);
+      setCatalogsLoaded(true);
       setFilteredCruces(crucesData.slice(0, 20));
     } catch (error) {
       console.error('Error loading catalogs:', error);
@@ -91,15 +175,45 @@ export function IncidentsList() {
   const loadIncidents = async () => {
     setLoading(true);
     try {
-      const response = await incidentsService.getIncidents({ 
-        page: currentPage, 
-        limit: pageSize,
-        incidenciaId: filters.incidenciaId,
-        cruceId: filters.cruceId,
-        estadoId: filters.estadoId
-      });
+      let allData: Incident[] = [];
       
-      let sortedData = [...response.data];
+      // Si hay múltiples estados, hacer una llamada por cada estado y combinar resultados
+      if (filters.estadoId && filters.estadoId.length > 1) {
+        const promises = filters.estadoId.map(estadoId => 
+          incidentsService.getIncidents({ 
+            page: 1,
+            limit: 10000, // Necesitamos todos para luego paginar correctamente
+            incidenciaId: filters.incidenciaId,
+            cruceId: filters.cruceId,
+            estadoId: estadoId
+          })
+        );
+        
+        const responses = await Promise.all(promises);
+        // Combinar todos los resultados y eliminar duplicados por ID
+        const allIncidents = responses.flatMap(r => r.data);
+        const uniqueIncidents = Array.from(
+          new Map(allIncidents.map(item => [item.id, item])).values()
+        );
+        allData = uniqueIncidents;
+      } else {
+        // Un solo estado o sin filtro de estado
+        const queryEstadoId = filters.estadoId && filters.estadoId.length === 1 
+          ? filters.estadoId[0] 
+          : undefined;
+        
+        const response = await incidentsService.getIncidents({ 
+          page: currentPage, 
+          limit: pageSize,
+          incidenciaId: filters.incidenciaId,
+          cruceId: filters.cruceId,
+          estadoId: queryEstadoId
+        });
+        
+        allData = response.data;
+      }
+      
+      let sortedData = [...allData];
       
       // Filtrar por rango de fechas en el cliente
       if (filters.fechaDesde || filters.fechaHasta) {
@@ -142,14 +256,33 @@ export function IncidentsList() {
           case 'fecha':
             compareValue = new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime();
             break;
+          case 'tiempo':
+            // Ordenar por tiempo transcurrido (más reciente primero cuando desc)
+            compareValue = new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime();
+            break;
         }
         
         return sortOrder === 'asc' ? compareValue : -compareValue;
       });
       
-      setIncidents(sortedData);
-      setTotalPages(response.meta.totalPages);
-      setTotalItems(response.meta.total);
+      // Si tenemos múltiples estados o filtros de fecha, paginamos en cliente
+      if ((filters.estadoId && filters.estadoId.length > 1) || filters.fechaDesde || filters.fechaHasta) {
+        const totalFiltered = sortedData.length;
+        const totalPagesCalculated = Math.ceil(totalFiltered / pageSize);
+        const startIndex = (currentPage - 1) * pageSize;
+        const endIndex = startIndex + pageSize;
+        
+        setIncidents(sortedData.slice(startIndex, endIndex));
+        setTotalPages(totalPagesCalculated);
+        setTotalItems(totalFiltered);
+      } else {
+        // Paginación desde el backend (ya viene paginado)
+        setIncidents(sortedData);
+        // Calcular totales basados en los datos que tenemos
+        const estimatedTotal = sortedData.length;
+        setTotalPages(Math.ceil(estimatedTotal / pageSize));
+        setTotalItems(estimatedTotal);
+      }
     } catch (error) {
       console.error('Error loading incidents:', error);
     } finally {
@@ -181,7 +314,24 @@ export function IncidentsList() {
   const clearFilters = () => {
     setFilters({});
     setCruceSearch('');
+    setIncidenciaSearch('');
     setCurrentPage(1);
+  };
+
+  const handleIncidenciaSelect = (incidenciaId: number, incidenciaTipo: string) => {
+    applyFilters({ ...filters, incidenciaId });
+    setIncidenciaSearch(incidenciaTipo);
+    setShowIncidenciaDropdown(false);
+  };
+
+  const handleIncidenciaInputChange = (value: string) => {
+    setIncidenciaSearch(value);
+    setShowIncidenciaDropdown(true);
+    if (value === '') {
+      const newFilters = { ...filters };
+      delete newFilters.incidenciaId;
+      applyFilters(newFilters);
+    }
   };
 
   const handleCruceSelect = (cruceId: number, cruceNombre: string) => {
@@ -200,6 +350,25 @@ export function IncidentsList() {
     }
   };
 
+  const handleEstadoToggle = (estadoId: number) => {
+    const currentEstados = filters.estadoId || [];
+    let newEstados: number[];
+    
+    if (currentEstados.includes(estadoId)) {
+      newEstados = currentEstados.filter(id => id !== estadoId);
+    } else {
+      newEstados = [...currentEstados, estadoId];
+    }
+    
+    if (newEstados.length === 0) {
+      const newFilters = { ...filters };
+      delete newFilters.estadoId;
+      applyFilters(newFilters);
+    } else {
+      applyFilters({ ...filters, estadoId: newEstados });
+    }
+  };
+
   const getStatusBadge = (estadoId: number | undefined) => {
     switch (estadoId) {
       case 1:
@@ -215,6 +384,49 @@ export function IncidentsList() {
       default:
         return <span className="badge bg-secondary">Desconocido</span>;
     }
+  };
+
+  const getTimeElapsed = (createdAt: string | Date) => {
+    const now = new Date();
+    const created = new Date(createdAt);
+    const diffMs = now.getTime() - created.getTime();
+    
+    const diffMinutes = Math.floor(diffMs / 60000);
+    const diffHours = Math.floor(diffMs / 3600000);
+    const diffDays = Math.floor(diffMs / 86400000);
+    
+    if (diffMinutes < 60) {
+      return { text: `${diffMinutes}m`, days: 0 };
+    } else if (diffHours < 24) {
+      return { text: `${diffHours}h`, days: 0 };
+    } else {
+      return { text: `${diffDays}d`, days: diffDays };
+    }
+  };
+
+  const getTimeBadge = (estadoId: number | undefined, createdAt: string | Date) => {
+    // Estados 3 y 4 no muestran tiempo
+    if (estadoId === 3 || estadoId === 4) {
+      return null;
+    }
+
+    const timeData = getTimeElapsed(createdAt);
+    
+    // Estados 1, 2, 5: aplicar colores según días transcurridos
+    if (estadoId === 1 || estadoId === 2 || estadoId === 5) {
+      let badgeClass = 'badge bg-success'; // Por defecto verde (menos de 1 día)
+      
+      if (timeData.days === 1) {
+        badgeClass = 'badge bg-warning text-dark'; // Naranja - exactamente 1 día
+      } else if (timeData.days > 1) {
+        badgeClass = 'badge bg-danger'; // Rojo - más de 1 día
+      }
+      
+      return <span className={badgeClass}>{timeData.text}</span>;
+    }
+    
+    // Otros estados: mostrar con color secundario
+    return <span className="badge bg-secondary">{timeData.text}</span>;
   };
 
   if (loading) {
@@ -257,36 +469,90 @@ export function IncidentsList() {
         {showFilters && (
           <div className="card-body">
             <div className="row g-2">
-              <div className="col-md-2">
+              <div className="col-md-3">
                 <label className="form-label small">Tipo de Incidencia</label>
-                <select 
-                  className="form-select form-select-sm"
-                  value={filters.incidenciaId || ''}
-                  onChange={(e) => applyFilters({ ...filters, incidenciaId: e.target.value ? parseInt(e.target.value) : undefined })}
-                >
-                  <option value="">Todos</option>
-                  {tiposIncidencia.map(tipo => (
-                    <option key={tipo.id} value={tipo.id}>{tipo.tipo}</option>
-                  ))}
-                </select>
+                <div className="position-relative incidencia-dropdown">
+                  <input 
+                    type="text" 
+                    className="form-control form-control-sm"
+                    placeholder="Buscar tipo de incidencia..."
+                    value={incidenciaSearch}
+                    onChange={(e) => handleIncidenciaInputChange(e.target.value)}
+                    onFocus={() => setShowIncidenciaDropdown(true)}
+                  />
+                  {showIncidenciaDropdown && (
+                    <div 
+                      className="position-absolute w-100 bg-white border rounded shadow-sm mt-1" 
+                      style={{ maxHeight: '200px', overflowY: 'auto', zIndex: 1000 }}
+                    >
+                      {filteredIncidencias.length === 0 ? (
+                        <div className="p-2 text-muted small">No se encontraron tipos</div>
+                      ) : (
+                        filteredIncidencias.map(inc => (
+                          <div
+                            key={inc.id}
+                            className="p-2 hover-bg-light cursor-pointer small"
+                            style={{ cursor: 'pointer' }}
+                            onClick={() => handleIncidenciaSelect(inc.id, inc.tipo)}
+                            onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#f8f9fa'}
+                            onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'transparent'}
+                          >
+                            {inc.tipo}
+                          </div>
+                        ))
+                      )}
+                    </div>
+                  )}
+                </div>
               </div>
               <div className="col-md-2">
-                <label className="form-label small">Estado</label>
-                <select 
-                  className="form-select form-select-sm"
-                  value={filters.estadoId || ''}
-                  onChange={(e) => applyFilters({ ...filters, estadoId: e.target.value ? parseInt(e.target.value) : undefined })}
-                >
-                  <option value="">Todos</option>
-                  <option value="1">Pendiente</option>
-                  <option value="2">En Proceso</option>
-                  <option value="3">Completado</option>
-                  <option value="4">Cancelado</option>
-                </select>
+                <label className="form-label small">Estados</label>
+                <div className="position-relative estado-dropdown">
+                  <button 
+                    type="button"
+                    className="form-control form-control-sm text-start d-flex justify-content-between align-items-center"
+                    onClick={() => setShowEstadoDropdown(!showEstadoDropdown)}
+                  >
+                    <span>
+                      {(filters.estadoId || []).length === 0 
+                        ? 'Seleccionar estados...' 
+                        : `${(filters.estadoId || []).length} seleccionado(s)`}
+                    </span>
+                    <i className={`fas fa-chevron-${showEstadoDropdown ? 'up' : 'down'} ms-2`}></i>
+                  </button>
+                  {showEstadoDropdown && (
+                    <div 
+                      className="position-absolute w-100 bg-white border rounded shadow-sm mt-1" 
+                      style={{ maxHeight: '200px', overflowY: 'auto', zIndex: 1000 }}
+                    >
+                      {estados.map(estado => (
+                        <div
+                          key={estado.id}
+                          className="p-2 d-flex align-items-center hover-bg-light"
+                          style={{ cursor: 'pointer' }}
+                          onClick={() => handleEstadoToggle(estado.id)}
+                          onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#f8f9fa'}
+                          onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'transparent'}
+                        >
+                          <input
+                            type="checkbox"
+                            className="form-check-input me-2"
+                            checked={(filters.estadoId || []).includes(estado.id)}
+                            onChange={() => {}}
+                            onClick={(e) => e.stopPropagation()}
+                          />
+                          <label className="small mb-0" style={{ cursor: 'pointer' }}>
+                            {estado.nombre}
+                          </label>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
               </div>
               <div className="col-md-3">
                 <label className="form-label small">Cruce</label>
-                <div className="position-relative">
+                <div className="position-relative cruce-dropdown">
                   <input 
                     type="text" 
                     className="form-control form-control-sm"
@@ -396,13 +662,16 @@ export function IncidentsList() {
                   <th className="py-3" style={{ cursor: 'pointer' }} onClick={() => handleSort('fecha')}>
                     Fecha {getSortIcon('fecha')}
                   </th>
+                  <th className="py-3" style={{ cursor: 'pointer' }} onClick={() => handleSort('tiempo')}>
+                    Tiempo {getSortIcon('tiempo')}
+                  </th>
                   <th className="py-3 text-center">Acciones</th>
                 </tr>
               </thead>
               <tbody>
                 {incidents.length === 0 ? (
                   <tr>
-                    <td colSpan={6} className="text-center py-5 text-muted">
+                    <td colSpan={7} className="text-center py-5 text-muted">
                       <i className="fas fa-inbox fa-3x mb-3 d-block"></i>
                       No hay incidencias registradas
                     </td>
@@ -425,6 +694,9 @@ export function IncidentsList() {
                       <td>{getStatusBadge(incident.estadoId)}</td>
                       <td>
                         <small>{new Date(incident.createdAt).toLocaleString('es-PE')}</small>
+                      </td>
+                      <td>
+                        {getTimeBadge(incident.estadoId, incident.createdAt)}
                       </td>
                       <td className="text-center">
                         <button

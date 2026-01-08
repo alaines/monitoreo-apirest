@@ -4,6 +4,7 @@ import type { User, LoginCredentials } from './types';
 
 interface AuthState {
   user: User | null;
+  token: string | null;
   isAuthenticated: boolean;
   isLoading: boolean;
   error: string | null;
@@ -15,6 +16,7 @@ interface AuthState {
 
 export const useAuthStore = create<AuthState>((set) => ({
   user: null,
+  token: null,
   isAuthenticated: false,
   isLoading: false,
   error: null,
@@ -30,6 +32,7 @@ export const useAuthStore = create<AuthState>((set) => ({
 
       set({
         user: response.user,
+        token: response.accessToken,
         isAuthenticated: true,
         isLoading: false,
         error: null,
@@ -53,6 +56,7 @@ export const useAuthStore = create<AuthState>((set) => ({
     localStorage.removeItem('redirectAfterLogin');
     set({
       user: null,
+      token: null,
       isAuthenticated: false,
       error: null,
     });
@@ -69,6 +73,7 @@ export const useAuthStore = create<AuthState>((set) => ({
     if (user && token) {
       set({
         user,
+        token,
         isAuthenticated: true,
       });
     }

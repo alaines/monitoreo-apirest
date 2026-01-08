@@ -3,10 +3,19 @@ import { PrismaService } from '../prisma/prisma.service';
 import { CreateIncidentDto } from './dto/create-incident.dto';
 import { UpdateIncidentDto } from './dto/update-incident.dto';
 import { QueryIncidentsDto } from './dto/query-incidents.dto';
+import { NotificationsService } from '../notifications/notifications.service';
+import { NotificationsGateway } from '../notifications/notifications.gateway';
+
+// IDs de incidencias críticas que requieren notificación
+const CRITICAL_INCIDENT_IDS = [22, 3, 64, 65, 66]; // SEMAFORO INTERMITENTE, SEMAFORO VEHICULAR APAGADO, SEMAFORO PEATONAL APAGADO, SEMAFORO CICLISTA APAGADO, CRUCE APAGADO
 
 @Injectable()
 export class IncidentsService {
-  constructor(private prisma: PrismaService) {}
+  constructor(
+    private prisma: PrismaService,
+    private notificationsService: NotificationsService,
+    private notificationsGateway: NotificationsGateway,
+  ) {}
 
   async create(createIncidentDto: CreateIncidentDto, usuario: string) {
     // Las incidencias siempre heredan coordenadas del cruce, no necesitan geom propio
@@ -29,7 +38,35 @@ export class IncidentsService {
 
     // Obtener el ticket recién creado
     const ticketId = result[0].id;
-    return this.findOne(ticketId);
+    const ticket = await this.findOne(ticketId);
+
+    // Broadcast to all connected clients that a new incident was created
+    try {
+      this.notificationsGateway.broadcastIncidentCreated(ticket);
+    } catch (error) {
+      console.error('Error broadcasting incident creation:', error);
+    }
+
+    // Enviar notificación si es una incidencia crítica
+    if (CRITICAL_INCIDENT_IDS.includes(createIncidentDto.incidenciaId)) {
+      try {
+        const incidenciaTipo = ticket.incidencia?.tipo || 'Incidencia crítica';
+        const cruceNombre = ticket.cruce?.nombre || `Cruce #${ticket.cruceId}`;
+        
+        // Notificar a todos los usuarios activos
+        await this.notificationsService.notifyNewIncidencia(
+          ticketId,
+          incidenciaTipo,
+          cruceNombre,
+          ticket.descripcion || '',
+        );
+      } catch (error) {
+        console.error('Error al enviar notificación de nueva incidencia:', error);
+        // No fallar la creación del ticket si falla la notificación
+      }
+    }
+
+    return ticket;
   }
 
   async findAll(query: QueryIncidentsDto) {
@@ -283,6 +320,19 @@ export class IncidentsService {
     return result.map(r => r.anho);
   }
 
+  async getCrucesApagadosCount() {
+    const count = await this.prisma.ticket.count({
+      where: {
+        incidenciaId: 66, // CRUCE APAGADO
+        estadoId: {
+          in: [1, 2, 5], // Pendiente, En Proceso, Observado
+        },
+      },
+    });
+
+    return { count };
+  }
+
   async getMapMarkers(query: QueryIncidentsDto) {
     const { page = 1, limit = 10000, estadoId, administradorId, anho } = query;
     const skip = (page - 1) * limit;
@@ -388,6 +438,7 @@ export class IncidentsService {
         tipo: true,
         caracteristica: true,
         parentId: true,
+        prioridadId: true,
       },
     });
 
@@ -416,6 +467,7 @@ export class IncidentsService {
         id: inc.id,
         tipo: nombreCompleto,
         caracteristica: inc.caracteristica,
+        prioridadeId: inc.prioridadId,
         nombrePadre, // Para ordenamiento
       };
     });
@@ -465,6 +517,17 @@ export class IncidentsService {
 
   async getEquiposCatalog() {
     return this.prisma.equipo.findMany({
+      where: { estado: true },
+      select: {
+        id: true,
+        nombre: true,
+      },
+      orderBy: { nombre: 'asc' },
+    });
+  }
+
+  async getReportadoresCatalog() {
+    return this.prisma.reportador.findMany({
       where: { estado: true },
       select: {
         id: true,

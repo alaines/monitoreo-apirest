@@ -94,6 +94,7 @@ export interface IncidenciaCatalog {
   id: number;
   tipo: string;
   caracteristica?: string;
+  prioridadeId?: number;
 }
 
 export interface PrioridadCatalog {
@@ -112,6 +113,17 @@ export interface CruceCatalog {
 }
 
 export interface EquipoCatalog {
+  id: number;
+  nombre: string;
+}
+
+export interface ResponsableCatalog {
+  id: number;
+  nombre: string;
+  equipoId: number;
+}
+
+export interface ReportadorCatalog {
   id: number;
   nombre: string;
 }
@@ -181,6 +193,11 @@ class IncidentsService {
     return response.data;
   }
 
+  async getCrucesApagadosCount(): Promise<{ count: number }> {
+    const response = await api.get('/incidents/cruces-apagados/count');
+    return response.data;
+  }
+
   async getMapMarkers(query?: QueryIncidentsDto): Promise<IncidentsResponse> {
     const response = await api.get('/incidents/map-markers', { params: query });
     return response.data;
@@ -208,6 +225,17 @@ class IncidentsService {
 
   async getEquiposCatalog(): Promise<EquipoCatalog[]> {
     const response = await api.get('/incidents/catalogs/equipos');
+    return response.data;
+  }
+
+  async getResponsablesCatalog(equipoId?: number): Promise<ResponsableCatalog[]> {
+    const params = equipoId ? { equipoId } : {};
+    const response = await api.get('/responsables', { params });
+    return response.data;
+  }
+
+  async getReportadoresCatalog(): Promise<ReportadorCatalog[]> {
+    const response = await api.get('/incidents/catalogs/reportadores');
     return response.data;
   }
 

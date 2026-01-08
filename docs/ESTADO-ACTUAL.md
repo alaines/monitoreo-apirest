@@ -1,8 +1,8 @@
 # Estado Actual del Proyecto - Sistema de Monitoreo
 
-**Fecha**: 6 de enero de 2026
-**Última actualización**: Enero 2026
-**Estado General**: Producción - Mejoras Continuas
+**Fecha**: 8 de enero de 2026
+**Última actualización**: Enero 2026 - Sprint 8 Completado
+**Estado General**: Producción - Sprint 8: Notificaciones en Tiempo Real
 
 ---
 
@@ -39,6 +39,7 @@
   - Cerrados del día
   - Total activos (estados 1 y 2)
   - Total resueltos (estados 3 y 4)
+  - **[SPRINT 8]** Cruces apagados (estados 1, 2, 5 - tipo 66)
 - ✅ Mapa interactivo de incidencias activas
 - ✅ Filtros dinámicos:
   - Por año (obtiene años disponibles de BD)
@@ -46,16 +47,31 @@
 - ✅ Carga optimizada (endpoint ligero ~2MB vs ~18MB)
 - ✅ UI con placeholders (no bloquea mientras carga)
 - ✅ Lazy loading del detalle de incidencias
+- ✅ **[SPRINT 8]** Sistema de notificaciones:
+  - Campana con contador de no leídas
+  - Panel desplegable
+  - WebSocket en tiempo real
+  - Auto-notificación para incidencias críticas
 
 ### 3. Gestión de Incidencias ✅
 - ✅ CRUD completo de tickets
 - ✅ Sistema de seguimiento (trackings)
-- ✅ Estados: Pendiente, En Proceso, Cerrado
+- ✅ Estados: Pendiente, En Proceso, Atendido, Cerrado, Reasignado
 - ✅ Prioridades: Alta, Media, Baja
 - ✅ Asignación a equipos y responsables
 - ✅ Heredamiento de coordenadas desde cruces
 - ✅ Modal de detalle con información completa
 - ✅ Timeline de seguimientos
+- ✅ **[SPRINT 8]** Filtros avanzados:
+  - Búsqueda de tipo de incidencia con buscador
+  - Selección múltiple de estados
+  - Aplicación automática desde URL
+- ✅ **[SPRINT 8]** Columna "Tiempo Transcurrido":
+  - Alertas visuales (verde/naranja/rojo)
+  - Cálculo automático desde creación
+  - Lógica diferenciada por estado
+- ✅ **[SPRINT 8]** Card "Cruces Apagados" en dashboard
+- ✅ **[SPRINT 8]** Notificaciones en tiempo real con WebSockets
 
 ### 4. Cruces Semaforizados ✅
 - ✅ Catálogo completo de cruces
@@ -94,9 +110,18 @@
 
 ---
 
-## 🔧 Correcciones Recientes (Enero 2026)
+## 🔧 Mejoras Recientes (Enero 2026)
 
-### Issues Resueltos
+### Sprint 8: Sistema de Notificaciones ✅ (8 de Enero 2026)
+1. ✅ **WebSocket con Socket.IO**: Notificaciones en tiempo real
+2. ✅ **NotificationBell Component**: Campana con contador y panel
+3. ✅ **Auto-notificaciones**: Incidencias críticas notifican automáticamente
+4. ✅ **Card Cruces Apagados**: Monitoreo especial en dashboard
+5. ✅ **Filtros Mejorados**: Búsqueda de tipo y estados múltiples
+6. ✅ **Columna Tiempo**: Alertas visuales verde/naranja/rojo
+7. ✅ **Optimización de Carga**: Múltiples llamadas filtradas vs descargar todo
+
+### Issues Resueltos (Anteriores)
 1. ✅ **Schema mismatch**: Campo `passwordHash` no existía en DB
 2. ✅ **Permisos de menú**: Códigos NULL o con sufijo `_mant`
 3. ✅ **Estadísticas incorrectas**: No incluía estado 4 en resueltos

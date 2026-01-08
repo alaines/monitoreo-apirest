@@ -1,6 +1,8 @@
 import { useState, useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useAuthStore } from '../features/auth/authStore';
+import { NotificationBell } from './notifications/NotificationBell';
+import { NotificationToast } from './notifications/NotificationToast';
 
 export function Layout({ children }: { children: React.ReactNode }) {
   const navigate = useNavigate();
@@ -79,8 +81,11 @@ export function Layout({ children }: { children: React.ReactNode }) {
           {isActive('/users') && 'Gestión de Usuarios'}
         </div>
 
-        {/* Usuario en header */}
-        <div style={{ position: 'relative' }}>
+        {/* Notificaciones y Usuario en header */}
+        <div style={{ display: 'flex', gap: '12px', alignItems: 'center' }}>
+          <NotificationBell />
+          
+          <div style={{ position: 'relative' }}>
           <button
             onClick={() => setShowUserMenu(!showUserMenu)}
             className="btn btn-light d-flex align-items-center gap-2"
@@ -164,6 +169,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
               </a>
             </div>
           )}
+        </div>
         </div>
       </header>
 
@@ -771,6 +777,9 @@ export function Layout({ children }: { children: React.ReactNode }) {
           </div>
         </div>
       </footer>
+
+      {/* Notificación Toast */}
+      <NotificationToast />
     </div>
   );
 }

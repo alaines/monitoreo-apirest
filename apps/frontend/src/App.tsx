@@ -100,7 +100,7 @@ function App() {
           element={
             <ProtectedRoute>
               <Layout>
-                <IncidentDetail incidentId={0} onClose={() => {}} />
+                <IncidentDetail />
               </Layout>
             </ProtectedRoute>
           }

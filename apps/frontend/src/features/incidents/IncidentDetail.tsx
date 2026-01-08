@@ -6,16 +6,23 @@ import {
   IncidentTracking, 
   CreateTrackingDto,
   EstadoCatalog,
-  EquipoCatalog 
+  EquipoCatalog,
+  ResponsableCatalog
 } from '../../services/incidents.service';
 
 interface IncidentDetailProps {
-  incidentId: number;
-  onClose: () => void;
+  incidentId?: number;
+  onClose?: () => void;
 }
 
-export function IncidentDetail({ incidentId, onClose }: IncidentDetailProps) {
+export function IncidentDetail({ incidentId: propIncidentId, onClose }: IncidentDetailProps) {
   const navigate = useNavigate();
+  const params = useParams<{ id: string }>();
+  
+  // Usar el ID de las props si existe, sino del parámetro de la URL
+  const incidentId = propIncidentId || (params.id ? parseInt(params.id) : 0);
+  const isModal = !!propIncidentId; // Es modal si recibió ID por props
+  
   const [incident, setIncident] = useState<Incident | null>(null);
   const [loading, setLoading] = useState(true);
   const [trackings, setTrackings] = useState<IncidentTracking[]>([]);
@@ -23,10 +30,12 @@ export function IncidentDetail({ incidentId, onClose }: IncidentDetailProps) {
   const [showTrackingForm, setShowTrackingForm] = useState(false);
   const [estados, setEstados] = useState<EstadoCatalog[]>([]);
   const [equipos, setEquipos] = useState<EquipoCatalog[]>([]);
+  const [responsables, setResponsables] = useState<ResponsableCatalog[]>([]);
   const [trackingForm, setTrackingForm] = useState<CreateTrackingDto>({
     reporte: '',
     estadoId: undefined,
     equipoId: undefined,
+    responsableId: undefined,
   });
 
   useEffect(() => {
@@ -86,14 +95,30 @@ export function IncidentDetail({ incidentId, onClose }: IncidentDetailProps) {
 
     try {
       await incidentsService.createTracking(incidentId, trackingForm);
-      setTrackingForm({ reporte: '', estadoId: undefined, equipoId: undefined });
+      setTrackingForm({ reporte: '', estadoId: undefined, equipoId: undefined, responsableId: undefined });
       setShowTrackingForm(false);
+      setResponsables([]);
       loadTrackings();
       loadIncident(incidentId); // Recargar para actualizar el estado
     } catch (error: any) {
       console.error('Error creating tracking:', error);
       const errorMessage = error.response?.data?.message || error.message || 'Error al crear el seguimiento';
       alert(errorMessage);
+    }
+  };
+
+  const handleEquipoChange = async (equipoId: number | undefined) => {
+    setTrackingForm({ ...trackingForm, equipoId, responsableId: undefined });
+    if (equipoId) {
+      try {
+        const responsablesData = await incidentsService.getResponsablesCatalog(equipoId);
+        setResponsables(responsablesData);
+      } catch (error) {
+        console.error('Error loading responsables:', error);
+        setResponsables([]);
+      }
+    } else {
+      setResponsables([]);
     }
   };
 
@@ -133,37 +158,50 @@ export function IncidentDetail({ incidentId, onClose }: IncidentDetailProps) {
   }
 
   if (!incident) {
-    return (
-      <div className="modal show d-block" style={{ backgroundColor: 'rgba(0,0,0,0.5)' }}>
-        <div className="modal-dialog modal-xl">
-          <div className="modal-content">
-            <div className="modal-body">
-              <div className="alert alert-warning">
-                <i className="fas fa-exclamation-triangle me-2"></i>
-                No se encontró la incidencia
+    if (isModal) {
+      return (
+        <div className="modal show d-block" style={{ backgroundColor: 'rgba(0,0,0,0.5)' }}>
+          <div className="modal-dialog modal-xl">
+            <div className="modal-content">
+              <div className="modal-body">
+                <div className="alert alert-warning">
+                  <i className="fas fa-exclamation-triangle me-2"></i>
+                  No se encontró la incidencia
+                </div>
+                <button className="btn btn-primary" onClick={onClose}>
+                  Cerrar
+                </button>
               </div>
-              <button className="btn btn-primary" onClick={onClose}>
-                Cerrar
-              </button>
             </div>
           </div>
         </div>
+      );
+    }
+    
+    return (
+      <div className="container-fluid py-4">
+        <div className="alert alert-warning">
+          <i className="fas fa-exclamation-triangle me-2"></i>
+          No se encontró la incidencia
+        </div>
+        <button className="btn btn-primary" onClick={() => navigate('/incidents')}>
+          <i className="fas fa-arrow-left me-2"></i>
+          Volver a la lista
+        </button>
       </div>
     );
   }
 
-  return (
-    <div className="modal show d-block" style={{ backgroundColor: 'rgba(0,0,0,0.5)' }} onClick={onClose}>
-      <div className="modal-dialog modal-xl modal-dialog-scrollable" onClick={(e) => e.stopPropagation()}>
-        <div className="modal-content">
-          <div className="modal-header bg-primary text-white">
-            <h5 className="modal-title">
-              <i className="fas fa-eye me-2"></i>
-              Ver Incidencia
-            </h5>
-            <button type="button" className="btn-close btn-close-white" onClick={onClose}></button>
-          </div>
-          <div className="modal-body">
+  const handleClose = () => {
+    if (onClose) {
+      onClose();
+    } else {
+      navigate('/incidents');
+    }
+  };
+
+  const content = (
+    <>
       <div className="row g-3">
         <div className="col-md-8">
           {/* Información General */}
@@ -323,7 +361,7 @@ export function IncidentDetail({ incidentId, onClose }: IncidentDetailProps) {
         </div>
       </div>
 
-      {/* Sección de Seguimientos */}
+      {/* Seccion de Seguimientos */}
       <div className="row mt-3">
         <div className="col-12">
           <div className="card">
@@ -358,31 +396,52 @@ export function IncidentDetail({ incidentId, onClose }: IncidentDetailProps) {
                   <form onSubmit={handleSubmitTracking}>
                     <div className="row mb-3">
                       <div className="col-md-6">
-                        <label className="form-label">Cambiar Estado</label>
+                        <label className="form-label">Equipo Asignado</label>
                         <select
                           className="form-select"
-                          value={trackingForm.estadoId || ''}
-                          onChange={(e) => setTrackingForm({ ...trackingForm, estadoId: e.target.value ? parseInt(e.target.value) : undefined })}
+                          value={trackingForm.equipoId || ''}
+                          onChange={(e) => handleEquipoChange(e.target.value ? parseInt(e.target.value) : undefined)}
                         >
-                          <option value="">Sin cambio</option>
-                          {estados.map((estado) => (
-                            <option key={estado.id} value={estado.id}>
-                              {estado.nombre}
+                          <option value="">Seleccionar equipo</option>
+                          {equipos.map((equipo) => (
+                            <option key={equipo.id} value={equipo.id}>
+                              {equipo.nombre}
                             </option>
                           ))}
                         </select>
                       </div>
                       <div className="col-md-6">
-                        <label className="form-label">Equipo Asignado</label>
+                        <label className="form-label">Responsable</label>
                         <select
                           className="form-select"
-                          value={trackingForm.equipoId || ''}
-                          onChange={(e) => setTrackingForm({ ...trackingForm, equipoId: e.target.value ? parseInt(e.target.value) : undefined })}
+                          value={trackingForm.responsableId || ''}
+                          onChange={(e) => setTrackingForm({ ...trackingForm, responsableId: e.target.value ? parseInt(e.target.value) : undefined })}
+                          disabled={!trackingForm.equipoId || responsables.length === 0}
                         >
-                          <option value="">Sin equipo</option>
-                          {equipos.map((equipo) => (
-                            <option key={equipo.id} value={equipo.id}>
-                              {equipo.nombre}
+                          <option value="">Seleccionar responsable</option>
+                          {responsables.map((responsable) => (
+                            <option key={responsable.id} value={responsable.id}>
+                              {responsable.nombre}
+                            </option>
+                          ))}
+                        </select>
+                        {trackingForm.equipoId && responsables.length === 0 && (
+                          <small className="text-muted">No hay responsables para este equipo</small>
+                        )}
+                      </div>
+                    </div>
+                    <div className="row mb-3">
+                      <div className="col-12">
+                        <label className="form-label">Asignar Estado</label>
+                        <select
+                          className="form-select"
+                          value={trackingForm.estadoId || ''}
+                          onChange={(e) => setTrackingForm({ ...trackingForm, estadoId: e.target.value ? parseInt(e.target.value) : undefined })}
+                        >
+                          <option value="">Sin cambio de estado</option>
+                          {estados.map((estado) => (
+                            <option key={estado.id} value={estado.id}>
+                              {estado.nombre}
                             </option>
                           ))}
                         </select>
@@ -481,28 +540,73 @@ export function IncidentDetail({ incidentId, onClose }: IncidentDetailProps) {
           </div>
         </div>
       </div>
-          </div>
-          <div className="modal-footer bg-light">
-            <button type="button" className="btn btn-secondary" onClick={onClose}>
-              <i className="fas fa-times me-2"></i>
-              Cerrar
-            </button>
-            {incident.estadoId !== 4 && (
-              <button 
-                type="button" 
-                className="btn btn-primary"
-                onClick={() => {
-                  onClose();
-                  // Aquí podrías navegar a editar si necesitas
-                }}
-              >
-                <i className="fas fa-edit me-2"></i>
-                Editar Incidencia
+    </>
+  );
+
+  if (isModal) {
+    return (
+      <div className="modal show d-block" style={{ backgroundColor: 'rgba(0,0,0,0.5)' }} onClick={handleClose}>
+        <div className="modal-dialog modal-xl modal-dialog-scrollable" onClick={(e) => e.stopPropagation()}>
+          <div className="modal-content">
+            <div className="modal-header bg-primary text-white">
+              <h5 className="modal-title">
+                <i className="fas fa-eye me-2"></i>
+                Ver Incidencia
+              </h5>
+              <button type="button" className="btn-close btn-close-white" onClick={handleClose}></button>
+            </div>
+            <div className="modal-body">
+              {content}
+            </div>
+            <div className="modal-footer bg-light">
+              <button type="button" className="btn btn-secondary" onClick={handleClose}>
+                <i className="fas fa-times me-2"></i>
+                Cerrar
               </button>
-            )}
+              {incident.estadoId !== 4 && (
+                <button 
+                  type="button" 
+                  className="btn btn-primary"
+                  onClick={() => {
+                    handleClose();
+                    navigate(`/incidents/${incident.id}/edit`);
+                  }}
+                >
+                  <i className="fas fa-edit me-2"></i>
+                  Editar Incidencia
+                </button>
+              )}
+            </div>
           </div>
         </div>
       </div>
+    );
+  }
+
+  return (
+    <div className="container-fluid py-4">
+      <div className="d-flex justify-content-between align-items-center mb-4">
+        <h3>
+          <i className="fas fa-eye me-2"></i>
+          Detalle de Incidencia
+        </h3>
+        <div>
+          <button className="btn btn-secondary me-2" onClick={handleClose}>
+            <i className="fas fa-arrow-left me-2"></i>
+            Volver
+          </button>
+          {incident.estadoId !== 4 && (
+            <button 
+              className="btn btn-primary"
+              onClick={() => navigate(`/incidents/${incident.id}/edit`)}
+            >
+              <i className="fas fa-edit me-2"></i>
+              Editar
+            </button>
+          )}
+        </div>
+      </div>
+      {content}
     </div>
   );
 }

@@ -121,9 +121,12 @@ Aplicacion web profesional para la gestion, seguimiento y analisis de cruces sem
 - Asignacion a equipos tecnicos especializados
 - Seguimiento del ciclo de vida completo
 - Heredamiento automatico de coordenadas desde cruces
-- Calculo automatico de dias sin atencion
+- Calculo automatico de tiempo transcurrido con alertas visuales
 - Sistema de tracking con timeline visual y historial completo
 - Restriccion de modificaciones en incidencias finalizadas
+- Filtros avanzados con busqueda de tipo y seleccion multiple de estados
+- Monitoreo especial de "Cruces Apagados" en dashboard
+- Notificaciones en tiempo real para incidencias criticas
 
 ### Mapas Interactivos
 - Mapa de cruces con marcadores diferenciados por administrador
@@ -139,7 +142,10 @@ Aplicacion web profesional para la gestion, seguimiento y analisis de cruces sem
 - Filtros por periodo temporal (Hoy, Semana, Mes, Ano, Todas)
 - Indicadores de rendimiento (KPIs): activas, pendientes, en progreso
 - Metricas de tiempo promedio de resolucion
+- Card especial "Cruces Apagados" con contador en vivo
 - Integracion con mapas para analisis espacial
+- Sistema de notificaciones en tiempo real con WebSockets
+- Campana de notificaciones con contador de alertas no leidas
 
 ### Sistema de Reportes
 - **Reporte de Incidencias**: Estadisticas detalladas con exportacion a PDF
@@ -176,6 +182,7 @@ Aplicacion web profesional para la gestion, seguimiento y analisis de cruces sem
 - ORM: Prisma con cliente autogenerado
 - Base de Datos: PostgreSQL 13+ con extension PostGIS
 - Autenticacion: JWT con Passport.js
+- WebSockets: Socket.IO para notificaciones en tiempo real
 - Documentacion API: Swagger/OpenAPI
 - Validacion: class-validator y class-transformer
 - Gestion de Archivos: Multer con almacenamiento en disco
@@ -186,6 +193,7 @@ Aplicacion web profesional para la gestion, seguimiento y analisis de cruces sem
 - Lenguaje: TypeScript con tipado estricto
 - UI Framework: Bootstrap 5.3.8
 - Gestion de Estado: Zustand para estado global
+- WebSockets: socket.io-client para notificaciones en tiempo real
 - Mapas: Leaflet con React Leaflet
 - Enrutamiento: React Router v6
 - Graficos: Chart.js 4.x con react-chartjs-2
@@ -401,6 +409,14 @@ monitoreo-apirest/
 - `DELETE /api/incidents/:id` - Eliminar incidencia
 - `GET /api/incidents/:id/tracking` - Obtener seguimientos
 - `POST /api/incidents/:id/tracking` - Agregar seguimiento
+- `GET /api/incidents/cruces-apagados/count` - Contador de cruces apagados
+
+### Notificaciones
+- `GET /api/notifications` - Listar notificaciones (paginado)
+- `GET /api/notifications/unread-count` - Contador de no leidas
+- `PATCH /api/notifications/:id/mark-read` - Marcar como leida
+- `PATCH /api/notifications/mark-all-read` - Marcar todas como leidas
+- `WebSocket /` - Conexion en tiempo real para notificaciones
 
 ### Catalogos
 - `GET /api/tipos` - Tipos jerarquicos (cruces, perifericos, incidencias)
@@ -469,7 +485,10 @@ Cada incidencia mantiene un historial completo de seguimientos con:
 - @nestjs/common
 - @nestjs/jwt
 - @nestjs/passport
+- @nestjs/websockets
+- @nestjs/platform-socket.io
 - @prisma/client 5.14.0
+- socket.io 4.6.0
 - passport-jwt
 - bcryptjs
 - class-validator
@@ -482,6 +501,7 @@ Cada incidencia mantiene un historial completo de seguimientos con:
 - react-router-dom 6.23.1
 - typescript 5.5.3
 - zustand 4.5.2
+- socket.io-client 4.6.0
 - leaflet 1.9.4
 - react-leaflet
 - bootstrap 5.3.8

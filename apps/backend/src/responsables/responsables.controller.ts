@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete, ParseIntPipe, UseGuards } from '@nestjs/common';
+import { Controller, Get, Post, Body, Patch, Param, Delete, ParseIntPipe, UseGuards, Query } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiBearerAuth } from '@nestjs/swagger';
 import { ResponsablesService } from './responsables.service';
 import { CreateResponsableDto, UpdateResponsableDto, ResponsableResponseDto } from './responsables.dto';
@@ -16,8 +16,8 @@ export class ResponsablesController {
   @Get()
   @RequirePermission('responsables', 'view')
   @ApiOperation({ summary: 'Listar todos los responsables' })
-  async findAll(): Promise<ResponsableResponseDto[]> {
-    return this.responsablesService.findAll();
+  async findAll(@Query('equipoId', new ParseIntPipe({ optional: true })) equipoId?: number): Promise<ResponsableResponseDto[]> {
+    return this.responsablesService.findAll(equipoId);
   }
 
   @Get(':id')
