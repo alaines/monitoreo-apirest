@@ -1,6 +1,6 @@
 {
   "name": "monitoreo-apirest",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Sistema de Gestión de Incidencias de Semáforos - Monorepo",
   "private": true,
   "workspaces": [
@@ -29,7 +29,11 @@
     "prisma:studio": "npm run prisma:studio -w apps/backend",
     "docker:up": "docker-compose up -d",
     "docker:down": "docker-compose down",
-    "docker:logs": "docker-compose logs -f"
+    "docker:logs": "docker-compose logs -f",
+    "version:patch": "./scripts/version-bump.sh patch",
+    "version:minor": "./scripts/version-bump.sh minor",
+    "version:major": "./scripts/version-bump.sh major",
+    "release": "./scripts/release.sh"
   },
   "keywords": [
     "monitoreo",

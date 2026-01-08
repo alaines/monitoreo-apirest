@@ -1,6 +1,6 @@
 {
   "name": "@monitoreo/frontend",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Frontend con React + Vite + TypeScript",
   "private": true,
   "type": "module",

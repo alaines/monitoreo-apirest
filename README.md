@@ -1,5 +1,8 @@
 # Sistema de Monitoreo de Semaforos e Incidencias
 
+[![Version](https://img.shields.io/badge/version-1.0.1-blue.svg)](./CHANGELOG.md)
+[![License](https://img.shields.io/badge/license-MIT-green.svg)](./LICENSE)
+
 Sistema integral de gestion y monitoreo de cruces semaforizados e incidencias de trafico en tiempo real. Monorepo fullstack desarrollado con NestJS, React, PostgreSQL y PostGIS.
 
 ## Autor
@@ -11,6 +14,8 @@ Aland Laines Calonge
 - **[📖 Guía de Instalación Completa](docs/INSTALLATION.md)** - Instalación detallada para desarrollo y producción
 - **[⚡ Guía Rápida](docs/guides/GUIA-RAPIDA.md)** - Inicio rápido para desarrollo
 - **[🔧 Configuración de Servidor](docs/architecture/SERVER-CONFIG.md)** - Configuración técnica de servidores
+- **[📋 CHANGELOG](CHANGELOG.md)** - Historial de cambios y versiones
+- **[🏷️ Versionado](docs/guides/VERSIONING.md)** - Guía de versionado y releases
 
 ## ⚡ Instalación Rápida
 
