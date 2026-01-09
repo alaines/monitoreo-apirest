@@ -20,10 +20,10 @@ module.exports = {
       name: 'monitoreo-frontend',
       cwd: './apps/frontend',
       script: 'npm',
-      args: 'run preview',
+      args: 'run dev',
       watch: false,
       env: {
-        NODE_ENV: 'production',
+        NODE_ENV: 'development',
       },
       error_file: './logs/frontend-error.log',
       out_file: './logs/frontend-out.log',
