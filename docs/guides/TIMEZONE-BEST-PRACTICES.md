@@ -1,12 +1,12 @@
 # Guía de Mejores Prácticas para Manejo de Zonas Horarias
 
-## 📅 Fecha de Creación
+## Fecha de Creación
 2026-01-08
 
-## 🎯 Objetivo
+## Objetivo
 Estandarizar el manejo de fechas y horas en todo el sistema para evitar inconsistencias entre servidores, base de datos y clientes en diferentes zonas horarias.
 
-## 🌍 Situación Actual del Sistema
+## Situación Actual del Sistema
 
 ### Servidores
 - **apps.movingenia.com**: UTC (GMT+0)
@@ -16,7 +16,7 @@ Estandarizar el manejo de fechas y horas en todo el sistema para evitar inconsis
 - **Ubicación principal**: Lima, Perú (GMT-5)
 - **Zona horaria**: America/Lima
 
-## ⚠️ Problema Identificado
+## Problema Identificado
 
 ### Antes de la Corrección
 Las tablas usaban `timestamp without time zone`:
@@ -29,9 +29,9 @@ Las tablas usaban `timestamp without time zone`:
 -- Columna: timestamp without time zone
 connected_at | 2026-01-08 12:26:41.69
 ```
-❓ ¿Esta hora es UTC? ¿Es hora de Lima? **No se puede saber**
+¿Esta hora es UTC? ¿Es hora de Lima? **No se puede saber**
 
-## ✅ Solución Implementada
+## Solución Implementada
 
 ### 1. Base de Datos: Usar `timestamptz`
 
@@ -42,15 +42,15 @@ ALTER TABLE user_sessions
 ```
 
 **Ventajas:**
-- ✅ Siempre almacena en UTC internamente
-- ✅ Acepta fechas en cualquier zona horaria
-- ✅ Convierte automáticamente a UTC
-- ✅ Al consultar, se puede mostrar en cualquier zona horaria
+- Siempre almacena en UTC internamente
+- Acepta fechas en cualquier zona horaria
+- Convierte automáticamente a UTC
+- Al consultar, se puede mostrar en cualquier zona horaria
 
 ### 2. Backend: Siempre UTC
 
 ```typescript
-// ✅ CORRECTO
+// CORRECTO
 const now = new Date(); // JavaScript Date siempre es UTC internamente
 
 // Prisma automáticamente maneja timestamptz
@@ -74,7 +74,7 @@ model UserSession {
 ### 3. Frontend: Mostrar en Hora Local
 
 ```typescript
-// ✅ CORRECTO: Mostrar en hora local del navegador
+// CORRECTO: Mostrar en hora local del navegador
 const date = new Date(incident.createdAt);
 
 // Opción 1: toLocaleString (hora del navegador)
@@ -95,18 +95,18 @@ import { es } from 'date-fns/locale';
 format(date, "dd/MM/yyyy HH:mm:ss", { locale: es });
 ```
 
-## 📋 Reglas de Oro
+## Reglas de Oro
 
 ### 1. **Almacenamiento: Siempre UTC**
 ```javascript
-// ✅ BIEN
+// BIEN
 await prisma.incident.create({
   data: {
     createdAt: new Date(), // UTC
   }
 });
 
-// ❌ MAL
+// MAL
 await prisma.incident.create({
   data: {
     createdAt: new Date(Date.now() - 5 * 60 * 60 * 1000), // Restando horas manualmente
@@ -116,24 +116,24 @@ await prisma.incident.create({
 
 ### 2. **Transmisión: ISO 8601 con Zona Horaria**
 ```javascript
-// ✅ BIEN
+// BIEN
 const dateString = date.toISOString(); // "2026-01-08T12:26:41.690Z"
 
-// ❌ MAL
+// MAL
 const dateString = date.toString(); // "Thu Jan 08 2026 07:26:41 GMT-0500"
 ```
 
 ### 3. **Visualización: Hora Local del Usuario**
 ```javascript
-// ✅ BIEN - El navegador convierte automáticamente
+// BIEN - El navegador convierte automáticamente
 new Date('2026-01-08T12:26:41.690Z').toLocaleString('es-PE');
 // Muestra: "08/01/2026 07:26:41" (hora de Lima)
 
-// ❌ MAL - Conversión manual propensa a errores
+// MAL - Conversión manual propensa a errores
 const limaTime = new Date(utcTime.getTime() - 5 * 60 * 60 * 1000);
 ```
 
-## 🔧 Implementación Paso a Paso
+## Implementación Paso a Paso
 
 ### Paso 1: Migración de Base de Datos
 
@@ -231,7 +231,7 @@ export const formatTime = (date: string | Date): string => {
 };
 ```
 
-## 🧪 Verificación
+## Verificación
 
 ### Test en Backend
 ```typescript
@@ -275,13 +275,13 @@ ORDER BY id DESC
 LIMIT 5;
 ```
 
-## 📊 Comparación Antes vs Después
+## Comparación Antes vs Después
 
 ### Antes (timestamp without time zone)
 ```sql
 connected_at | 2026-01-08 12:26:41.69
 ```
-❌ Ambiguo, no se sabe la zona horaria
+Ambiguo, no se sabe la zona horaria
 
 ### Después (timestamptz)
 ```sql
@@ -289,16 +289,16 @@ connected_at              | hora_lima
 --------------------------+-------------------------
 2026-01-08 12:26:41.69+00 | 2026-01-08 07:26:41.69-05
 ```
-✅ Claro: UTC +00, Lima -05
+Claro: UTC +00, Lima -05
 
-## 🎓 Recursos Adicionales
+## Recursos Adicionales
 
 - [PostgreSQL Timestamp Documentation](https://www.postgresql.org/docs/current/datatype-datetime.html)
 - [JavaScript Date and Time](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Date)
 - [Prisma DateTime Documentation](https://www.prisma.io/docs/concepts/components/prisma-schema/data-model#datetime)
 - [date-fns Time Zone Support](https://date-fns.org/docs/Time-Zones)
 
-## 🔒 Resumen Ejecutivo
+## Resumen Ejecutivo
 
 1. **Base de datos**: Use `timestamptz` para todas las columnas de fecha/hora
 2. **Backend**: Siempre trabaje en UTC, use `new Date()` sin ajustes manuales

@@ -1,33 +1,33 @@
-# Sprint 1 - Autenticación y Gestión de Usuarios ✅ COMPLETADO
+# Sprint 1 - Autenticación y Gestión de Usuarios COMPLETADO
 
 **Duración**: 1 día (28 diciembre 2025)  
 **Objetivo**: Implementar sistema de autenticación y gestión básica de usuarios
 
-**Estado**: ✅ COMPLETADO - Ver [sprint-1-COMPLETADO.md](sprint-1-COMPLETADO.md) para detalles
+**Estado**: COMPLETADO - Ver [sprint-1-COMPLETADO.md](sprint-1-COMPLETADO.md) para detalles
 
 ---
 
-## 🎯 Objetivo del Sprint
+## Objetivo del Sprint
 
 Desarrollar el sistema de autenticación JWT, gestión de usuarios con roles (PUBLICO, OPERADOR, SUPERVISOR, ADMINISTRADOR) y control de permisos RBAC.
 
 ---
 
-## 📋 Historias del Sprint
+## Historias del Sprint
 
 | ID | Historia | Story Points | Prioridad | Estado |
 |----|----------|--------------|-----------|--------|
-| US-001 | Como operador, necesito autenticarme con usuario y contraseña | 5 | ALTA | 📝 To Do |
-| US-002 | Como administrador, necesito crear y gestionar usuarios | 8 | ALTA | 📝 To Do |
-| TECH-007 | Implementar guards de autenticación | 3 | ALTA | 📝 To Do |
-| TECH-008 | Implementar middleware de roles | 3 | ALTA | 📝 To Do |
-| TECH-009 | Setup tests unitarios | 5 | MEDIA | 📝 To Do |
+| US-001 | Como operador, necesito autenticarme con usuario y contraseña | 5 | ALTA | To Do |
+| US-002 | Como administrador, necesito crear y gestionar usuarios | 8 | ALTA | To Do |
+| TECH-007 | Implementar guards de autenticación | 3 | ALTA | To Do |
+| TECH-008 | Implementar middleware de roles | 3 | ALTA | To Do |
+| TECH-009 | Setup tests unitarios | 5 | MEDIA | To Do |
 
 **Total Story Points**: 24
 
 ---
 
-## 📝 Tareas Detalladas
+## Tareas Detalladas
 
 ### Backend (NestJS)
 
@@ -107,7 +107,7 @@ Desarrollar el sistema de autenticación JWT, gestión de usuarios con roles (PU
 
 ---
 
-## 🎨 UI/UX
+## UI/UX
 
 ### Pantallas a diseñar
 1. **Login**
@@ -131,7 +131,7 @@ Desarrollar el sistema de autenticación JWT, gestión de usuarios con roles (PU
 
 ---
 
-## ✅ Criterios de Aceptación
+## Criterios de Aceptación
 
 ### US-001: Login
 - [x] Usuario puede ingresar usuario y contraseña
@@ -156,7 +156,7 @@ Desarrollar el sistema de autenticación JWT, gestión de usuarios con roles (PU
 
 ---
 
-## 🔧 Configuración Técnica
+## Configuración Técnica
 
 ### Variables de Entorno Backend
 ```env
@@ -180,7 +180,7 @@ model User {
 
 ---
 
-## 📊 Definition of Done
+## Definition of Done
 
 - [ ] Código implementado y commiteado
 - [ ] Tests unitarios pasando (> 70% coverage)
@@ -194,7 +194,7 @@ model User {
 
 ---
 
-## 🚀 Demo
+## Demo
 
 Al final del sprint se debe poder demostrar:
 
@@ -216,7 +216,7 @@ Al final del sprint se debe poder demostrar:
 
 ---
 
-## 📅 Planificación
+## Planificación
 
 ### Semana 1
 - **Días 1-2**: Setup backend (Auth + Users modules)
@@ -230,7 +230,7 @@ Al final del sprint se debe poder demostrar:
 
 ---
 
-## 🎯 Riesgos Identificados
+## Riesgos Identificados
 
 | Riesgo | Impacto | Probabilidad | Mitigación |
 |--------|---------|--------------|------------|
@@ -240,7 +240,7 @@ Al final del sprint se debe poder demostrar:
 
 ---
 
-## 📚 Referencias
+## Referencias
 
 - [NestJS Authentication](https://docs.nestjs.com/security/authentication)
 - [Prisma Best Practices](https://www.prisma.io/docs/guides/performance-and-optimization)

@@ -28,10 +28,10 @@ apps/frontend/public/
 ```
 
 **Ventajas:**
-- ✅ Rápido y sencillo
-- ✅ No requiere configuración adicional
-- ✅ Disponible inmediatamente
-- ✅ Ideal para imágenes que no cambian frecuentemente
+- Rápido y sencillo
+- No requiere configuración adicional
+- Disponible inmediatamente
+- Ideal para imágenes que no cambian frecuentemente
 
 ### 2. Carpeta src/assets (Para imágenes que se procesan con Vite)
 
@@ -60,10 +60,10 @@ import logo from '@/assets/images/logo.png';
 ```
 
 **Ventajas:**
-- ✅ Optimización automática de imágenes
-- ✅ Cache busting (hash en el nombre del archivo)
-- ✅ TypeScript puede validar que la imagen existe
-- ✅ Ideal para imágenes que forman parte del código
+- Optimización automática de imágenes
+- Cache busting (hash en el nombre del archivo)
+- TypeScript puede validar que la imagen existe
+- Ideal para imágenes que forman parte del código
 
 ### 3. Servicio CDN Externo (Para Producción a Gran Escala)
 

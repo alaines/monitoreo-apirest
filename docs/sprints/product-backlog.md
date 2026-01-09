@@ -107,13 +107,13 @@ Sistema integral de gestion de cruces semaforizados, perifericos e incidencias p
 | US-020 | Como usuario, necesito exportar reportes a Excel con formato | 5 | 6 | PLANIFICADO |
 | US-021 | Como usuario, necesito exportar reportes a PDF con formato | 5 | 6 | PLANIFICADO |
 | US-022 | Como supervisor, necesito analizar tiempos de atencion por equipo | 8 | 6 | PLANIFICADO |
-| US-023 | Como administrador, necesito gestionar catalogos (tabla tipos) | 13 | 7 | ✅ COMPLETADO |
-| US-024 | Como administrador, necesito gestion avanzada de usuarios | 13 | 7 | ✅ COMPLETADO |
-| US-025 | Como administrador, necesito crear y gestionar perfiles de usuario | 13 | 7 | ✅ COMPLETADO |
-| US-026 | Como administrador, necesito asignar permisos granulares por modulo | 13 | 7 | ✅ COMPLETADO |
-| US-027 | Como sistema, necesito proteger rutas segun permisos del usuario | 8 | 7 | ✅ COMPLETADO |
-| US-028 | Como administrador, necesito ver auditoria de cambios administrativos | 8 | 7 | ✅ COMPLETADO |
-| US-029 | Como administrador, necesito gestionar tablas maestras (Areas, Equipos, etc) | 21 | 7 | ✅ COMPLETADO |
+| US-023 | Como administrador, necesito gestionar catalogos (tabla tipos) | 13 | 7 | COMPLETADO |
+| US-024 | Como administrador, necesito gestion avanzada de usuarios | 13 | 7 | COMPLETADO |
+| US-025 | Como administrador, necesito crear y gestionar perfiles de usuario | 13 | 7 | COMPLETADO |
+| US-026 | Como administrador, necesito asignar permisos granulares por modulo | 13 | 7 | COMPLETADO |
+| US-027 | Como sistema, necesito proteger rutas segun permisos del usuario | 8 | 7 | COMPLETADO |
+| US-028 | Como administrador, necesito ver auditoria de cambios administrativos | 8 | 7 | COMPLETADO |
+| US-029 | Como administrador, necesito gestionar tablas maestras (Areas, Equipos, etc) | 21 | 7 | COMPLETADO |
 | US-029 | Como operador, necesito adjuntar fotos a las incidencias | 8 | 8 | PENDIENTE |
 | US-030 | Como tecnico, necesito ver perifericos montados en estructuras | 13 | 8 | PENDIENTE |
 
@@ -181,28 +181,28 @@ Para que una historia se considere completa debe cumplir:
 ---
 
 ## Notas
-- ✅ Validaciones en frontend y backend
-- ✅ Mensajes de error claros y traducidos al español
-- ✅ Respuestas API siguen estándar REST
-- ✅ Datos persistidos correctamente en PostgreSQL
+- Validaciones en frontend y backend
+- Mensajes de error claros y traducidos al español
+- Respuestas API siguen estándar REST
+- Datos persistidos correctamente en PostgreSQL
 
 ### No Funcionales
-- ✅ Tiempo de respuesta < 2 segundos
-- ✅ UI responsive (móvil, tablet, desktop)
-- ✅ Accesibilidad básica (WCAG 2.0 nivel A)
-- ✅ Código con cobertura de tests > 70%
-- ✅ Sin errores en consola
+- Tiempo de respuesta < 2 segundos
+- UI responsive (móvil, tablet, desktop)
+- Accesibilidad básica (WCAG 2.0 nivel A)
+- Código con cobertura de tests > 70%
+- Sin errores en consola
 
 ### Seguridad
-- ✅ Autenticación requerida para todas las rutas (excepto login)
-- ✅ Autorización por roles
-- ✅ Validación de inputs (XSS, SQL Injection)
-- ✅ Passwords encriptados (bcrypt)
-- ✅ Tokens JWT seguros
+- Autenticación requerida para todas las rutas (excepto login)
+- Autorización por roles
+- Validación de inputs (XSS, SQL Injection)
+- Passwords encriptados (bcrypt)
+- Tokens JWT seguros
 
 ---
 
-## 📈 Estimación Total
+## Estimación Total
 
 - **Total Story Points**: ~220 puntos
 - **Velocidad estimada**: 25-30 puntos por sprint (2 semanas)
@@ -210,22 +210,22 @@ Para que una historia se considere completa debe cumplir:
 
 ---
 
-## 🏃‍♂️ Definición de Done (DoD)
+## Definición de Done (DoD)
 
 Para que una historia se considere completa debe cumplir:
 
-1. ✅ Código implementado y testeado
-2. ✅ Tests unitarios pasando (cobertura > 70%)
-3. ✅ Code review aprobado
-4. ✅ Documentación actualizada
-5. ✅ Integrado en rama develop sin conflictos
-6. ✅ Validado por Product Owner
-7. ✅ Sin bugs críticos pendientes
-8. ✅ Cumple criterios de aceptación
+1. Código implementado y testeado
+2. Tests unitarios pasando (cobertura > 70%)
+3. Code review aprobado
+4. Documentación actualizada
+5. Integrado en rama develop sin conflictos
+6. Validado por Product Owner
+7. Sin bugs críticos pendientes
+8. Cumple criterios de aceptación
 
 ---
 
-## 📝 Notas
+## Notas
 
 - Los Story Points usan escala Fibonacci (1, 2, 3, 5, 8, 13, 21, 34)
 - Sprints de 2 semanas

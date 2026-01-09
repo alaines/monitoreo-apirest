@@ -5,29 +5,29 @@
 
 ---
 
-## 🎯 Objetivo del Sprint
+## Objetivo del Sprint
 
 Configurar el entorno de desarrollo completo, migrar la base de datos existente y preparar la infraestructura para el desarrollo de funcionalidades.
 
 ---
 
-## 📋 Historias del Sprint
+## Historias del Sprint
 
 | ID | Historia | Story Points | Asignado | Estado |
 |----|----------|--------------|----------|--------|
-| US-010 | Migración de datos desde CakePHP | 13 | - | ✅ Done |
-| TECH-001 | Setup monorepo con npm workspaces | 5 | - | ✅ Done |
-| TECH-002 | Configurar NestJS backend | 5 | - | ✅ Done |
-| TECH-003 | Configurar React frontend | 5 | - | ✅ Done |
-| TECH-004 | Setup Prisma con PostgreSQL | 8 | - | ✅ Done |
-| TECH-005 | Configurar Docker y docker-compose | 5 | - | ✅ Done |
-| TECH-006 | Setup CI/CD básico | 8 | - | ✅ Done |
+| US-010 | Migración de datos desde CakePHP | 13 | - | Done |
+| TECH-001 | Setup monorepo con npm workspaces | 5 | - | Done |
+| TECH-002 | Configurar NestJS backend | 5 | - | Done |
+| TECH-003 | Configurar React frontend | 5 | - | Done |
+| TECH-004 | Setup Prisma con PostgreSQL | 8 | - | Done |
+| TECH-005 | Configurar Docker y docker-compose | 5 | - | Done |
+| TECH-006 | Setup CI/CD básico | 8 | - | Done |
 
 **Total Story Points**: 49
 
 ---
 
-## ✅ Tareas Completadas
+## Tareas Completadas
 
 ### 1. Estructura del Monorepo
 - [x] Crear package.json raíz con workspaces
@@ -75,7 +75,7 @@ Configurar el entorno de desarrollo completo, migrar la base de datos existente 
 
 ## ⏳ Tareas Pendientes
 
-### CI/CD (TECH-006) ✅ COMPLETADO
+### CI/CD (TECH-006) COMPLETADO
 - [x] Setup GitHub Actions
 - [x] Configurar workflows de CI
   - [x] Lint
@@ -91,37 +91,37 @@ Configurar el entorno de desarrollo completo, migrar la base de datos existente 
 ## 🗂️ Entregables
 
 ### Repositorio
-- ✅ Monorepo configurado
-- ✅ Estructura de carpetas definida
-- ✅ Configuración de desarrollo
+- Monorepo configurado
+- Estructura de carpetas definida
+- Configuración de desarrollo
 
 ### Documentación
-- ✅ README.md principal
-- ✅ READMEs de apps (backend, frontend)
-- ✅ Documentación de base de datos
-- ✅ .env.example
+- README.md principal
+- READMEs de apps (backend, frontend)
+- Documentación de base de datos
+- .env.example
 
 ### Base de Datos
-- ✅ Schema Prisma completo
-- ✅ Esquema actual documentado
+- Schema Prisma completo
+- Esquema actual documentado
 - ⏳ Migraciones iniciales
 - ⏳ Seeds de datos de prueba
 
 ### Docker
-- ✅ docker-compose.yml funcional
-- ✅ Dockerfiles para desarrollo
-- ✅ Configuración nginx
+- docker-compose.yml funcional
+- Dockerfiles para desarrollo
+- Configuración nginx
 
 ### CI/CD
-- ✅ GitHub Actions CI pipeline
-- ✅ GitHub Actions CD pipeline
-- ✅ Dependabot configuration
-- ✅ Security polic100% ✅
+- GitHub Actions CI pipeline
+- GitHub Actions CD pipeline
+- Dependabot configuration
+- Security polic100%
 - **Story Points Done**: 49/49
 - **Tiempo invertido**: ~6
 ---
 
-## 📊 Métricas
+## Métricas
 
 - **Completado**: 85%
 - **Story Points Done**: 41/49
@@ -132,26 +132,26 @@ Configurar el entorno de desarrollo completo, migrar la base de datos existente 
 
 - CI/CD configurado desde el inicio
 
-### ⚠️ Qué mejorar
+### Qué mejorar
 - Necesitamos definir estrategia de migraciones
 - Documentar mejor las decisiones de arquitectura
 - Crear datos de prueba (seeds)
 
-### 🎯 Acciones para el siguiente sprint
+### Acciones para el siguiente sprint
 - Crear datos de prueba (seeds)
 - Definir estrategia de testing
 - Implementar primeros tests unitarios
 - Necesitamos definir estrategia de migraciones
 - Documentar mejor las decisiones de arquitectura
 
-### 🎯 Acciones para el siguiente sprint
+### Acciones para el siguiente sprint
 - Completar setup de CI/CD
 - Crear datos de prueba (seeds)
 - Definir estrategia de testing
 
 ---
 
-## 📅 Siguiente Sprint
+## Siguiente Sprint
 
 **Sprint 1: Autenticación y Gestión de Usuarios**
 - Fecha inicio: TBD

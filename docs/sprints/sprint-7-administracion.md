@@ -1,6 +1,6 @@
 # Sprint 7: Modulo de Administracion
 
-**Estado:** ✅ COMPLETADO (4 enero 2026)  
+**Estado:** COMPLETADO (4 enero 2026)  
 **Prioridad:** Alta  
 **Estimacion:** 3 semanas  
 **Tiempo Real:** 2 días

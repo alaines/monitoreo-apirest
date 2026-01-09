@@ -1,6 +1,6 @@
 # Guía de Instalación - Sistema de Monitoreo
 
-## 📋 Tabla de Contenidos
+## Tabla de Contenidos
 1. [Requisitos Previos](#requisitos-previos)
 2. [Instalación Rápida (Desarrollo)](#instalación-rápida-desarrollo)
 3. [Instalación en Producción](#instalación-en-producción)
@@ -11,7 +11,7 @@
 
 ---
 
-## 🔧 Requisitos Previos
+## Requisitos Previos
 
 ### Software Requerido
 - **Node.js**: v18 o superior (recomendado v20)
@@ -32,7 +32,7 @@ psql --version    # Debe ser 13+
 
 ---
 
-## 🚀 Instalación Rápida (Desarrollo)
+## Instalación Rápida (Desarrollo)
 
 ### 1. Clonar el Repositorio
 ```bash
@@ -126,7 +126,7 @@ npm run frontend:dev
 - Usuario: `admin`
 - Contraseña: `Admin123`
 
-⚠️ **¡Cambiar la contraseña después del primer login!**
+**¡Cambiar la contraseña después del primer login!**
 
 ---
 
@@ -348,7 +348,7 @@ sudo systemctl restart nginx
 
 ---
 
-## 🗄️ Configuración de Base de Datos
+## Configuración de Base de Datos
 
 ### Estructura Básica
 El sistema requiere estas tablas principales:
@@ -364,15 +364,15 @@ El sistema requiere estas tablas principales:
 
 ### Script de Inicialización
 El archivo `database/init.sql` incluye:
-- ✅ Usuario administrador inicial (admin/Admin123)
-- ✅ Estados y prioridades base
-- ✅ Catálogo de tipos jerárquico
-- ✅ Incidencias comunes
-- ✅ Datos de ejemplo opcionales
+- Usuario administrador inicial (admin/Admin123)
+- Estados y prioridades base
+- Catálogo de tipos jerárquico
+- Incidencias comunes
+- Datos de ejemplo opcionales
 
 ### Resetear Base de Datos
 ```bash
-# ⚠️ CUIDADO: Esto eliminará todos los datos
+# CUIDADO: Esto eliminará todos los datos
 psql -U transito -d monitoreo -c "DROP SCHEMA public CASCADE; CREATE SCHEMA public; GRANT ALL ON SCHEMA public TO transito;"
 psql -U transito -d monitoreo -c "CREATE EXTENSION IF NOT EXISTS postgis;"
 psql -U transito -d monitoreo -f database/current-schema.sql
@@ -381,7 +381,7 @@ psql -U transito -d monitoreo -f database/init.sql
 
 ---
 
-## ⚙️ Variables de Entorno
+## Variables de Entorno
 
 ### Archivo `.env` Completo
 
@@ -438,7 +438,7 @@ node -e "console.log(require('crypto').randomBytes(32).toString('hex'))"
 
 ---
 
-## ✅ Verificación
+## Verificación
 
 ### Verificar Backend
 ```bash
@@ -476,7 +476,7 @@ sudo nginx -t
 
 ---
 
-## 🔧 Solución de Problemas
+## Solución de Problemas
 
 ### Backend no inicia
 ```bash
@@ -543,7 +543,7 @@ server: {
 
 ---
 
-## 📚 Documentación Adicional
+## Documentación Adicional
 
 - **Guía Rápida**: [docs/guides/GUIA-RAPIDA.md](./guides/GUIA-RAPIDA.md)
 - **Arquitectura**: [docs/architecture/SERVER-CONFIG.md](./architecture/SERVER-CONFIG.md)
@@ -561,7 +561,7 @@ Para problemas o preguntas:
 
 ---
 
-## 📝 Notas de Seguridad
+## Notas de Seguridad
 
 1. **Cambiar contraseñas por defecto**
    - Usuario: admin/Admin123

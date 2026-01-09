@@ -82,10 +82,10 @@ Ver `.env.example` en la raíz del proyecto.
 
 ## Características
 
-- ✅ Autenticación JWT + Google OAuth
-- ✅ Notificaciones en tiempo real (WebSockets)
-- ✅ Mapas interactivos con Leaflet
-- ✅ Responsive design
-- ✅ Dark mode ready
-- ✅ Validación de formularios
-- ✅ Gestión de estado reactivo
+- Autenticación JWT + Google OAuth
+- Notificaciones en tiempo real (WebSockets)
+- Mapas interactivos con Leaflet
+- Responsive design
+- Dark mode ready
+- Validación de formularios
+- Gestión de estado reactivo

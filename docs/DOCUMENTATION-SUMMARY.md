@@ -1,16 +1,16 @@
-# 📚 Resumen de Documentación Actualizada
+# Resumen de Documentación Actualizada
 
-## ✅ Documentos Creados/Actualizados
+## Documentos Creados/Actualizados
 
 ### 1. **database/init.sql** ⭐ NUEVO
 Script de inicialización de base de datos que incluye:
-- ✅ Usuario administrador inicial (`admin` / `Admin123`)
-- ✅ Estados de tickets (PENDIENTE, EN_PROCESO, RESUELTO, CERRADO)
-- ✅ Prioridades (BAJA, MEDIA, ALTA, CRÍTICA)
-- ✅ Catálogo completo de tipos jerárquicos
-- ✅ Incidencias base (10 tipos comunes)
-- ✅ Administradores y equipos de ejemplo
-- ✅ Sistema funcional sin datos adicionales
+- Usuario administrador inicial (`admin` / `Admin123`)
+- Estados de tickets (PENDIENTE, EN_PROCESO, RESUELTO, CERRADO)
+- Prioridades (BAJA, MEDIA, ALTA, CRÍTICA)
+- Catálogo completo de tipos jerárquicos
+- Incidencias base (10 tipos comunes)
+- Administradores y equipos de ejemplo
+- Sistema funcional sin datos adicionales
 
 **Uso:**
 ```bash
@@ -19,28 +19,28 @@ psql -U transito -d monitoreo -f database/init.sql
 
 ### 2. **docs/INSTALLATION.md** ⭐ NUEVO
 Guía completa de instalación con:
-- ✅ Requisitos previos
-- ✅ Instalación rápida para desarrollo
-- ✅ Instalación detallada para producción
-- ✅ Configuración de PostgreSQL + PostGIS
-- ✅ Configuración de PM2 y Nginx
-- ✅ Variables de entorno explicadas
-- ✅ Verificación y troubleshooting
-- ✅ Notas de seguridad
+- Requisitos previos
+- Instalación rápida para desarrollo
+- Instalación detallada para producción
+- Configuración de PostgreSQL + PostGIS
+- Configuración de PM2 y Nginx
+- Variables de entorno explicadas
+- Verificación y troubleshooting
+- Notas de seguridad
 
 ### 3. **scripts/install-production.sh** ⭐ NUEVO
 Script de instalación automática que:
-- ✅ Verifica requisitos
-- ✅ Instala Node.js 20
-- ✅ Instala PostgreSQL + PostGIS
-- ✅ Crea base de datos y usuario
-- ✅ Clona repositorio
-- ✅ Instala dependencias
-- ✅ Configura variables de entorno
-- ✅ Aplica schema e inicializa datos
-- ✅ Compila backend y frontend
-- ✅ Configura PM2 para servicios
-- ✅ Muestra resumen final con credenciales
+- Verifica requisitos
+- Instala Node.js 20
+- Instala PostgreSQL + PostGIS
+- Crea base de datos y usuario
+- Clona repositorio
+- Instala dependencias
+- Configura variables de entorno
+- Aplica schema e inicializa datos
+- Compila backend y frontend
+- Configura PM2 para servicios
+- Muestra resumen final con credenciales
 
 **Uso:**
 ```bash
@@ -49,10 +49,10 @@ sudo ./scripts/install-production.sh
 
 ### 4. **scripts/backup-database.sh** ⭐ NUEVO
 Script de backup automático que:
-- ✅ Crea respaldos comprimidos (.sql.gz)
-- ✅ Almacena en directorio configurable
-- ✅ Limpia backups antiguos (30 días por defecto)
-- ✅ Muestra resumen de backups recientes
+- Crea respaldos comprimidos (.sql.gz)
+- Almacena en directorio configurable
+- Limpia backups antiguos (30 días por defecto)
+- Muestra resumen de backups recientes
 
 **Uso:**
 ```bash
@@ -64,27 +64,27 @@ Script de backup automático que:
 ```
 
 ### 5. **README.md** ✏️ ACTUALIZADO
-- ✅ Sección de documentación al inicio
-- ✅ Instalación rápida destacada
-- ✅ Enlaces a guías detalladas
-- ✅ Instrucciones de instalación automática
+- Sección de documentación al inicio
+- Instalación rápida destacada
+- Enlaces a guías detalladas
+- Instrucciones de instalación automática
 
 ### 6. **.env.example** ✏️ ACTUALIZADO
-- ✅ Estructura clara y comentada
-- ✅ Variables agrupadas por categoría
-- ✅ Instrucciones para producción
-- ✅ Comandos para generar secrets
+- Estructura clara y comentada
+- Variables agrupadas por categoría
+- Instrucciones para producción
+- Comandos para generar secrets
 
 ### 7. **database/fix-coordinates.sql** ⭐ NUEVO
 Script para corregir coordenadas sin decimales:
-- ✅ Detecta coordenadas incorrectas
-- ✅ Corrige dividiendo por factores apropiados
-- ✅ Actualiza geometrías PostGIS
-- ✅ Verifica resultados
+- Detecta coordenadas incorrectas
+- Corrige dividiendo por factores apropiados
+- Actualiza geometrías PostGIS
+- Verifica resultados
 
 ---
 
-## 🚀 Flujos de Instalación
+## Flujos de Instalación
 
 ### Desarrollo Local
 ```bash
@@ -111,7 +111,7 @@ Ver [docs/INSTALLATION.md](docs/INSTALLATION.md#instalación-en-producción)
 
 ---
 
-## 📋 Checklist Post-Instalación
+## Checklist Post-Instalación
 
 Después de instalar el sistema:
 
@@ -126,12 +126,12 @@ Después de instalar el sistema:
 
 ---
 
-## 🔐 Credenciales por Defecto
+## Credenciales por Defecto
 
 ### Usuario Administrador
 - **Usuario:** `admin`
 - **Contraseña:** `Admin123`
-- ⚠️ **Cambiar después del primer login**
+- **Cambiar después del primer login**
 
 ### Base de Datos
 - **Usuario:** `transito`
@@ -140,7 +140,7 @@ Después de instalar el sistema:
 
 ---
 
-## 📖 Guías de Referencia
+## Guías de Referencia
 
 | Documento | Propósito |
 |-----------|-----------|
@@ -162,7 +162,7 @@ Después de instalar el sistema:
 
 ---
 
-## ✨ Mejoras Implementadas
+## Mejoras Implementadas
 
 1. **Sistema funcional mínimo:** Solo requiere usuario admin para funcionar
 2. **Instalación automática:** Un solo comando para producción

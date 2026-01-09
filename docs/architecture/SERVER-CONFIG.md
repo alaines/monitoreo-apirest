@@ -20,14 +20,14 @@
 
 ---
 
-## ⚠️ Nota sobre Puerto 3000
+## Nota sobre Puerto 3000
 
 El puerto 3000 está siendo usado por otro servicio (`/home/alaines/parqueape-api/app.js`).
 Por esta razón, hemos configurado el backend en el puerto **3001**.
 
 ---
 
-## 🚀 Comandos de Inicio
+## Comandos de Inicio
 
 ### Opción 1: Desarrollo con npm
 ```bash
@@ -64,7 +64,7 @@ docker-compose up -d
 
 ---
 
-## 🔧 Configuración de Red
+## Configuración de Red
 
 ### Firewall
 Si el servidor tiene firewall activo, asegurar que los puertos estén abiertos:
@@ -89,7 +89,7 @@ Para acceder desde otras máquinas en la red:
 
 ---
 
-## 🧪 Verificar Conexión
+## Verificar Conexión
 
 ### Backend
 ```bash
@@ -105,7 +105,7 @@ Abrir en navegador: http://192.168.18.230:5173
 
 ---
 
-## 🔐 CORS Configurado
+## CORS Configurado
 
 El backend está configurado para aceptar peticiones desde:
 - `http://192.168.18.230:5173` (Frontend)
@@ -113,7 +113,7 @@ El backend está configurado para aceptar peticiones desde:
 
 ---
 
-## 📝 Variables de Entorno Principales
+## Variables de Entorno Principales
 
 ### Backend (.env)
 ```env
@@ -133,7 +133,7 @@ VITE_API_URL=http://192.168.18.230:3000/api
 
 ---
 
-## 🐛 Troubleshooting
+## Troubleshooting
 
 ### Backend no responde desde otra máquina
 1. Verificar que escucha en `0.0.0.0`: `netstat -tlnp | grep 3000`
@@ -153,7 +153,7 @@ VITE_API_URL=http://192.168.18.230:3000/api
 
 ---
 
-## 📊 Logs
+## Logs
 
 ### Ver logs del backend
 ```bash
@@ -167,7 +167,7 @@ tail -f /home/alaines/monitoreo-apirest/backend.log
 
 ---
 
-## 🔄 Reiniciar Servicios
+## Reiniciar Servicios
 
 ```bash
 # Backend

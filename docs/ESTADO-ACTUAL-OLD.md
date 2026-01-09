@@ -6,35 +6,35 @@
 
 ---
 
-## ✅ Implementado Correctamente
+## Implementado Correctamente
 
 ### Backend
-- ✅ Estructura completa de NestJS
-- ✅ Módulo de autenticación (auth)
-- ✅ Módulo de usuarios (users)
-- ✅ Guards y decoradores personalizados
-- ✅ Prisma ORM configurado
-- ✅ DTOs con validación
-- ✅ Tests unitarios y E2E
-- ✅ Swagger documentation
+- Estructura completa de NestJS
+- Módulo de autenticación (auth)
+- Módulo de usuarios (users)
+- Guards y decoradores personalizados
+- Prisma ORM configurado
+- DTOs con validación
+- Tests unitarios y E2E
+- Swagger documentation
 
 ### Frontend
-- ✅ React con Vite y TypeScript
-- ✅ Feature de autenticación con Zustand
-- ✅ Componentes UI (Button, Input)
-- ✅ Layout y navegación
-- ✅ Rutas protegidas
-- ✅ Axios con interceptors
+- React con Vite y TypeScript
+- Feature de autenticación con Zustand
+- Componentes UI (Button, Input)
+- Layout y navegación
+- Rutas protegidas
+- Axios con interceptors
 
 ### Configuración
-- ✅ Variables de entorno para IP 192.168.18.230
-- ✅ Puerto 3001 configurado (3000 en uso por otro servicio)
-- ✅ CORS configurado
-- ✅ CI/CD con GitHub Actions
+- Variables de entorno para IP 192.168.18.230
+- Puerto 3001 configurado (3000 en uso por otro servicio)
+- CORS configurado
+- CI/CD con GitHub Actions
 
 ---
 
-## ⚠️ Pendiente de Resolución
+## Pendiente de Resolución
 
 ### Problema Actual: Compilación de Backend
 
@@ -87,7 +87,7 @@ npm run start:prod -w apps/backend
 
 ---
 
-## 📁 Archivos Modificados para IP 192.168.18.230
+## Archivos Modificados para IP 192.168.18.230
 
 ### Backend
 - `apps/backend/src/main.ts` - Configurado para escuchar en 0.0.0.0
@@ -106,7 +106,7 @@ npm run start:prod -w apps/backend
 
 ---
 
-## 🔧 Próximos Pasos
+## Próximos Pasos
 
 ### Inmediato
 1. Resolver problema de compilación de bcrypt
@@ -122,7 +122,7 @@ npm run start:prod -w apps/backend
 
 ---
 
-## 🚀 Comandos para Continuar
+## Comandos para Continuar
 
 ### Resolver bcrypt issue
 ```bash
@@ -171,17 +171,17 @@ curl -X POST http://192.168.18.230:3001/api/auth/login \
 
 ---
 
-## 📊 Progreso del Sprint 1
+## Progreso del Sprint 1
 
 - **Completado**: 95%
 - **Bloqueado por**: Issue de compilación con bcrypt
 - **Estimado para resolver**: 30-60 minutos
-- **Código funcionando**: ✅ Sí (solo falta compilar)
+- **Código funcionando**: Sí (solo falta compilar)
 - **Tests pasando**: ⏳ Pendiente de ejecutar
 
 ---
 
-## 📝 Notas Técnicas
+## Notas Técnicas
 
 ### Campos de Base de Datos Corregidos
 - Persona.apellidos → Persona.ape_pat + Persona.ape_mat

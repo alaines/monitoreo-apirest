@@ -1,6 +1,6 @@
 # Sprint 6: Sistema de Reportes
 
-**Estado:** ✅ COMPLETADO (31 diciembre 2025)  
+**Estado:** COMPLETADO (31 diciembre 2025)  
 **Prioridad:** Alta  
 **Estimacion:** 2 semanas  
 **Tiempo Real:** 3 semanas
@@ -227,8 +227,8 @@ El sistema actual cuenta con un dashboard basico con KPIs de incidencias. Se req
 - Queries avanzadas con Prisma (groupBy, aggregate)
 
 ### Frontend
-- `chart.js` 4.x + `react-chartjs-2` 5.x - Graficos interactivos ✅
-- `jspdf` 3.x + `jspdf-autotable` 5.x - Generacion de PDFs en frontend ✅
+- `chart.js` 4.x + `react-chartjs-2` 5.x - Graficos interactivos
+- `jspdf` 3.x + `jspdf-autotable` 5.x - Generacion de PDFs en frontend
 - ~~`recharts`~~ - No implementado (se eligio Chart.js)
 - `file-saver` - No necesario (descarga nativa con Blob)
 

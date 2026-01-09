@@ -1,20 +1,20 @@
-# 🚀 Guía Rápida - Sistema de Monitoreo
+# Guía Rápida - Sistema de Monitoreo
 
 **Última actualización**: 28 de diciembre de 2025  
 **Servidor**: 192.168.18.230
 
 ---
 
-## 🌐 URLs del Sistema
+## URLs del Sistema
 
 ### Backend (Puerto 3001)
 ```
-🔗 API Base:         http://192.168.18.230:3001/api
-📚 Swagger Docs:     http://192.168.18.230:3001/api/docs
-🔐 Login:            http://192.168.18.230:3001/api/auth/login
-🔄 Refresh:          http://192.168.18.230:3001/api/auth/refresh
+API Base:         http://192.168.18.230:3001/api
+Swagger Docs:     http://192.168.18.230:3001/api/docs
+Login:            http://192.168.18.230:3001/api/auth/login
+Refresh:          http://192.168.18.230:3001/api/auth/refresh
 👤 Usuario Actual:   http://192.168.18.230:3001/api/users/me
-👥 Listar Usuarios:  http://192.168.18.230:3001/api/users
+Listar Usuarios:  http://192.168.18.230:3001/api/users
 ```
 
 ### Frontend (Puerto 5173)
@@ -24,7 +24,7 @@
 
 ---
 
-## 🔑 Credenciales
+## Credenciales
 
 ### Usuario de Prueba
 ```
@@ -38,7 +38,7 @@ Los usuarios existentes en la base de datos pueden iniciar sesión si tienen `pa
 
 ---
 
-## ⚡ Comandos Rápidos
+## Comandos Rápidos
 
 ### Iniciar Servicios
 
@@ -101,7 +101,7 @@ curl -s http://192.168.18.230:3001/api/auth/login \
 
 ---
 
-## 🧪 Probar API
+## Probar API
 
 ### 1. Login
 ```bash
@@ -181,7 +181,7 @@ npx tsx apps/backend/prisma/seed.ts
 
 ---
 
-## 🐛 Troubleshooting
+## Troubleshooting
 
 ### Backend no inicia
 
@@ -241,7 +241,7 @@ kill -9 <PID>
 
 ---
 
-## 📚 Documentación
+## Documentación
 
 - [README Principal](../README.md)
 - [Sprint 1 Completado](sprint-1-COMPLETADO.md)
@@ -250,7 +250,7 @@ kill -9 <PID>
 
 ---
 
-## 🎯 Próximos Pasos
+## Próximos Pasos
 
 ### Sprint 2 - Gestión de Incidencias
 - [ ] CRUD de incidencias
@@ -268,7 +268,7 @@ kill -9 <PID>
 
 ---
 
-## 💡 Tips
+## Tips
 
 ### Alias útiles
 Agregar a `~/.bashrc`:
@@ -316,4 +316,4 @@ done
 ---
 
 **Última verificación**: 28/12/2025 22:00  
-**Estado**: ✅ Todos los servicios operativos
+**Estado**: Todos los servicios operativos

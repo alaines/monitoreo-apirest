@@ -1,13 +1,13 @@
 # Mapa de Calor de Incidencias
 
-## 📍 Ubicación
+## Ubicación
 **Menú:** Reportes → Mapa de Calor
 
 **Ruta:** `/reportes/mapa`
 
-## ✨ Características Implementadas
+## Características Implementadas
 
-### 🎯 Funcionalidades Principales
+### Funcionalidades Principales
 
 1. **Visualización de Mapa de Calor**
    - Círculos concéntricos que representan la densidad de incidencias
@@ -23,9 +23,9 @@
    - **Muy Alta (10+):** Rojo Oscuro (#8b0000) - Radio 300m
 
 3. **Filtros Dinámicos**
-   - ✅ **Año:** Últimos 5 años disponibles
-   - ✅ **Mes:** 12 meses del año (opcional)
-   - ✅ **Tipo de Incidencia:** Todos los tipos del catálogo
+   - **Año:** Últimos 5 años disponibles
+   - **Mes:** 12 meses del año (opcional)
+   - **Tipo de Incidencia:** Todos los tipos del catálogo
 
 4. **Información en Popups**
    Cada círculo muestra al hacer click:
@@ -47,14 +47,14 @@
    - Código de colores explicado
    - Niveles de intensidad claramente definidos
 
-### 🗺️ Tecnologías Utilizadas
+### Tecnologías Utilizadas
 
 - **React Leaflet:** Renderizado del mapa interactivo
 - **OpenStreetMap:** Capa de tiles para el mapa base
 - **Algoritmo de densidad:** Cálculo de incidencias cercanas en radio de ~1km
 - **Auto-ajuste de vista:** El mapa se centra automáticamente en las incidencias filtradas
 
-### 📊 Datos Requeridos
+### Datos Requeridos
 
 Las incidencias deben tener:
 - `latitude` (número)
@@ -64,7 +64,7 @@ Las incidencias deben tener:
 
 **Nota:** Solo se visualizan incidencias con coordenadas válidas.
 
-### 🎨 Interfaz de Usuario
+### Interfaz de Usuario
 
 - **Panel de filtros colapsable**
 - **Contador de incidencias en tiempo real**
@@ -73,7 +73,7 @@ Las incidencias deben tener:
 - **Altura del mapa:** 600px
 - **Estilos consistentes** con el resto del sistema
 
-### 🚀 Uso
+### Uso
 
 1. Acceder a **Reportes → Mapa de Calor**
 2. El mapa carga todas las incidencias del año actual
@@ -84,7 +84,7 @@ Las incidencias deben tener:
 4. Hacer click en los círculos para ver detalles
 5. El mapa se ajusta automáticamente a los datos visibles
 
-### 📈 Casos de Uso
+### Casos de Uso
 
 - **Análisis de zonas críticas:** Identificar áreas con mayor concentración de incidencias
 - **Planificación de mantenimiento:** Priorizar cruces según densidad de problemas
@@ -92,7 +92,7 @@ Las incidencias deben tener:
 - **Análisis por tipo:** Identificar qué tipos de incidencias son más frecuentes y dónde
 - **Comparación anual:** Evaluar evolución de incidencias año tras año
 
-### 🔧 Configuración del Algoritmo
+### Configuración del Algoritmo
 
 **Radio de búsqueda:** 0.01 grados (≈1.1 km)
 
@@ -105,7 +105,7 @@ const getHeatIntensity = (lat, lng) => {
 }
 ```
 
-### 💡 Mejoras Futuras Sugeridas
+### Mejoras Futuras Sugeridas
 
 - [ ] Agregar filtro por prioridad
 - [ ] Exportar mapa como imagen

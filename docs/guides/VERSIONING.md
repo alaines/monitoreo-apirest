@@ -1,6 +1,6 @@
 # Guía de Versionado
 
-## 📦 Semantic Versioning
+## Semantic Versioning
 
 Este proyecto sigue [Semantic Versioning 2.0.0](https://semver.org/lang/es/):
 
@@ -42,7 +42,7 @@ Ejemplo: 1.2.3
 
 **Ejemplo**: `1.5.2` → `1.5.3`
 
-## 🔄 Proceso de Versionado
+## Proceso de Versionado
 
 ### 1. Antes de Hacer Cambios
 
@@ -94,7 +94,7 @@ git checkout v1.0.1
 ./scripts/deploy.sh v1.0.1
 ```
 
-## 📝 Actualizar CHANGELOG
+## Actualizar CHANGELOG
 
 ### Formato Estándar
 
@@ -103,42 +103,42 @@ Cada entrada debe seguir este formato:
 ```markdown
 ## [1.0.1] - 2026-01-08
 
-### ✨ Agregado (Added)
+### Agregado (Added)
 - Nueva funcionalidad 1
 - Nueva funcionalidad 2
 
-### 🎨 Mejorado (Changed)
+### Mejorado (Changed)
 - Mejora en componente X
 - Optimización de Y
 
-### 🔧 Corregido (Fixed)
+### Corregido (Fixed)
 - Bug en módulo A
 - Error en validación B
 
-### 🗑️ Eliminado (Removed)
+### Eliminado (Removed)
 - Funcionalidad deprecada X
 
-### 🔒 Seguridad (Security)
+### Seguridad (Security)
 - Parche de vulnerabilidad CVE-XXXX
 
-### 🗄️ Base de Datos
+### Base de Datos
 - Migración 010: Descripción
 ```
 
 ### Categorías de Cambios
 
-| Emoji | Categoría | Cuándo Usar |
-|-------|-----------|-------------|
-| ✨ | **Agregado** (Added) | Nuevas funcionalidades |
-| 🎨 | **Mejorado** (Changed) | Cambios en funcionalidades existentes |
-| 🔧 | **Corregido** (Fixed) | Correcciones de bugs |
-| 🗑️ | **Eliminado** (Removed) | Funcionalidades eliminadas |
-| 🔒 | **Seguridad** (Security) | Correcciones de seguridad |
-| 🗄️ | **Base de Datos** | Migraciones o cambios de schema |
-| 📚 | **Documentación** | Solo cambios en docs |
-| ⚠️ | **Deprecado** (Deprecated) | Funcionalidades a eliminar |
+| Categoría | Cuándo Usar |
+|-----------|-------------|
+| **Agregado** (Added) | Nuevas funcionalidades |
+| **Mejorado** (Changed) | Cambios en funcionalidades existentes |
+| **Corregido** (Fixed) | Correcciones de bugs |
+| **Eliminado** (Removed) | Funcionalidades eliminadas |
+| **Seguridad** (Security) | Correcciones de seguridad |
+| **Base de Datos** | Migraciones o cambios de schema |
+| **Documentación** | Solo cambios en docs |
+| **Deprecado** (Deprecated) | Funcionalidades a eliminar |
 
-## 🏷️ Sistema de Tags Git
+## Sistema de Tags Git
 
 ### Convención de Nombres
 
@@ -196,7 +196,7 @@ git push origin --tags
 git push origin main --tags
 ```
 
-## 📋 Checklist de Release
+## Checklist de Release
 
 ### Pre-Release
 
@@ -226,7 +226,7 @@ git push origin main --tags
 - [ ] Actualizar roadmap si es necesario
 - [ ] Documentar lecciones aprendidas
 
-## 🔧 Scripts de Automatización
+## Scripts de Automatización
 
 ### Script de Bump de Versión
 
@@ -238,7 +238,7 @@ Crear `scripts/version-bump.sh`:
 
 TYPE=${1:-patch}
 
-echo "📦 Incrementando versión ($TYPE)..."
+echo "Incrementando versión ($TYPE)..."
 
 # Actualizar package.json
 npm version $TYPE --no-git-tag-version
@@ -259,9 +259,9 @@ cd apps/frontend
 npm version $VERSION --no-git-tag-version
 cd ../..
 
-echo "✅ Versión actualizada a: $VERSION"
-echo "📝 Ahora actualiza CHANGELOG.md"
-echo "🏷️ Luego ejecuta: git tag -a v$VERSION -m 'Version $VERSION'"
+echo "Versión actualizada a: $VERSION"
+echo "Ahora actualiza CHANGELOG.md"
+echo "Luego ejecuta: git tag -a v$VERSION -m 'Version $VERSION'"
 ```
 
 ### Script de Release
@@ -276,16 +276,16 @@ TAG=$1
 MESSAGE=${2:-"Release $TAG"}
 
 if [ -z "$TAG" ]; then
-  echo "❌ Error: Debes especificar un tag"
+  echo "Error: Debes especificar un tag"
   echo "Uso: ./scripts/release.sh v1.0.1 'Mensaje'"
   exit 1
 fi
 
-echo "🚀 Creando release $TAG..."
+echo "Creando release $TAG..."
 
 # Verificar que no hay cambios sin commit
 if [[ -n $(git status -s) ]]; then
-  echo "⚠️ Advertencia: Hay cambios sin commit"
+  echo "Advertencia: Hay cambios sin commit"
   git status -s
   read -p "¿Continuar? (y/n) " -n 1 -r
   echo
@@ -300,11 +300,11 @@ git tag -a $TAG -m "$MESSAGE"
 # Push
 git push origin main --tags
 
-echo "✅ Release $TAG creado y publicado"
-echo "🌐 Ver en: https://github.com/alaines/monitoreo-apirest/releases/tag/$TAG"
+echo "Release $TAG creado y publicado"
+echo "Ver en: https://github.com/alaines/monitoreo-apirest/releases/tag/$TAG"
 ```
 
-## 📊 Historial de Versiones
+## Historial de Versiones
 
 ### Versión Actual
 **v1.0.1** (2026-01-08)
@@ -312,7 +312,7 @@ echo "🌐 Ver en: https://github.com/alaines/monitoreo-apirest/releases/tag/$TA
 ### Historial Completo
 Consultar [CHANGELOG.md](../CHANGELOG.md)
 
-## 🔗 Referencias
+## Referencias
 
 - [Semantic Versioning](https://semver.org/lang/es/)
 - [Keep a Changelog](https://keepachangelog.com/es-ES/1.0.0/)

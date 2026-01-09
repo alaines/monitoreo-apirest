@@ -9,11 +9,11 @@ Cuando los usuarios se logueaban en producción (http://apps.movingenia.com), no
 ## Diagnóstico
 
 ### 1. Verificación de Backend
-- ✅ El código de `NotificationsGateway` estaba correcto
-- ✅ El método `handleConnection()` creaba registros en `user_sessions`
-- ✅ La tabla `user_sessions` existía con la estructura correcta
-- ✅ El ownership de la tabla era correcto (`transito`)
-- ✅ Prisma Client estaba actualizado
+- El código de `NotificationsGateway` estaba correcto
+- El método `handleConnection()` creaba registros en `user_sessions`
+- La tabla `user_sessions` existía con la estructura correcta
+- El ownership de la tabla era correcto (`transito`)
+- Prisma Client estaba actualizado
 
 ### 2. Prueba Directa de WebSocket
 Se realizó una prueba conectando directamente al WebSocket:
@@ -26,7 +26,7 @@ const socket = io('http://localhost:3001/notifications', {
 });
 "
 ```
-**Resultado**: ✅ La conexión funcionó y creó el registro en `user_sessions`
+**Resultado**: La conexión funcionó y creó el registro en `user_sessions`
 
 ### 3. Problemas Encontrados
 
@@ -35,7 +35,7 @@ const socket = io('http://localhost:3001/notifications', {
 
 **Problema 1**: El proxy del API apuntaba a una dirección incorrecta
 ```nginx
-# ❌ ANTES (Incorrecto)
+# ANTES (Incorrecto)
 location /api/ {
     proxy_pass http://34.66.18.138:3000/;
 }
@@ -54,7 +54,7 @@ location /api/ {
 
 **Problema**: Las URLs estaban configuradas con el puerto directo:
 ```env
-# ❌ ANTES (Incorrecto)
+# ANTES (Incorrecto)
 VITE_API_URL=http://apps.movingenia.com:3001/api
 VITE_WS_URL=http://apps.movingenia.com:3001
 ```
@@ -66,7 +66,7 @@ Esto causaba que el frontend intentara conectarse directamente al puerto 3001, e
 
 **Problema**: El backend estaba configurado para correr en modo desarrollo:
 ```javascript
-// ❌ ANTES (Incorrecto)
+// ANTES (Incorrecto)
 args: 'run dev',
 env: {
   NODE_ENV: 'development',
@@ -135,7 +135,7 @@ sudo systemctl reload nginx
 
 **Archivo**: `apps/frontend/.env.production`
 ```env
-# ✅ CORRECTO
+# CORRECTO
 VITE_API_URL=http://apps.movingenia.com/api
 VITE_WS_URL=http://apps.movingenia.com
 ```
@@ -151,7 +151,7 @@ sudo chown -R www-data:www-data /var/www/alertas-web/
 
 ### 4. Actualización de ecosystem.config.js
 ```javascript
-// ✅ CORRECTO
+// CORRECTO
 {
   name: 'monitoreo-backend',
   args: 'run start:prod',
@@ -178,12 +178,12 @@ const socket = io('http://apps.movingenia.com/notifications', {
 });
 
 socket.on('connect', () => {
-  console.log('✅ Conectado!', socket.id);
+  console.log('Conectado!', socket.id);
 });
 EOF
 ```
 
-**Resultado**: ✅ Conexión exitosa a través de Nginx
+**Resultado**: Conexión exitosa a través de Nginx
 
 ### 2. Verificación de Registros en Base de Datos
 ```sql
@@ -192,7 +192,7 @@ FROM user_sessions
 ORDER BY connected_at DESC;
 ```
 
-**Resultado**: ✅ Registros creados correctamente
+**Resultado**: Registros creados correctamente
 
 ```
  id | user_id |      socket_id       |      connected_at       | is_active 
@@ -227,7 +227,7 @@ ORDER BY connected_at DESC;
 4. **PM2 Logging**: Los logs de NestJS en modo producción no siempre se capturan en los archivos de PM2
 
 ## Estado Final
-✅ **RESUELTO**: El WebSocket ahora funciona correctamente a través de Nginx y crea registros en `user_sessions` cuando los usuarios se conectan.
+**RESUELTO**: El WebSocket ahora funciona correctamente a través de Nginx y crea registros en `user_sessions` cuando los usuarios se conectan.
 
 ## Referencias
 - [Socket.IO with Nginx](https://socket.io/docs/v4/reverse-proxy/#nginx)

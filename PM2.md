@@ -54,11 +54,11 @@ Los logs se guardan en:
 
 ## Ventajas de PM2
 
-- ✅ Reinicio automático si hay errores
-- ✅ Gestión centralizada de procesos
-- ✅ Logs organizados y persistentes
-- ✅ No necesitas múltiples terminales
-- ✅ Fácil monitoreo del estado
+- Reinicio automático si hay errores
+- Gestión centralizada de procesos
+- Logs organizados y persistentes
+- No necesitas múltiples terminales
+- Fácil monitoreo del estado
 
 ## Comandos Avanzados de PM2
 

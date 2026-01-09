@@ -7,7 +7,7 @@
 
 ---
 
-## 🎯 Objetivos del Sprint
+## Objetivos del Sprint
 
 ### Objetivo Principal
 Implementar infraestructura WebSocket para saber qué usuarios están conectados en tiempo real, sentando las bases para el futuro sistema de mensajería.
@@ -19,7 +19,7 @@ Implementar infraestructura WebSocket para saber qué usuarios están conectados
 
 ---
 
-## 📋 Historias de Usuario
+## Historias de Usuario
 
 ### US-057: Sistema de Presencia Online
 **Como** administrador  
@@ -97,7 +97,7 @@ Implementar infraestructura WebSocket para saber qué usuarios están conectados
 
 ---
 
-## 🏗️ Arquitectura Técnica
+## Arquitectura Técnica
 
 ### Backend
 
@@ -188,7 +188,7 @@ export const SocketProvider = ({ children }) => {
 
 ---
 
-## 🔧 Tareas Técnicas Detalladas
+## Tareas Técnicas Detalladas
 
 ### Backend
 1. **Setup WebSocket** (3h)
@@ -233,7 +233,7 @@ export const SocketProvider = ({ children }) => {
 
 ---
 
-## 🧪 Testing
+## Testing
 
 ### Tests Unitarios
 - [ ] PresenceService.registerSession()
@@ -255,7 +255,7 @@ export const SocketProvider = ({ children }) => {
 
 ---
 
-## 📦 Dependencias
+## Dependencias
 
 ### Backend
 ```json
@@ -276,7 +276,7 @@ export const SocketProvider = ({ children }) => {
 
 ---
 
-## 🎨 Diseño UI/UX
+## Diseño UI/UX
 
 ### Notificaciones
 - Icono de campana en header (top-right)
@@ -295,7 +295,7 @@ export const SocketProvider = ({ children }) => {
 
 ---
 
-## 📊 Métricas de Éxito
+## Métricas de Éxito
 
 ### Performance
 - Latencia WebSocket < 100ms
@@ -314,7 +314,7 @@ export const SocketProvider = ({ children }) => {
 
 ---
 
-## 🚀 Plan de Deployment
+## Plan de Deployment
 
 ### Fase 1: Development (Semana 1)
 - Setup WebSocket en local
@@ -343,7 +343,7 @@ Este sprint sienta las bases para:
 
 ---
 
-## 📚 Referencias
+## Referencias
 
 - [Socket.io Documentation](https://socket.io/docs/)
 - [NestJS WebSockets](https://docs.nestjs.com/websockets/gateways)

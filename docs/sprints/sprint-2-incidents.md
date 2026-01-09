@@ -5,27 +5,27 @@
 
 ---
 
-## 🎯 Objetivo del Sprint
+## Objetivo del Sprint
 
 Desarrollar el módulo principal de incidencias permitiendo el registro, visualización, asignación y seguimiento de tickets reportados por operadores.
 
 ---
 
-## 📋 Historias del Sprint
+## Historias del Sprint
 
 | ID | Historia | Story Points | Prioridad | Estado |
 |----|----------|--------------|-----------|--------|
-| US-003 | Como operador, necesito registrar una nueva incidencia | 13 | ALTA | 📝 To Do |
-| US-004 | Como operador, necesito ver la lista de incidencias pendientes | 8 | ALTA | 📝 To Do |
-| US-005 | Como operador, necesito asignar una incidencia a un equipo | 5 | ALTA | 📝 To Do |
-| US-006 | Como operador, necesito registrar el seguimiento de una incidencia | 8 | ALTA | 📝 To Do |
-| US-009 | Como operador, necesito ver el detalle completo de una incidencia | 5 | ALTA | 📝 To Do |
+| US-003 | Como operador, necesito registrar una nueva incidencia | 13 | ALTA | To Do |
+| US-004 | Como operador, necesito ver la lista de incidencias pendientes | 8 | ALTA | To Do |
+| US-005 | Como operador, necesito asignar una incidencia a un equipo | 5 | ALTA | To Do |
+| US-006 | Como operador, necesito registrar el seguimiento de una incidencia | 8 | ALTA | To Do |
+| US-009 | Como operador, necesito ver el detalle completo de una incidencia | 5 | ALTA | To Do |
 
 **Total Story Points**: 39
 
 ---
 
-## 📝 Tareas Detalladas
+## Tareas Detalladas
 
 ### Backend (NestJS)
 
@@ -134,7 +134,7 @@ features/incidents/
 
 ---
 
-## 🎨 UI/UX
+## UI/UX
 
 ### 1. Lista de Incidencias
 **Elementos:**
@@ -201,7 +201,7 @@ features/incidents/
 
 ---
 
-## ✅ Criterios de Aceptación
+## Criterios de Aceptación
 
 ### US-003: Registrar Nueva Incidencia
 - [x] Operador puede acceder al formulario
@@ -249,7 +249,7 @@ features/incidents/
 
 ---
 
-## 📊 Modelo de Datos
+## Modelo de Datos
 
 ### Incident (Ticket)
 ```typescript
@@ -273,7 +273,7 @@ interface Incident {
 
 ---
 
-## 🔧 Configuración Técnica
+## Configuración Técnica
 
 ### Enums
 ```typescript
@@ -295,7 +295,7 @@ enum IncidentStatus {
 
 ---
 
-## 📊 Definition of Done
+## Definition of Done
 
 - [ ] CRUD completo de incidencias funcional
 - [ ] Asignación de equipos funciona
@@ -310,7 +310,7 @@ enum IncidentStatus {
 
 ---
 
-## 🚀 Demo
+## Demo
 
 Demostrar:
 1. Crear nueva incidencia desde formulario
@@ -322,7 +322,7 @@ Demostrar:
 
 ---
 
-## 📅 Planificación
+## Planificación
 
 ### Semana 1
 - **Días 1-2**: Backend - CRUD incidencias
@@ -336,7 +336,7 @@ Demostrar:
 
 ---
 
-## 🎯 Riesgos
+## Riesgos
 
 | Riesgo | Impacto | Mitigación |
 |--------|---------|------------|
@@ -346,7 +346,7 @@ Demostrar:
 
 ---
 
-## 📚 Referencias
+## Referencias
 
 - [React Hook Form](https://react-hook-form.com/)
 - [Zod Validation](https://zod.dev/)

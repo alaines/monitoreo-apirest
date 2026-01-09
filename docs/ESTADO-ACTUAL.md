@@ -6,7 +6,7 @@
 
 ---
 
-## 🚀 Sistema en Producción
+## Sistema en Producción
 
 ### Servidores
 - **Apps**: apps.movingenia.com (34.66.18.138)
@@ -23,111 +23,111 @@
 
 ---
 
-## ✅ Módulos Completamente Implementados
+## Módulos Completamente Implementados
 
-### 1. Autenticación y Usuarios ✅
-- ✅ Login con JWT
-- ✅ Gestión de usuarios (CRUD)
-- ✅ Roles y grupos
-- ✅ Permisos granulares (RBAC)
-- ✅ Guards y decoradores personalizados
-- ✅ Middleware de autorización
+### 1. Autenticación y Usuarios
+- Login con JWT
+- Gestión de usuarios (CRUD)
+- Roles y grupos
+- Permisos granulares (RBAC)
+- Guards y decoradores personalizados
+- Middleware de autorización
 
-### 2. Dashboard Analítico ✅
-- ✅ Cards de estadísticas en tiempo real
+### 2. Dashboard Analítico
+- Cards de estadísticas en tiempo real
   - Pendientes del día
   - Cerrados del día
   - Total activos (estados 1 y 2)
   - Total resueltos (estados 3 y 4)
   - **[SPRINT 8]** Cruces apagados (estados 1, 2, 5 - tipo 66)
-- ✅ Mapa interactivo de incidencias activas
-- ✅ Filtros dinámicos:
+- Mapa interactivo de incidencias activas
+- Filtros dinámicos:
   - Por año (obtiene años disponibles de BD)
   - Por administrador
-- ✅ Carga optimizada (endpoint ligero ~2MB vs ~18MB)
-- ✅ UI con placeholders (no bloquea mientras carga)
-- ✅ Lazy loading del detalle de incidencias
-- ✅ **[SPRINT 8]** Sistema de notificaciones:
+- Carga optimizada (endpoint ligero ~2MB vs ~18MB)
+- UI con placeholders (no bloquea mientras carga)
+- Lazy loading del detalle de incidencias
+- **[SPRINT 8]** Sistema de notificaciones:
   - Campana con contador de no leídas
   - Panel desplegable
   - WebSocket en tiempo real
   - Auto-notificación para incidencias críticas
 
-### 3. Gestión de Incidencias ✅
-- ✅ CRUD completo de tickets
-- ✅ Sistema de seguimiento (trackings)
-- ✅ Estados: Pendiente, En Proceso, Atendido, Cerrado, Reasignado
-- ✅ Prioridades: Alta, Media, Baja
-- ✅ Asignación a equipos y responsables
-- ✅ Heredamiento de coordenadas desde cruces
-- ✅ Modal de detalle con información completa
-- ✅ Timeline de seguimientos
-- ✅ **[SPRINT 8]** Filtros avanzados:
+### 3. Gestión de Incidencias
+- CRUD completo de tickets
+- Sistema de seguimiento (trackings)
+- Estados: Pendiente, En Proceso, Atendido, Cerrado, Reasignado
+- Prioridades: Alta, Media, Baja
+- Asignación a equipos y responsables
+- Heredamiento de coordenadas desde cruces
+- Modal de detalle con información completa
+- Timeline de seguimientos
+- **[SPRINT 8]** Filtros avanzados:
   - Búsqueda de tipo de incidencia con buscador
   - Selección múltiple de estados
   - Aplicación automática desde URL
-- ✅ **[SPRINT 8]** Columna "Tiempo Transcurrido":
+- **[SPRINT 8]** Columna "Tiempo Transcurrido":
   - Alertas visuales (verde/naranja/rojo)
   - Cálculo automático desde creación
   - Lógica diferenciada por estado
-- ✅ **[SPRINT 8]** Card "Cruces Apagados" en dashboard
-- ✅ **[SPRINT 8]** Notificaciones en tiempo real con WebSockets
+- **[SPRINT 8]** Card "Cruces Apagados" en dashboard
+- **[SPRINT 8]** Notificaciones en tiempo real con WebSockets
 
-### 4. Cruces Semaforizados ✅
-- ✅ Catálogo completo de cruces
-- ✅ Mapa interactivo con Leaflet
-- ✅ Filtros múltiples:
+### 4. Cruces Semaforizados
+- Catálogo completo de cruces
+- Mapa interactivo con Leaflet
+- Filtros múltiples:
   - Búsqueda por texto
   - Tipo de gestión
   - Tipo de comunicación
   - Administrador
-- ✅ Leyenda de colores por administrador
-- ✅ Popups con información detallada
-- ✅ Coordenadas geográficas (latitud/longitud)
-- ✅ Relación con administradores y proyectos
+- Leyenda de colores por administrador
+- Popups con información detallada
+- Coordenadas geográficas (latitud/longitud)
+- Relación con administradores y proyectos
 
-### 5. Módulo de Administración ✅
-- ✅ Gestión de usuarios
-- ✅ Mantenimiento de catálogos:
-  - ✅ Áreas
-  - ✅ Equipos
-  - ✅ Reportadores
-  - ✅ Responsables
-  - ✅ Administradores
-  - ✅ Ejes
-  - ✅ Proyectos
-  - ✅ Tipos de incidencias
-- ✅ Control de permisos por módulo
-- ✅ Códigos de menú sincronizados con controllers
+### 5. Módulo de Administración
+- Gestión de usuarios
+- Mantenimiento de catálogos:
+  - Áreas
+  - Equipos
+  - Reportadores
+  - Responsables
+  - Administradores
+  - Ejes
+  - Proyectos
+  - Tipos de incidencias
+- Control de permisos por módulo
+- Códigos de menú sincronizados con controllers
 
-### 6. Layout y UX ✅
-- ✅ Sidebar responsivo con navegación
-- ✅ Header con información de usuario
-- ✅ Botón de usuario en header (movido desde sidebar)
-- ✅ Dropdown con perfil y logout
-- ✅ Diseño moderno con Bootstrap 5
-- ✅ Iconos con FontAwesome
+### 6. Layout y UX
+- Sidebar responsivo con navegación
+- Header con información de usuario
+- Botón de usuario en header (movido desde sidebar)
+- Dropdown con perfil y logout
+- Diseño moderno con Bootstrap 5
+- Iconos con FontAwesome
 
 ---
 
-## 🔧 Mejoras Recientes (Enero 2026)
+## Mejoras Recientes (Enero 2026)
 
-### Sprint 8: Sistema de Notificaciones ✅ (8 de Enero 2026)
-1. ✅ **WebSocket con Socket.IO**: Notificaciones en tiempo real
-2. ✅ **NotificationBell Component**: Campana con contador y panel
-3. ✅ **Auto-notificaciones**: Incidencias críticas notifican automáticamente
-4. ✅ **Card Cruces Apagados**: Monitoreo especial en dashboard
-5. ✅ **Filtros Mejorados**: Búsqueda de tipo y estados múltiples
-6. ✅ **Columna Tiempo**: Alertas visuales verde/naranja/rojo
-7. ✅ **Optimización de Carga**: Múltiples llamadas filtradas vs descargar todo
+### Sprint 8: Sistema de Notificaciones (8 de Enero 2026)
+1. **WebSocket con Socket.IO**: Notificaciones en tiempo real
+2. **NotificationBell Component**: Campana con contador y panel
+3. **Auto-notificaciones**: Incidencias críticas notifican automáticamente
+4. **Card Cruces Apagados**: Monitoreo especial en dashboard
+5. **Filtros Mejorados**: Búsqueda de tipo y estados múltiples
+6. **Columna Tiempo**: Alertas visuales verde/naranja/rojo
+7. **Optimización de Carga**: Múltiples llamadas filtradas vs descargar todo
 
 ### Issues Resueltos (Anteriores)
-1. ✅ **Schema mismatch**: Campo `passwordHash` no existía en DB
-2. ✅ **Permisos de menú**: Códigos NULL o con sufijo `_mant`
-3. ✅ **Estadísticas incorrectas**: No incluía estado 4 en resueltos
-4. ✅ **Carga lenta del mapa**: Reducido de 18MB a ~2MB
-5. ✅ **Filtro de años hardcoded**: Ahora se obtiene dinámicamente
-6. ✅ **UI bloqueada en carga**: Ahora usa placeholders progresivos
+1. **Schema mismatch**: Campo `passwordHash` no existía en DB
+2. **Permisos de menú**: Códigos NULL o con sufijo `_mant`
+3. **Estadísticas incorrectas**: No incluía estado 4 en resueltos
+4. **Carga lenta del mapa**: Reducido de 18MB a ~2MB
+5. **Filtro de años hardcoded**: Ahora se obtiene dinámicamente
+6. **UI bloqueada en carga**: Ahora usa placeholders progresivos
 
 ### Mejoras de Performance
 - **Endpoint ligero `/incidents/map-markers`**: Solo campos esenciales
@@ -136,7 +136,7 @@
 
 ---
 
-## 📊 Base de Datos
+## Base de Datos
 
 ### Tablas Principales
 - **tickets**: 54,526 registros
@@ -157,7 +157,7 @@
 
 ---
 
-## 🎯 Funcionalidades Pendientes
+## Funcionalidades Pendientes
 
 ### Alta Prioridad
 - [ ] **Sistema de Reportes Avanzados**
@@ -202,7 +202,7 @@
 
 ---
 
-## 💡 Sugerencias de Nuevas Funcionalidades
+## Sugerencias de Nuevas Funcionalidades
 
 ### 1. Sistema de Presencia Online ⭐ RECOMENDADO
 **Objetivo**: Saber qué usuarios están conectados en tiempo real
@@ -402,7 +402,7 @@
 
 ---
 
-## 📈 Métricas del Proyecto
+## Métricas del Proyecto
 
 ### Desarrollo
 - **Commits totales**: +65
@@ -419,16 +419,16 @@
 
 ---
 
-## 🔐 Seguridad
+## Seguridad
 
 ### Implementado
-- ✅ JWT con expiración
-- ✅ Bcrypt para passwords
-- ✅ RBAC granular
-- ✅ Guards en todos los endpoints
-- ✅ CORS configurado
-- ✅ Validación de DTOs
-- ✅ SQL injection prevention (Prisma)
+- JWT con expiración
+- Bcrypt para passwords
+- RBAC granular
+- Guards en todos los endpoints
+- CORS configurado
+- Validación de DTOs
+- SQL injection prevention (Prisma)
 
 ### Pendiente
 - [ ] Rate limiting

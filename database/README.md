@@ -9,7 +9,7 @@
 
 ## Tablas Principales
 
-### 🎫 **Módulo de Incidencias (Core)**
+### **Módulo de Incidencias (Core)**
 
 #### `tickets`
 Tabla principal de incidencias/tickets reportados.
@@ -68,7 +68,7 @@ Catálogo de prioridades (Alta, Media, Baja).
 
 ---
 
-### 🚦 **Módulo de Semáforos e Intersecciones**
+### **Módulo de Semáforos e Intersecciones**
 
 #### `cruces`
 Intersecciones/cruces semaforizados.
@@ -114,7 +114,7 @@ Administradores de zonas/áreas.
 
 ---
 
-### 👥 **Módulo de Usuarios y Seguridad**
+### **Módulo de Usuarios y Seguridad**
 
 #### `users`
 Usuarios del sistema.
@@ -147,7 +147,7 @@ Menús del sistema.
 
 ---
 
-### 🔧 **Módulo de Mantenimiento**
+### **Módulo de Mantenimiento**
 
 #### `equipos`
 Equipos de mantenimiento.
@@ -162,7 +162,7 @@ Responsables de equipos de mantenimiento.
 
 ---
 
-### 📊 **Tablas de Soporte**
+### **Tablas de Soporte**
 
 #### `areas`
 Áreas de trabajo.
@@ -181,7 +181,7 @@ Proyectos de implementación.
 
 ---
 
-### 🔍 **Auditoría**
+### **Auditoría**
 
 #### `audits`
 Registro de auditoría de cambios.
@@ -209,7 +209,7 @@ Detalle de cambios (campo por campo).
 
 ## Próximos Pasos
 
-1. ✅ Esquema actual exportado
+1. Esquema actual exportado
 2. ⏳ Mapeo a Prisma Schema
 3. ⏳ Propuesta de mejoras y normalización
 4. ⏳ Plan de migración de datos

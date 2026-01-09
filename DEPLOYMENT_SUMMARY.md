@@ -1,22 +1,22 @@
 # Resumen de Despliegue - Sistema de Monitoreo
 
-## ✅ Despliegue Completado Exitosamente
+## Despliegue Completado Exitosamente
 
 **Fecha**: 31 de Diciembre de 2024, 22:55 UTC  
 **Servidor**: apps.movingenia.com (34.66.199.6)
 
 ---
 
-## 🌐 URLs del Sistema
+## URLs del Sistema
 
 | Servicio | URL | Estado |
 |----------|-----|--------|
-| **Frontend** | http://apps.movingenia.com | ✅ Funcionando |
-| **Backend API** | http://apps.movingenia.com/api | ✅ Funcionando |
+| **Frontend** | http://apps.movingenia.com | Funcionando |
+| **Backend API** | http://apps.movingenia.com/api | Funcionando |
 
 ---
 
-## 🗄️ Base de Datos
+## Base de Datos
 
 - **Host**: dbsrv.movingenia.com (34.66.199.6)
 - **Motor**: PostgreSQL 13+ con PostGIS 3.4
@@ -25,14 +25,14 @@
 - **Password**: `transito`
 
 ### Datos Migrados
-- ✅ **809 cruces**
-- ✅ **1,545 tickets**
-- ✅ **20 usuarios**
-- ✅ **5 administradores**
+- **809 cruces**
+- **1,545 tickets**
+- **20 usuarios**
+- **5 administradores**
 
 ---
 
-## 🏗️ Arquitectura Desplegada
+## Arquitectura Desplegada
 
 ```
 Internet
@@ -47,30 +47,30 @@ Internet
 
 ---
 
-## 📦 Componentes
+## Componentes
 
 ### Frontend
 - **Framework**: React + TypeScript + Vite
 - **Puerto interno**: 5173
 - **Directorio**: ~/monitoreo-apirest/apps/frontend
 - **Proceso PM2**: `monitoreo-frontend`
-- **Estado**: ✅ Online
+- **Estado**: Online
 
 ### Backend
 - **Framework**: NestJS + Prisma
 - **Puerto interno**: 3001
 - **Directorio**: ~/monitoreo-apirest/apps/backend
 - **Proceso PM2**: `monitoreo-backend`
-- **Estado**: ✅ Online
+- **Estado**: Online
 
 ### Nginx
 - **Puerto**: 80
 - **Configuración**: `/etc/nginx/sites-available/monitoreo`
-- **Estado**: ✅ Active
+- **Estado**: Active
 
 ---
 
-## 🔑 Acceso al Servidor
+## Acceso al Servidor
 
 ### SSH
 ```bash
@@ -111,7 +111,7 @@ pm2 save
 
 ---
 
-## ⚙️ Archivos de Configuración
+## Archivos de Configuración
 
 ### Variables de Entorno
 **Archivo**: `~/monitoreo-apirest/.env`
@@ -135,7 +135,7 @@ VITE_API_URL=http://apps.movingenia.com/api
 
 ---
 
-## 🔧 Mantenimiento
+## Mantenimiento
 
 ### Actualizar la Aplicación
 ```bash
@@ -168,7 +168,7 @@ sudo tail -f /var/log/nginx/monitoreo-error.log
 
 ---
 
-## 🔍 Verificación del Sistema
+## Verificación del Sistema
 
 ### Test de Conectividad
 ```bash
@@ -274,7 +274,7 @@ sudo systemctl restart nginx
 
 ---
 
-## ✅ Tareas Completadas
+## Tareas Completadas
 
 - [x] Migración de base de datos (192.168.18.230 → dbsrv.movingenia.com)
 - [x] Creación de usuario `transito` en PostgreSQL
@@ -312,4 +312,4 @@ sudo systemctl restart nginx
 
 ---
 
-**Estado Final**: ✅ Sistema completamente desplegado y operativo
+**Estado Final**: Sistema completamente desplegado y operativo

@@ -37,9 +37,9 @@ for migration in database/migrations/*.sql; do
     echo "Ejecutando: $migration"
     PGPASSWORD=$DB_PASS psql -U $DB_USER -d $DB_NAME -h $DB_HOST -f "$migration"
     if [ $? -eq 0 ]; then
-        echo "✓ $migration completado"
+        echo "$migration completado"
     else
-        echo "✗ Error en $migration"
+        echo "Error en $migration"
         exit 1
     fi
 done
