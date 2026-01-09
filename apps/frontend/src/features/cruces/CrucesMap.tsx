@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { MapContainer, TileLayer, Marker, Popup, useMap } from 'react-leaflet';
+import Select from 'react-select';
 import { crucesService, Cruce } from '../../services/cruces.service';
 import { tiposService, Tipo } from '../../services/tipos.service';
 import { administradoresService, Administrador } from '../../services/administradores.service';
@@ -313,16 +314,20 @@ export function CrucesMap() {
                     <i className="fas fa-cogs me-2"></i>
                     Tipo de Gestión
                   </label>
-                  <select
-                    className="form-select"
-                    value={selectedTipoGestion || ''}
-                    onChange={(e) => setSelectedTipoGestion(e.target.value ? parseInt(e.target.value) : null)}
-                  >
-                    <option value="">Todos</option>
-                    {tiposGestion.map(tipo => (
-                      <option key={tipo.id} value={tipo.id}>{tipo.name}</option>
-                    ))}
-                  </select>
+                  <Select
+                    options={[
+                      { value: null, label: 'Todos' },
+                      ...tiposGestion.map(tipo => ({ value: tipo.id, label: tipo.name }))
+                    ]}
+                    value={selectedTipoGestion ? tiposGestion.find(t => t.id === selectedTipoGestion) ? { value: selectedTipoGestion, label: tiposGestion.find(t => t.id === selectedTipoGestion)?.name || '' } : null : null}
+                    onChange={(option) => setSelectedTipoGestion(option?.value || null)}
+                    placeholder="Seleccionar..."
+                    isClearable
+                    styles={{
+                      control: (base) => ({ ...base, minHeight: '38px' }),
+                      menu: (base) => ({ ...base, zIndex: 1050 })
+                    }}
+                  />
                 </div>
 
                 <div className="col-md-3">
@@ -330,16 +335,20 @@ export function CrucesMap() {
                     <i className="fas fa-wifi me-2"></i>
                     Tipo de Comunicación
                   </label>
-                  <select
-                    className="form-select"
-                    value={selectedTipoComunicacion || ''}
-                    onChange={(e) => setSelectedTipoComunicacion(e.target.value ? parseInt(e.target.value) : null)}
-                  >
-                    <option value="">Todos</option>
-                    {tiposComunicacion.map(tipo => (
-                      <option key={tipo.id} value={tipo.id}>{tipo.name}</option>
-                    ))}
-                  </select>
+                  <Select
+                    options={[
+                      { value: null, label: 'Todos' },
+                      ...tiposComunicacion.map(tipo => ({ value: tipo.id, label: tipo.name }))
+                    ]}
+                    value={selectedTipoComunicacion ? tiposComunicacion.find(t => t.id === selectedTipoComunicacion) ? { value: selectedTipoComunicacion, label: tiposComunicacion.find(t => t.id === selectedTipoComunicacion)?.name || '' } : null : null}
+                    onChange={(option) => setSelectedTipoComunicacion(option?.value || null)}
+                    placeholder="Seleccionar..."
+                    isClearable
+                    styles={{
+                      control: (base) => ({ ...base, minHeight: '38px' }),
+                      menu: (base) => ({ ...base, zIndex: 1050 })
+                    }}
+                  />
                 </div>
 
                 <div className="col-md-2">
@@ -347,16 +356,20 @@ export function CrucesMap() {
                     <i className="fas fa-user-tie me-2"></i>
                     Administrador
                   </label>
-                  <select
-                    className="form-select"
-                    value={selectedAdministrador || ''}
-                    onChange={(e) => setSelectedAdministrador(e.target.value ? parseInt(e.target.value) : null)}
-                  >
-                    <option value="">Todos</option>
-                    {administradores.map(admin => (
-                      <option key={admin.id} value={admin.id}>{admin.nombre}</option>
-                    ))}
-                  </select>
+                  <Select
+                    options={[
+                      { value: null, label: 'Todos' },
+                      ...administradores.map(admin => ({ value: admin.id, label: admin.nombre }))
+                    ]}
+                    value={selectedAdministrador ? administradores.find(a => a.id === selectedAdministrador) ? { value: selectedAdministrador, label: administradores.find(a => a.id === selectedAdministrador)?.nombre || '' } : null : null}
+                    onChange={(option) => setSelectedAdministrador(option?.value || null)}
+                    placeholder="Seleccionar..."
+                    isClearable
+                    styles={{
+                      control: (base) => ({ ...base, minHeight: '38px' }),
+                      menu: (base) => ({ ...base, zIndex: 1050 })
+                    }}
+                  />
                 </div>
 
                 <div className="col-md-1 d-flex align-items-end">

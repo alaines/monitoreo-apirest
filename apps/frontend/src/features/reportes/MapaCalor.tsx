@@ -1,8 +1,8 @@
 import { useState, useEffect } from 'react';
 import { MapContainer, TileLayer, useMap } from 'react-leaflet';
+import Select from 'react-select';
 import { incidentsService } from '../../services/incidents.service';
 import { HeatmapLayer } from '../../components/HeatmapLayer';
-import { SearchableSelect } from '../../components/SearchableSelect';
 import 'leaflet/dist/leaflet.css';
 
 // Interface simplificada para data del mapa
@@ -223,7 +223,7 @@ export function MapaCalor() {
           top: '10px',
           right: '10px',
           zIndex: 900,
-          maxWidth: '400px'
+          maxWidth: '500px'
         }}>
           <div className="card shadow-sm">
             <div className="card-header bg-white border-bottom d-flex justify-content-between align-items-center py-2">
@@ -259,16 +259,20 @@ export function MapaCalor() {
                         <i className="fas fa-calendar-alt me-1"></i>
                         Año
                       </label>
-                      <select
-                        className="form-select form-select-sm"
-                        value={filters.year}
-                        onChange={(e) => handleFilterChange('year', e.target.value)}
-                      >
-                        <option value="">Todos</option>
-                        {years.map(year => (
-                          <option key={year} value={year}>{year}</option>
-                        ))}
-                      </select>
+                      <Select
+                        options={[
+                          { value: '', label: 'Todos' },
+                          ...years.map(year => ({ value: year.toString(), label: year.toString() }))
+                        ]}
+                        value={filters.year ? { value: filters.year, label: filters.year } : { value: '', label: 'Todos' }}
+                        onChange={(option) => handleFilterChange('year', option?.value || '')}
+                        placeholder="Seleccionar año..."
+                        isClearable
+                        styles={{
+                          control: (base) => ({ ...base, minHeight: '31px', fontSize: '14px' }),
+                          menu: (base) => ({ ...base, zIndex: 1050 })
+                        }}
+                      />
                     </div>
 
                     <div className="mb-2">
@@ -276,32 +280,40 @@ export function MapaCalor() {
                         <i className="fas fa-calendar me-1"></i>
                         Mes
                       </label>
-                      <select
-                        className="form-select form-select-sm"
-                        value={filters.month}
-                        onChange={(e) => handleFilterChange('month', e.target.value)}
-                      >
-                        <option value="">Todos</option>
-                        {months.map(month => (
-                          <option key={month.value} value={month.value}>{month.label}</option>
-                        ))}
-                      </select>
+                      <Select
+                        options={[
+                          { value: '', label: 'Todos' },
+                          ...months.map(month => ({ value: month.value, label: month.label }))
+                        ]}
+                        value={filters.month ? months.find(m => m.value === filters.month) : { value: '', label: 'Todos' }}
+                        onChange={(option) => handleFilterChange('month', option?.value || '')}
+                        placeholder="Seleccionar mes..."
+                        isClearable
+                        styles={{
+                          control: (base) => ({ ...base, minHeight: '31px', fontSize: '14px' }),
+                          menu: (base) => ({ ...base, zIndex: 1050 })
+                        }}
+                      />
                     </div>
 
                     <div className="mb-2">
-                      <SearchableSelect
-                        label="Tipo de Incidencia"
-                        icon="fas fa-exclamation-triangle"
+                      <label className="form-label small mb-1 fw-bold">
+                        <i className="fas fa-exclamation-triangle me-1"></i>
+                        Tipo de Incidencia
+                      </label>
+                      <Select
                         options={[
                           { value: '', label: 'Todos' },
-                          ...tiposIncidencia.map(tipo => ({
-                            value: tipo.id.toString(),
-                            label: tipo.tipo
-                          }))
+                          ...tiposIncidencia.map(tipo => ({ value: tipo.id.toString(), label: tipo.tipo }))
                         ]}
-                        value={filters.tipoIncidencia}
-                        onChange={(value) => handleFilterChange('tipoIncidencia', value)}
-                        placeholder="Seleccionar tipo..."
+                        value={filters.tipoIncidencia ? tiposIncidencia.find(t => t.id.toString() === filters.tipoIncidencia) ? { value: filters.tipoIncidencia, label: tiposIncidencia.find(t => t.id.toString() === filters.tipoIncidencia)?.tipo || '' } : { value: '', label: 'Todos' } : { value: '', label: 'Todos' }}
+                        onChange={(option) => handleFilterChange('tipoIncidencia', option?.value || '')}
+                        placeholder="Buscar tipo de incidencia..."
+                        isClearable
+                        styles={{
+                          control: (base) => ({ ...base, minHeight: '31px', fontSize: '14px' }),
+                          menu: (base) => ({ ...base, zIndex: 1050 })
+                        }}
                       />
                     </div>
 

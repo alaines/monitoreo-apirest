@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
+import Select from 'react-select';
 import {
   Chart as ChartJS,
   CategoryScale,
@@ -456,20 +457,22 @@ const ReporteGrafico: React.FC = () => {
                   <i className="fas fa-calendar-alt me-2"></i>
                   Periodo
                 </label>
-                <select
-                  className="form-select form-select-sm"
-                  value={filtros.periodo}
-                  onChange={(e) =>
-                    setFiltros({
-                      ...filtros,
-                      periodo: e.target.value as 'DIA' | 'MES' | 'ANIO',
-                    })
-                  }
-                >
-                  <option value="DIA">Día</option>
-                  <option value="MES">Mes</option>
-                  <option value="ANIO">Año</option>
-                </select>
+                <Select
+                  options={[
+                    { value: 'DIA', label: 'Día' },
+                    { value: 'MES', label: 'Mes' },
+                    { value: 'ANIO', label: 'Año' }
+                  ]}
+                  value={{ value: filtros.periodo, label: filtros.periodo === 'DIA' ? 'Día' : filtros.periodo === 'MES' ? 'Mes' : 'Año' }}
+                  onChange={(option) => setFiltros({
+                    ...filtros,
+                    periodo: option?.value as 'DIA' | 'MES' | 'ANIO' || 'MES'
+                  })}
+                  styles={{
+                    control: (base) => ({ ...base, minHeight: '31px', fontSize: '14px' }),
+                    menu: (base) => ({ ...base, zIndex: 1050 })
+                  }}
+                />
               </div>
 
               {/* Día */}
@@ -502,29 +505,31 @@ const ReporteGrafico: React.FC = () => {
                     <i className="fas fa-calendar-alt me-2"></i>
                     Mes
                   </label>
-                  <select
-                    className="form-select form-select-sm"
-                    value={filtros.mes}
-                    onChange={(e) =>
-                      setFiltros({
-                        ...filtros,
-                        mes: parseInt(e.target.value),
-                      })
-                    }
-                  >
-                    <option value="1">Enero</option>
-                    <option value="2">Febrero</option>
-                    <option value="3">Marzo</option>
-                    <option value="4">Abril</option>
-                    <option value="5">Mayo</option>
-                    <option value="6">Junio</option>
-                    <option value="7">Julio</option>
-                    <option value="8">Agosto</option>
-                    <option value="9">Septiembre</option>
-                    <option value="10">Octubre</option>
-                    <option value="11">Noviembre</option>
-                    <option value="12">Diciembre</option>
-                  </select>
+                  <Select
+                    options={[
+                      { value: 1, label: 'Enero' },
+                      { value: 2, label: 'Febrero' },
+                      { value: 3, label: 'Marzo' },
+                      { value: 4, label: 'Abril' },
+                      { value: 5, label: 'Mayo' },
+                      { value: 6, label: 'Junio' },
+                      { value: 7, label: 'Julio' },
+                      { value: 8, label: 'Agosto' },
+                      { value: 9, label: 'Septiembre' },
+                      { value: 10, label: 'Octubre' },
+                      { value: 11, label: 'Noviembre' },
+                      { value: 12, label: 'Diciembre' }
+                    ]}
+                    value={filtros.mes ? { value: filtros.mes, label: ['Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio', 'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'][filtros.mes - 1] } : null}
+                    onChange={(option) => setFiltros({
+                      ...filtros,
+                      mes: option?.value || new Date().getMonth() + 1
+                    })}
+                    styles={{
+                      control: (base) => ({ ...base, minHeight: '31px', fontSize: '14px' }),
+                      menu: (base) => ({ ...base, zIndex: 1050 })
+                    }}
+                  />
                 </div>
               )}
 
@@ -534,20 +539,21 @@ const ReporteGrafico: React.FC = () => {
                   <i className="fas fa-calendar me-2"></i>
                   Año
                 </label>
-                <select
-                  className="form-select form-select-sm"
-                  value={filtros.anio}
-                  onChange={(e) =>
-                    setFiltros({
-                      ...filtros,
-                      anio: parseInt(e.target.value),
-                    })
-                  }
-                >
-                  {Array.from({ length: 7 }, (_, i) => new Date().getFullYear() - 5 + i).map(year => (
-                    <option key={year} value={year}>{year}</option>
-                  ))}
-                </select>
+                <Select
+                  options={Array.from({ length: 7 }, (_, i) => new Date().getFullYear() - 5 + i).map(year => ({
+                    value: year,
+                    label: year.toString()
+                  }))}
+                  value={{ value: filtros.anio, label: filtros.anio.toString() }}
+                  onChange={(option) => setFiltros({
+                    ...filtros,
+                    anio: option?.value || new Date().getFullYear()
+                  })}
+                  styles={{
+                    control: (base) => ({ ...base, minHeight: '31px', fontSize: '14px' }),
+                    menu: (base) => ({ ...base, zIndex: 1050 })
+                  }}
+                />
               </div>
 
               {/* Botones */}
