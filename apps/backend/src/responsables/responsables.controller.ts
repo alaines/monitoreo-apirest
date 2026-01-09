@@ -15,8 +15,7 @@ export class ResponsablesController {
 
   @Get()
   @RequirePermission('responsables', 'view')
-  @ApiOperation({ summary: 'Listar todos los responsables' })
-  @ApiQuery({ name: 'equipoId', required: false, type: Number, description: 'Filtrar por ID de equipo' })
+  @ApiOperation({ summary: 'Listar todos los responsables, opcionalmente filtrados por equipoId' })
   async findAll(@Query('equipoId') equipoId?: string): Promise<ResponsableResponseDto[]> {
     const parsedEquipoId = equipoId && equipoId.trim() !== '' ? parseInt(equipoId, 10) : undefined;
     return this.responsablesService.findAll(parsedEquipoId);
