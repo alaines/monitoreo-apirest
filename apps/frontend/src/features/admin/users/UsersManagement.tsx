@@ -1,5 +1,7 @@
 import { useState, useEffect } from 'react';
+import Select from 'react-select';
 import { usersService, gruposService, areasService, catalogosPersonasService, type User, type Grupo, type Area, type CreateUserDto, type UpdateUserDto, type TipoDoc, type EstadoCivil } from '../../../services/admin.service';
+import { customSelectStyles, customSelectStylesSmall } from '../../../styles/react-select-custom';
 
 type SortField = 'usuario' | 'nombreCompleto' | 'email' | 'grupo' | 'estado';
 type SortOrder = 'asc' | 'desc';
@@ -365,28 +367,30 @@ export function UsersManagement() {
               </div>
               <div className="col-md-3">
                 <label className="form-label small">Grupo</label>
-                <select
-                  className="form-select form-select-sm"
-                  value={filters.grupoId}
-                  onChange={(e) => handleFilterChange('grupoId', e.target.value)}
-                >
-                  <option value="">Todos</option>
-                  {grupos.map(grupo => (
-                    <option key={grupo.id} value={grupo.id}>{grupo.nombre}</option>
-                  ))}
-                </select>
+                <Select
+                  options={[
+                    { value: '', label: 'Todos' },
+                    ...grupos.map(grupo => ({ value: String(grupo.id), label: grupo.nombre }))
+                  ]}
+                  value={filters.grupoId ? { value: filters.grupoId, label: grupos.find(g => g.id === parseInt(filters.grupoId))?.nombre || filters.grupoId } : { value: '', label: 'Todos' }}
+                  onChange={(option) => handleFilterChange('grupoId', option?.value || '')}
+                  isClearable
+                  styles={customSelectStylesSmall}
+                />
               </div>
               <div className="col-md-3">
                 <label className="form-label small">Estado</label>
-                <select
-                  className="form-select form-select-sm"
-                  value={filters.estado}
-                  onChange={(e) => handleFilterChange('estado', e.target.value)}
-                >
-                  <option value="">Todos</option>
-                  <option value="true">Activos</option>
-                  <option value="false">Inactivos</option>
-                </select>
+                <Select
+                  options={[
+                    { value: '', label: 'Todos' },
+                    { value: 'true', label: 'Activos' },
+                    { value: 'false', label: 'Inactivos' }
+                  ]}
+                  value={filters.estado === 'true' ? { value: 'true', label: 'Activos' } : filters.estado === 'false' ? { value: 'false', label: 'Inactivos' } : { value: '', label: 'Todos' }}
+                  onChange={(option) => handleFilterChange('estado', option?.value || '')}
+                  isClearable
+                  styles={customSelectStylesSmall}
+                />
               </div>
               <div className="col-md-2 d-flex align-items-end">
                 <button
@@ -481,20 +485,17 @@ export function UsersManagement() {
                 </span>
               </div>
               <div className="d-flex gap-2 align-items-center">
-                <select
-                  className="form-select form-select-sm"
-                  style={{ width: 'auto' }}
-                  value={limit}
-                  onChange={(e) => {
-                    setLimit(Number(e.target.value));
-                    setPage(1);
-                  }}
-                >
-                  <option value={10}>10 por página</option>
-                  <option value={25}>25 por página</option>
-                  <option value={50}>50 por página</option>
-                  <option value={100}>100 por página</option>
-                </select>
+                <Select
+                  options={[
+                    { value: 10, label: '10 por página' },
+                    { value: 25, label: '25 por página' },
+                    { value: 50, label: '50 por página' },
+                    { value: 100, label: '100 por página' }
+                  ]}
+                  value={{ value: limit, label: `${limit} por página` }}
+                  onChange={(option) => { setLimit(Number(option?.value || 10)); setPage(1); }}
+                  styles={customSelectStylesSmall}
+                />
                 <nav>
                   <ul className="pagination pagination-sm mb-0">
                     <li className={`page-item ${page === 1 ? 'disabled' : ''}`}>
@@ -577,45 +578,40 @@ export function UsersManagement() {
                     </div>
                     <div className="col-md-4">
                       <label className="form-label">Grupo / Perfil *</label>
-                      <select
-                        className="form-select"
-                        value={formData.grupoId}
-                        onChange={(e) => setFormData({ ...formData, grupoId: Number(e.target.value) })}
-                        required
-                      >
-                        <option value="">Seleccione un grupo</option>
-                        {grupos.map((grupo) => (
-                          <option key={grupo.id} value={grupo.id}>
-                            {grupo.nombre}
-                          </option>
-                        ))}
-                      </select>
+                      <Select
+                        options={[
+                          { value: 0, label: 'Seleccione un grupo' },
+                          ...grupos.map(grupo => ({ value: grupo.id, label: grupo.nombre }))
+                        ]}
+                        value={formData.grupoId ? { value: formData.grupoId, label: grupos.find(g => g.id === formData.grupoId)?.nombre || 'Seleccione un grupo' } : { value: 0, label: 'Seleccione un grupo' }}
+                        onChange={(option) => setFormData({ ...formData, grupoId: Number(option?.value || 0) })}
+                        styles={customSelectStyles}
+                      />
                     </div>
                     <div className="col-md-4">
                       <label className="form-label">Área</label>
-                      <select
-                        className="form-select"
-                        value={formData.areaId || ''}
-                        onChange={(e) => setFormData({ ...formData, areaId: e.target.value ? Number(e.target.value) : undefined })}
-                      >
-                        <option value="">Sin área</option>
-                        {areas.map((area) => (
-                          <option key={area.id} value={area.id}>
-                            {area.nombre}
-                          </option>
-                        ))}
-                      </select>
+                      <Select
+                        options={[
+                          { value: null, label: 'Sin área' },
+                          ...areas.map(area => ({ value: area.id, label: area.nombre }))
+                        ]}
+                        value={formData.areaId ? { value: formData.areaId, label: areas.find(a => a.id === formData.areaId)?.nombre || 'Sin área' } : { value: null, label: 'Sin área' }}
+                        onChange={(option) => setFormData({ ...formData, areaId: option?.value || undefined })}
+                        isClearable
+                        styles={customSelectStyles}
+                      />
                     </div>
                     <div className="col-md-4">
                       <label className="form-label">Estado</label>
-                      <select
-                        className="form-select"
-                        value={formData.estado ? 'true' : 'false'}
-                        onChange={(e) => setFormData({ ...formData, estado: e.target.value === 'true' })}
-                      >
-                        <option value="true">Activo</option>
-                        <option value="false">Inactivo</option>
-                      </select>
+                      <Select
+                        options={[
+                          { value: 'true', label: 'Activo' },
+                          { value: 'false', label: 'Inactivo' }
+                        ]}
+                        value={{ value: formData.estado ? 'true' : 'false', label: formData.estado ? 'Activo' : 'Inactivo' }}
+                        onChange={(option) => setFormData({ ...formData, estado: option?.value === 'true' })}
+                        styles={customSelectStyles}
+                      />
                     </div>
 
                     {/* Datos Personales */}
@@ -627,19 +623,15 @@ export function UsersManagement() {
                     </div>
                     <div className="col-md-4">
                       <label className="form-label">Tipo de Documento *</label>
-                      <select
-                        className="form-select"
-                        value={formData.tipoDocId}
-                        onChange={(e) => setFormData({ ...formData, tipoDocId: Number(e.target.value) })}
-                        required
-                      >
-                        <option value="">Seleccione tipo</option>
-                        {tiposDoc.map((tipo) => (
-                          <option key={tipo.id} value={tipo.id}>
-                            {tipo.nombre}
-                          </option>
-                        ))}
-                      </select>
+                      <Select
+                        options={[
+                          { value: 0, label: 'Seleccione tipo' },
+                          ...tiposDoc.map(tipo => ({ value: tipo.id, label: tipo.nombre }))
+                        ]}
+                        value={formData.tipoDocId ? { value: formData.tipoDocId, label: tiposDoc.find(t => t.id === formData.tipoDocId)?.nombre || 'Seleccione tipo' } : { value: 0, label: 'Seleccione tipo' }}
+                        onChange={(option) => setFormData({ ...formData, tipoDocId: Number(option?.value || 0) })}
+                        styles={customSelectStyles}
+                      />
                     </div>
                     <div className="col-md-4">
                       <label className="form-label">Número de Documento *</label>
@@ -654,14 +646,15 @@ export function UsersManagement() {
                     </div>
                     <div className="col-md-4">
                       <label className="form-label">Género</label>
-                      <select
-                        className="form-select"
-                        value={formData.genero}
-                        onChange={(e) => setFormData({ ...formData, genero: e.target.value })}
-                      >
-                        <option value="M">Masculino</option>
-                        <option value="F">Femenino</option>
-                      </select>
+                      <Select
+                        options={[
+                          { value: 'M', label: 'Masculino' },
+                          { value: 'F', label: 'Femenino' }
+                        ]}
+                        value={{ value: formData.genero, label: formData.genero === 'M' ? 'Masculino' : 'Femenino' }}
+                        onChange={(option) => setFormData({ ...formData, genero: option?.value || 'M' })}
+                        styles={customSelectStyles}
+                      />
                     </div>
                     <div className="col-md-4">
                       <label className="form-label">Nombres *</label>
@@ -704,18 +697,16 @@ export function UsersManagement() {
                     </div>
                     <div className="col-md-4">
                       <label className="form-label">Estado Civil</label>
-                      <select
-                        className="form-select"
-                        value={formData.estadoCivilId || ''}
-                        onChange={(e) => setFormData({ ...formData, estadoCivilId: e.target.value ? Number(e.target.value) : undefined })}
-                      >
-                        <option value="">Sin especificar</option>
-                        {estadosCiviles.map((estado) => (
-                          <option key={estado.id} value={estado.id}>
-                            {estado.nombre}
-                          </option>
-                        ))}
-                      </select>
+                      <Select
+                        options={[
+                          { value: null, label: 'Sin especificar' },
+                          ...estadosCiviles.map(estado => ({ value: estado.id, label: estado.nombre }))
+                        ]}
+                        value={formData.estadoCivilId ? { value: formData.estadoCivilId, label: estadosCiviles.find(e => e.id === formData.estadoCivilId)?.nombre || 'Sin especificar' } : { value: null, label: 'Sin especificar' }}
+                        onChange={(option) => setFormData({ ...formData, estadoCivilId: option?.value || undefined })}
+                        isClearable
+                        styles={customSelectStyles}
+                      />
                     </div>
 
                     {/* Datos de Contacto */}

@@ -1,5 +1,7 @@
 import { useState, useEffect } from 'react';
+import Select from 'react-select';
 import { tiposService, type Tipo, type CreateTipoDto } from '../../../services/admin.service';
+import { customSelectStyles } from '../../../styles/react-select-custom';
 
 export function CatalogosManagement() {
   const [tipos, setTipos] = useState<Tipo[]>([]);
@@ -256,20 +258,18 @@ export function CatalogosManagement() {
 
                   <div className="mb-3">
                     <label className="form-label">Tipo Padre</label>
-                    <select
-                      className="form-select"
-                      value={formData.parent_id || ''}
-                      onChange={(e) => setFormData({ ...formData, parent_id: e.target.value ? Number(e.target.value) : null })}
-                    >
-                      <option value="">Sin padre (tipo raíz)</option>
-                      {tiposRaiz
-                        .filter(t => t.id !== editingTipo?.id)
-                        .map(tipo => (
-                          <option key={tipo.id} value={tipo.id}>
-                            {tipo.name}
-                          </option>
-                        ))}
-                    </select>
+                    <Select
+                      options={[
+                        { value: null, label: 'Sin padre (tipo raíz)' },
+                        ...tiposRaiz
+                          .filter(t => t.id !== editingTipo?.id)
+                          .map(tipo => ({ value: tipo.id, label: tipo.name }))
+                      ]}
+                      value={formData.parent_id ? { value: formData.parent_id, label: tiposRaiz.find(t => t.id === formData.parent_id)?.name || 'Sin padre (tipo raíz)' } : { value: null, label: 'Sin padre (tipo raíz)' }}
+                      onChange={(option) => setFormData({ ...formData, parent_id: option?.value || null })}
+                      isClearable
+                      styles={customSelectStyles}
+                    />
                     <small className="text-muted">
                       Seleccione un tipo padre si este es un subtipo. Solo se muestran tipos raíz.
                     </small>

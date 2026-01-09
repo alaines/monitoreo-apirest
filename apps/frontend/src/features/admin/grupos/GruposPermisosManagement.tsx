@@ -1,5 +1,7 @@
 import { useState, useEffect } from 'react';
+import Select from 'react-select';
 import { gruposService, permisosService, accionesService, menusService, type Grupo, type Accion, type Menu, type Permiso } from '../../../services/admin.service';
+import { customSelectStyles } from '../../../styles/react-select-custom';
 
 export function GruposPermisosManagement() {
   const [grupos, setGrupos] = useState<Grupo[]>([]);
@@ -234,18 +236,15 @@ export function GruposPermisosManagement() {
                 <h6 className="mb-0">Copiar Permisos</h6>
               </div>
               <div className="card-body">
-                <select
-                  className="form-select mb-2"
-                  onChange={(e) => handleCopyPermisos(Number(e.target.value))}
-                  value=""
-                >
-                  <option value="">Copiar desde...</option>
-                  {grupos.filter(g => g.id !== selectedGrupo).map((grupo) => (
-                    <option key={grupo.id} value={grupo.id}>
-                      {grupo.nombre}
-                    </option>
-                  ))}
-                </select>
+                <Select
+                  options={[
+                    { value: null, label: 'Copiar desde...' },
+                    ...grupos.filter(g => g.id !== selectedGrupo).map(grupo => ({ value: grupo.id, label: grupo.nombre }))
+                  ]}
+                  value={{ value: null, label: 'Copiar desde...' }}
+                  onChange={(option) => option?.value && handleCopyPermisos(Number(option.value))}
+                  styles={customSelectStyles}
+                />
                 <small className="text-muted">
                   Los permisos del grupo seleccionado reemplazarán los permisos actuales.
                 </small>

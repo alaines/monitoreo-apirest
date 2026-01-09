@@ -1,5 +1,7 @@
 import React, { useState, useEffect } from 'react';
+import Select from 'react-select';
 import { equiposService, Equipo } from '../../../services/admin.service';
+import { customSelectStylesSmall } from '../../../styles/react-select-custom';
 
 type SortField = 'id' | 'nombre' | 'estado';
 type SortOrder = 'asc' | 'desc';
@@ -183,11 +185,17 @@ const EquiposManagement: React.FC = () => {
                   </div>
                   <div className="col-md-2">
                     <label className="form-label small">Estado</label>
-                    <select className="form-select form-select-sm" value={filters.estado} onChange={(e) => handleFilterChange('estado', e.target.value)}>
-                      <option value="">Todos</option>
-                      <option value="true">Activos</option>
-                      <option value="false">Inactivos</option>
-                    </select>
+                    <Select
+                      options={[
+                        { value: '', label: 'Todos' },
+                        { value: 'true', label: 'Activos' },
+                        { value: 'false', label: 'Inactivos' }
+                      ]}
+                      value={filters.estado === 'true' ? { value: 'true', label: 'Activos' } : filters.estado === 'false' ? { value: 'false', label: 'Inactivos' } : { value: '', label: 'Todos' }}
+                      onChange={(option) => handleFilterChange('estado', option?.value || '')}
+                      isClearable
+                      styles={customSelectStylesSmall}
+                    />
                   </div>
                   <div className="col-md-2 d-flex align-items-end">
                     <button className="btn btn-outline-secondary btn-sm w-100" onClick={() => { setFilters({ search: '', estado: '' }); setPage(1); }}>
@@ -245,11 +253,16 @@ const EquiposManagement: React.FC = () => {
               <div className="d-flex justify-content-between align-items-center mt-3">
                 <span className="text-muted">Mostrando {(page - 1) * limit + 1} - {Math.min(page * limit, total)} de {total}</span>
                 <div className="d-flex gap-2 align-items-center">
-                  <select className="form-select form-select-sm" style={{ width: 'auto' }} value={limit} onChange={(e) => { setLimit(Number(e.target.value)); setPage(1); }}>
-                    <option value={10}>10 por página</option>
-                    <option value={25}>25 por página</option>
-                    <option value={50}>50 por página</option>
-                  </select>
+                  <Select
+                    options={[
+                      { value: 10, label: '10 por página' },
+                      { value: 25, label: '25 por página' },
+                      { value: 50, label: '50 por página' }
+                    ]}
+                    value={{ value: limit, label: `${limit} por página` }}
+                    onChange={(option) => { setLimit(Number(option?.value || 10)); setPage(1); }}
+                    styles={customSelectStylesSmall}
+                  />
                   <nav>
                     <ul className="pagination pagination-sm mb-0">
                       <li className={`page-item ${page === 1 ? 'disabled' : ''}`}>

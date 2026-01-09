@@ -1,5 +1,7 @@
 import React, { useState, useEffect } from 'react';
+import Select from 'react-select';
 import { administradoresService, Administrador } from '../../../services/admin.service';
+import { customSelectStylesSmall } from '../../../styles/react-select-custom';
 
 type SortField = 'id' | 'nombre' | 'responsable' | 'email' | 'telefono' | 'estado';
 type SortOrder = 'asc' | 'desc';
@@ -191,11 +193,17 @@ const AdministradoresManagement: React.FC = () => {
                   </div>
                   <div className="col-md-2">
                     <label className="form-label small">Estado</label>
-                    <select className="form-select form-select-sm" value={filters.estado} onChange={(e) => handleFilterChange('estado', e.target.value)}>
-                      <option value="">Todos</option>
-                      <option value="true">Activos</option>
-                      <option value="false">Inactivos</option>
-                    </select>
+                    <Select
+                      options={[
+                        { value: '', label: 'Todos' },
+                        { value: 'true', label: 'Activos' },
+                        { value: 'false', label: 'Inactivos' }
+                      ]}
+                      value={filters.estado === 'true' ? { value: 'true', label: 'Activos' } : filters.estado === 'false' ? { value: 'false', label: 'Inactivos' } : { value: '', label: 'Todos' }}
+                      onChange={(option) => handleFilterChange('estado', option?.value || '')}
+                      isClearable
+                      styles={customSelectStylesSmall}
+                    />
                   </div>
                   <div className="col-md-2 d-flex align-items-end">
                     <button className="btn btn-outline-secondary btn-sm w-100" onClick={() => { setFilters({ search: '', estado: '' }); setPage(1); }}>
@@ -215,19 +223,17 @@ const AdministradoresManagement: React.FC = () => {
                 </div>
                 <div>
                   <label className="me-2">Mostrar:</label>
-                  <select 
-                    className="form-select form-select-sm d-inline-block w-auto"
-                    value={limit}
-                    onChange={(e) => {
-                      setLimit(Number(e.target.value));
-                      setPage(1);
-                    }}
-                  >
-                    <option value={10}>10</option>
-                    <option value={25}>25</option>
-                    <option value={50}>50</option>
-                    <option value={100}>100</option>
-                  </select>
+                  <Select
+                    options={[
+                      { value: 10, label: '10' },
+                      { value: 25, label: '25' },
+                      { value: 50, label: '50' },
+                      { value: 100, label: '100' }
+                    ]}
+                    value={{ value: limit, label: String(limit) }}
+                    onChange={(option) => { setLimit(Number(option?.value || 10)); setPage(1); }}
+                    styles={customSelectStylesSmall}
+                  />
                 </div>
               </div>
               <div className="table-responsive">

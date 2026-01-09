@@ -1,5 +1,7 @@
 import React, { useState, useEffect } from 'react';
+import Select from 'react-select';
 import { incidenciasService, Incidencia } from '../../../services/admin.service';
+import { customSelectStyles } from '../../../styles/react-select-custom';
 
 const IncidenciasManagement: React.FC = () => {
   const [incidencias, setIncidencias] = useState<Incidencia[]>([]);
@@ -199,18 +201,16 @@ const IncidenciasManagement: React.FC = () => {
 
                   <div className="mb-3">
                     <label className="form-label">Tipo Padre</label>
-                    <select
-                      className="form-select"
-                      value={formData.parentId || ''}
-                      onChange={(e) => setFormData({ ...formData, parentId: e.target.value ? Number(e.target.value) : null })}
-                    >
-                      <option value="">Sin padre (tipo raíz)</option>
-                      {incidenciasActivas.map(inc => (
-                        <option key={inc.id} value={inc.id}>
-                          {inc.tipo}
-                        </option>
-                      ))}
-                    </select>
+                    <Select
+                      options={[
+                        { value: null, label: 'Sin padre (tipo raíz)' },
+                        ...incidenciasActivas.map(inc => ({ value: inc.id, label: inc.tipo }))
+                      ]}
+                      value={formData.parentId ? { value: formData.parentId, label: incidenciasActivas.find(i => i.id === formData.parentId)?.tipo || '' } : { value: null, label: 'Sin padre (tipo raíz)' }}
+                      onChange={(option) => setFormData({ ...formData, parentId: option?.value || null })}
+                      isClearable
+                      styles={customSelectStyles}
+                    />
                   </div>
 
                   <div className="mb-3">
