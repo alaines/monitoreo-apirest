@@ -27,7 +27,7 @@ async function bootstrap() {
       transform: true,
       skipMissingProperties: false,
       transformOptions: {
-        enableImplicitConversion: true,
+        enableImplicitConversion: false,
       },
     }),
   );
