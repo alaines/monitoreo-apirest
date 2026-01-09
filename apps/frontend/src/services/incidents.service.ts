@@ -229,8 +229,10 @@ class IncidentsService {
   }
 
   async getResponsablesCatalog(equipoId?: number): Promise<ResponsableCatalog[]> {
-    const params = equipoId ? { equipoId } : {};
-    const response = await api.get('/responsables', { params });
+    const endpoint = equipoId 
+      ? `/responsables/equipo/${equipoId}` 
+      : '/responsables';
+    const response = await api.get(endpoint);
     return response.data;
   }
 
