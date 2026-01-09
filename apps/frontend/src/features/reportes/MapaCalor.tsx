@@ -223,7 +223,7 @@ export function MapaCalor() {
           top: '10px',
           right: '10px',
           zIndex: 900,
-          maxWidth: '500px'
+          width: '450px'
         }}>
           <div className="card shadow-sm">
             <div className="card-header bg-white border-bottom d-flex justify-content-between align-items-center py-2">
