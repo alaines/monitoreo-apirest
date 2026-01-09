@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { MapContainer, TileLayer, Marker, Popup, useMap } from 'react-leaflet';
 import Select from 'react-select';
+import { customSelectStyles } from '../../styles/react-select-custom';
 import { crucesService, Cruce } from '../../services/cruces.service';
 import { tiposService, Tipo } from '../../services/tipos.service';
 import { administradoresService, Administrador } from '../../services/administradores.service';
@@ -323,10 +324,7 @@ export function CrucesMap() {
                     onChange={(option) => setSelectedTipoGestion(option?.value || null)}
                     placeholder="Seleccionar..."
                     isClearable
-                    styles={{
-                      control: (base) => ({ ...base, minHeight: '38px' }),
-                      menu: (base) => ({ ...base, zIndex: 1050 })
-                    }}
+                    styles={customSelectStyles}
                   />
                 </div>
 
@@ -344,10 +342,7 @@ export function CrucesMap() {
                     onChange={(option) => setSelectedTipoComunicacion(option?.value || null)}
                     placeholder="Seleccionar..."
                     isClearable
-                    styles={{
-                      control: (base) => ({ ...base, minHeight: '38px' }),
-                      menu: (base) => ({ ...base, zIndex: 1050 })
-                    }}
+                    styles={customSelectStyles}
                   />
                 </div>
 
@@ -365,10 +360,7 @@ export function CrucesMap() {
                     onChange={(option) => setSelectedAdministrador(option?.value || null)}
                     placeholder="Seleccionar..."
                     isClearable
-                    styles={{
-                      control: (base) => ({ ...base, minHeight: '38px' }),
-                      menu: (base) => ({ ...base, zIndex: 1050 })
-                    }}
+                    styles={customSelectStyles}
                   />
                 </div>
 

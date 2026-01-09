@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { MapContainer, TileLayer, useMap } from 'react-leaflet';
 import Select from 'react-select';
+import { customSelectStylesSmall } from '../../styles/react-select-custom';
 import { incidentsService } from '../../services/incidents.service';
 import { HeatmapLayer } from '../../components/HeatmapLayer';
 import 'leaflet/dist/leaflet.css';
@@ -268,10 +269,7 @@ export function MapaCalor() {
                         onChange={(option) => handleFilterChange('year', option?.value || '')}
                         placeholder="Seleccionar año..."
                         isClearable
-                        styles={{
-                          control: (base) => ({ ...base, minHeight: '31px', fontSize: '14px' }),
-                          menu: (base) => ({ ...base, zIndex: 1050 })
-                        }}
+                        styles={customSelectStylesSmall}
                       />
                     </div>
 
@@ -289,10 +287,7 @@ export function MapaCalor() {
                         onChange={(option) => handleFilterChange('month', option?.value || '')}
                         placeholder="Seleccionar mes..."
                         isClearable
-                        styles={{
-                          control: (base) => ({ ...base, minHeight: '31px', fontSize: '14px' }),
-                          menu: (base) => ({ ...base, zIndex: 1050 })
-                        }}
+                        styles={customSelectStylesSmall}
                       />
                     </div>
 
@@ -310,10 +305,7 @@ export function MapaCalor() {
                         onChange={(option) => handleFilterChange('tipoIncidencia', option?.value || '')}
                         placeholder="Buscar tipo de incidencia..."
                         isClearable
-                        styles={{
-                          control: (base) => ({ ...base, minHeight: '31px', fontSize: '14px' }),
-                          menu: (base) => ({ ...base, zIndex: 1050 })
-                        }}
+                        styles={customSelectStylesSmall}
                       />
                     </div>
 

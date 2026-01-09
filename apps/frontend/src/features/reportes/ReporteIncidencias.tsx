@@ -1,4 +1,6 @@
 import { useState, useEffect } from 'react';
+import Select from 'react-select';
+import { customSelectStylesSmall } from '../../styles/react-select-custom';
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
 import { reportesService, PeriodoReporte, FiltrosReporte, EstadisticasReporte } from '../../services/reportes.service';
@@ -332,43 +334,38 @@ export function ReporteIncidencias() {
                 <i className="fas fa-calendar me-2"></i>
                 Periodo
               </label>
-              <select
-                className="form-select form-select-sm"
-                value={periodo}
-                onChange={(e) => setPeriodo(e.target.value as PeriodoReporte)}
-              >
-                <option value={PeriodoReporte.DIA}>Hoy</option>
-                <option value={PeriodoReporte.MES}>Mes</option>
-                <option value={PeriodoReporte.ANIO}>Año</option>
-                <option value={PeriodoReporte.PERSONALIZADO}>Personalizado</option>
-              </select>
+              <Select
+                options={[
+                  { value: PeriodoReporte.DIA, label: 'Hoy' },
+                  { value: PeriodoReporte.MES, label: 'Mes' },
+                  { value: PeriodoReporte.ANIO, label: 'Año' },
+                  { value: PeriodoReporte.PERSONALIZADO, label: 'Personalizado' }
+                ]}
+                value={{ value: periodo, label: periodo === PeriodoReporte.DIA ? 'Hoy' : periodo === PeriodoReporte.MES ? 'Mes' : periodo === PeriodoReporte.ANIO ? 'Año' : 'Personalizado' }}
+                onChange={(option) => setPeriodo(option?.value as PeriodoReporte || PeriodoReporte.MES)}
+                styles={customSelectStylesSmall}
+              />
             </div>
 
             {periodo === PeriodoReporte.MES && (
               <>
                 <div className="col-md-3">
                   <label className="form-label small">Mes</label>
-                  <select
-                    className="form-select form-select-sm"
-                    value={mes}
-                    onChange={(e) => setMes(parseInt(e.target.value))}
-                  >
-                    {meses.map(m => (
-                      <option key={m.value} value={m.value}>{m.label}</option>
-                    ))}
-                  </select>
+                  <Select
+                    options={meses.map(m => ({ value: m.value, label: m.label }))}
+                    value={meses.find(m => m.value === mes)}
+                    onChange={(option) => setMes(option?.value || new Date().getMonth() + 1)}
+                    styles={customSelectStylesSmall}
+                  />
                 </div>
                 <div className="col-md-3">
                   <label className="form-label small">Año</label>
-                  <select
-                    className="form-select form-select-sm"
-                    value={anio}
-                    onChange={(e) => setAnio(parseInt(e.target.value))}
-                  >
-                    {anios.map(a => (
-                      <option key={a} value={a}>{a}</option>
-                    ))}
-                  </select>
+                  <Select
+                    options={anios.map(a => ({ value: a, label: a.toString() }))}
+                    value={{ value: anio, label: anio.toString() }}
+                    onChange={(option) => setAnio(option?.value || new Date().getFullYear())}
+                    styles={customSelectStylesSmall}
+                  />
                 </div>
               </>
             )}
@@ -376,15 +373,12 @@ export function ReporteIncidencias() {
             {periodo === PeriodoReporte.ANIO && (
               <div className="col-md-3">
                 <label className="form-label small">Año</label>
-                <select
-                  className="form-select form-select-sm"
-                  value={anio}
-                  onChange={(e) => setAnio(parseInt(e.target.value))}
-                >
-                  {anios.map(a => (
-                    <option key={a} value={a}>{a}</option>
-                  ))}
-                </select>
+                <Select
+                  options={anios.map(a => ({ value: a, label: a.toString() }))}
+                  value={{ value: anio, label: anio.toString() }}
+                  onChange={(option) => setAnio(option?.value || new Date().getFullYear())}
+                  styles={customSelectStylesSmall}
+                />
               </div>
             )}
 
@@ -419,16 +413,16 @@ export function ReporteIncidencias() {
                 <i className="fas fa-exclamation-triangle me-2"></i>
                 Tipo de Incidencia
               </label>
-              <select
-                className="form-select form-select-sm"
-                value={tipoIncidencia || ''}
-                onChange={(e) => setTipoIncidencia(e.target.value ? parseInt(e.target.value) : undefined)}
-              >
-                <option value="">Todos</option>
-                {tiposIncidencia.map(tipo => (
-                  <option key={tipo.id} value={tipo.id}>{tipo.tipo}</option>
-                ))}
-              </select>
+              <Select
+                options={[
+                  { value: undefined, label: 'Todos' },
+                  ...tiposIncidencia.map(tipo => ({ value: tipo.id, label: tipo.tipo }))
+                ]}
+                value={tipoIncidencia ? tiposIncidencia.find(t => t.id === tipoIncidencia) ? { value: tipoIncidencia, label: tiposIncidencia.find(t => t.id === tipoIncidencia)?.tipo || '' } : { value: undefined, label: 'Todos' } : { value: undefined, label: 'Todos' }}
+                onChange={(option) => setTipoIncidencia(option?.value)}
+                isClearable
+                styles={customSelectStylesSmall}
+              />
             </div>
 
             <div className="col-md-3">
@@ -436,16 +430,16 @@ export function ReporteIncidencias() {
                 <i className="fas fa-info-circle me-2"></i>
                 Estado
               </label>
-              <select
-                className="form-select form-select-sm"
-                value={estadoId || ''}
-                onChange={(e) => setEstadoId(e.target.value ? parseInt(e.target.value) : undefined)}
-              >
-                <option value="">Todos</option>
-                {tiposEstado.map(estado => (
-                  <option key={estado.id} value={estado.id}>{estado.nombre}</option>
-                ))}
-              </select>
+              <Select
+                options={[
+                  { value: undefined, label: 'Todos' },
+                  ...tiposEstado.map(estado => ({ value: estado.id, label: estado.nombre }))
+                ]}
+                value={estadoId ? tiposEstado.find(e => e.id === estadoId) ? { value: estadoId, label: tiposEstado.find(e => e.id === estadoId)?.nombre || '' } : { value: undefined, label: 'Todos' } : { value: undefined, label: 'Todos' }}
+                onChange={(option) => setEstadoId(option?.value)}
+                isClearable
+                styles={customSelectStylesSmall}
+              />
             </div>
 
             <div className="col-md-3">
@@ -453,16 +447,16 @@ export function ReporteIncidencias() {
                 <i className="fas fa-user-tie me-2"></i>
                 Administrador
               </label>
-              <select
-                className="form-select form-select-sm"
-                value={administradorId || ''}
-                onChange={(e) => setAdministradorId(e.target.value ? parseInt(e.target.value) : undefined)}
-              >
-                <option value="">Todos</option>
-                {administradores.map(admin => (
-                  <option key={admin.id} value={admin.id}>{admin.nombre}</option>
-                ))}
-              </select>
+              <Select
+                options={[
+                  { value: undefined, label: 'Todos' },
+                  ...administradores.map(admin => ({ value: admin.id, label: admin.nombre }))
+                ]}
+                value={administradorId ? administradores.find(a => a.id === administradorId) ? { value: administradorId, label: administradores.find(a => a.id === administradorId)?.nombre || '' } : { value: undefined, label: 'Todos' } : { value: undefined, label: 'Todos' }}
+                onChange={(option) => setAdministradorId(option?.value)}
+                isClearable
+                styles={customSelectStylesSmall}
+              />
             </div>
 
             <div className="col-md-2 d-flex align-items-end">

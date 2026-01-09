@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import Select from 'react-select';
+import { customSelectStylesSmall } from '../../styles/react-select-custom';
 import {
   Chart as ChartJS,
   CategoryScale,
@@ -468,10 +469,7 @@ const ReporteGrafico: React.FC = () => {
                     ...filtros,
                     periodo: option?.value as 'DIA' | 'MES' | 'ANIO' || 'MES'
                   })}
-                  styles={{
-                    control: (base) => ({ ...base, minHeight: '31px', fontSize: '14px' }),
-                    menu: (base) => ({ ...base, zIndex: 1050 })
-                  }}
+                  styles={customSelectStylesSmall}
                 />
               </div>
 
@@ -525,10 +523,7 @@ const ReporteGrafico: React.FC = () => {
                       ...filtros,
                       mes: option?.value || new Date().getMonth() + 1
                     })}
-                    styles={{
-                      control: (base) => ({ ...base, minHeight: '31px', fontSize: '14px' }),
-                      menu: (base) => ({ ...base, zIndex: 1050 })
-                    }}
+                    styles={customSelectStylesSmall}
                   />
                 </div>
               )}
@@ -549,10 +544,7 @@ const ReporteGrafico: React.FC = () => {
                     ...filtros,
                     anio: option?.value || new Date().getFullYear()
                   })}
-                  styles={{
-                    control: (base) => ({ ...base, minHeight: '31px', fontSize: '14px' }),
-                    menu: (base) => ({ ...base, zIndex: 1050 })
-                  }}
+                  styles={customSelectStylesSmall}
                 />
               </div>
 
