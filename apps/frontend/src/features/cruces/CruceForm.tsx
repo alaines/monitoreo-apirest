@@ -1,5 +1,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
+import Select from 'react-select';
+import { customSelectStyles } from '../../styles/react-select-custom';
 import { MapContainer, TileLayer, Marker, useMapEvents } from 'react-leaflet';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
@@ -370,33 +372,31 @@ export function CruceForm({ cruceId, onClose, onSave }: { cruceId?: number | nul
         </div>
         <div className="col-md-6">
           <label className="form-label">Vía 1 <span className="text-danger">*</span></label>
-          <select
-            className="form-select"
-            name="via1"
-            value={formData.via1 || ''}
-            onChange={handleChange}
+          <Select
+            options={[
+              { value: '', label: 'Seleccione vía 1...' },
+              ...ejes.map(eje => ({ value: eje.id, label: eje.nombreVia }))
+            ]}
+            value={formData.via1 ? ejes.find(e => e.id === formData.via1) ? { value: formData.via1, label: ejes.find(e => e.id === formData.via1)?.nombreVia || '' } : null : null}
+            onChange={(option) => setFormData({ ...formData, via1: option?.value as number || undefined })}
+            isClearable
+            styles={customSelectStyles}
             required
-          >
-            <option value="">Seleccione vía 1...</option>
-            {ejes.map(eje => (
-              <option key={eje.id} value={eje.id}>{eje.nombreVia}</option>
-            ))}
-          </select>
+          />
         </div>
         <div className="col-md-6">
           <label className="form-label">Vía 2 <span className="text-danger">*</span></label>
-          <select
-            className="form-select"
-            name="via2"
-            value={formData.via2 || ''}
-            onChange={handleChange}
+          <Select
+            options={[
+              { value: '', label: 'Seleccione vía 2...' },
+              ...ejes.map(eje => ({ value: eje.id, label: eje.nombreVia }))
+            ]}
+            value={formData.via2 ? ejes.find(e => e.id === formData.via2) ? { value: formData.via2, label: ejes.find(e => e.id === formData.via2)?.nombreVia || '' } : null : null}
+            onChange={(option) => setFormData({ ...formData, via2: option?.value as number || undefined })}
+            isClearable
+            styles={customSelectStyles}
             required
-          >
-            <option value="">Seleccione vía 2...</option>
-            {ejes.map(eje => (
-              <option key={eje.id} value={eje.id}>{eje.nombreVia}</option>
-            ))}
-          </select>
+          />
         </div>
         <div className="col-12">
           <label className="form-label">Nombre del Cruce <span className="text-danger">*</span></label>
@@ -545,87 +545,81 @@ export function CruceForm({ cruceId, onClose, onSave }: { cruceId?: number | nul
         </div>
         <div className="col-md-6">
           <label className="form-label">Tipo de Cruce</label>
-          <select
-            className="form-select"
-            name="tipoCruce"
-            value={formData.tipoCruce || ''}
-            onChange={handleChange}
-          >
-            <option value="">Seleccione...</option>
-            {getTiposByParent(1).map(tipo => (
-              <option key={tipo.id} value={tipo.id}>{tipo.name}</option>
-            ))}
-          </select>
+          <Select
+            options={[
+              { value: '', label: 'Seleccione...' },
+              ...getTiposByParent(1).map(tipo => ({ value: tipo.id, label: tipo.name }))
+            ]}
+            value={formData.tipoCruce ? getTiposByParent(1).find(t => t.id === formData.tipoCruce) ? { value: formData.tipoCruce, label: getTiposByParent(1).find(t => t.id === formData.tipoCruce)?.name || '' } : null : null}
+            onChange={(option) => setFormData({ ...formData, tipoCruce: option?.value as number || undefined })}
+            isClearable
+            styles={customSelectStyles}
+          />
         </div>
         <div className="col-md-6">
           <label className="form-label">Tipo de Gestión</label>
-          <select
-            className="form-select"
-            name="tipoGestion"
-            value={formData.tipoGestion || ''}
-            onChange={handleChange}
-          >
-            <option value="">Seleccione...</option>
-            {getTiposByParent(4).map(tipo => (
-              <option key={tipo.id} value={tipo.id}>{tipo.name}</option>
-            ))}
-          </select>
+          <Select
+            options={[
+              { value: '', label: 'Seleccione...' },
+              ...getTiposByParent(4).map(tipo => ({ value: tipo.id, label: tipo.name }))
+            ]}
+            value={formData.tipoGestion ? getTiposByParent(4).find(t => t.id === formData.tipoGestion) ? { value: formData.tipoGestion, label: getTiposByParent(4).find(t => t.id === formData.tipoGestion)?.name || '' } : null : null}
+            onChange={(option) => setFormData({ ...formData, tipoGestion: option?.value as number || undefined })}
+            isClearable
+            styles={customSelectStyles}
+          />
         </div>
         <div className="col-md-6">
           <label className="form-label">Tipo de Comunicación</label>
-          <select
-            className="form-select"
-            name="tipoComunicacion"
-            value={formData.tipoComunicacion || ''}
-            onChange={handleChange}
-          >
-            <option value="">Seleccione...</option>
-            {getTiposByParent(9).map(tipo => (
-              <option key={tipo.id} value={tipo.id}>{tipo.name}</option>
-            ))}
-          </select>
+          <Select
+            options={[
+              { value: '', label: 'Seleccione...' },
+              ...getTiposByParent(9).map(tipo => ({ value: tipo.id, label: tipo.name }))
+            ]}
+            value={formData.tipoComunicacion ? getTiposByParent(9).find(t => t.id === formData.tipoComunicacion) ? { value: formData.tipoComunicacion, label: getTiposByParent(9).find(t => t.id === formData.tipoComunicacion)?.name || '' } : null : null}
+            onChange={(option) => setFormData({ ...formData, tipoComunicacion: option?.value as number || undefined })}
+            isClearable
+            styles={customSelectStyles}
+          />
         </div>
         <div className="col-md-6">
           <label className="form-label">Tipo de Control</label>
-          <select
-            className="form-select"
-            name="tipoControl"
-            value={formData.tipoControl || ''}
-            onChange={handleChange}
-          >
-            <option value="">Seleccione...</option>
-            {getTiposByParent(30).map(tipo => (
-              <option key={tipo.id} value={tipo.id}>{tipo.name}</option>
-            ))}
-          </select>
+          <Select
+            options={[
+              { value: '', label: 'Seleccione...' },
+              ...getTiposByParent(30).map(tipo => ({ value: tipo.id, label: tipo.name }))
+            ]}
+            value={formData.tipoControl ? getTiposByParent(30).find(t => t.id === formData.tipoControl) ? { value: formData.tipoControl, label: getTiposByParent(30).find(t => t.id === formData.tipoControl)?.name || '' } : null : null}
+            onChange={(option) => setFormData({ ...formData, tipoControl: option?.value as number || undefined })}
+            isClearable
+            styles={customSelectStyles}
+          />
         </div>
         <div className="col-md-6">
           <label className="form-label">Tipo de Estructura</label>
-          <select
-            className="form-select"
-            name="tipoEstructura"
-            value={formData.tipoEstructura || ''}
-            onChange={handleChange}
-          >
-            <option value="">Seleccione...</option>
-            {getTiposByParent(19).map(tipo => (
-              <option key={tipo.id} value={tipo.id}>{tipo.name}</option>
-            ))}
-          </select>
+          <Select
+            options={[
+              { value: '', label: 'Seleccione...' },
+              ...getTiposByParent(19).map(tipo => ({ value: tipo.id, label: tipo.name }))
+            ]}
+            value={formData.tipoEstructura ? getTiposByParent(19).find(t => t.id === formData.tipoEstructura) ? { value: formData.tipoEstructura, label: getTiposByParent(19).find(t => t.id === formData.tipoEstructura)?.name || '' } : null : null}
+            onChange={(option) => setFormData({ ...formData, tipoEstructura: option?.value as number || undefined })}
+            isClearable
+            styles={customSelectStyles}
+          />
         </div>
         <div className="col-md-6">
           <label className="form-label">Tipo de Operación</label>
-          <select
-            className="form-select"
-            name="tipoOperacion"
-            value={formData.tipoOperacion || ''}
-            onChange={handleChange}
-          >
-            <option value="">Seleccione...</option>
-            {getTiposByParent(23).map(tipo => (
-              <option key={tipo.id} value={tipo.id}>{tipo.name}</option>
-            ))}
-          </select>
+          <Select
+            options={[
+              { value: '', label: 'Seleccione...' },
+              ...getTiposByParent(23).map(tipo => ({ value: tipo.id, label: tipo.name }))
+            ]}
+            value={formData.tipoOperacion ? getTiposByParent(23).find(t => t.id === formData.tipoOperacion) ? { value: formData.tipoOperacion, label: getTiposByParent(23).find(t => t.id === formData.tipoOperacion)?.name || '' } : null : null}
+            onChange={(option) => setFormData({ ...formData, tipoOperacion: option?.value as number || undefined })}
+            isClearable
+            styles={customSelectStyles}
+          />
         </div>
         <div className="col-12 mt-3">
           <h6 className="fw-bold mb-2">Configuración Adicional</h6>
@@ -644,17 +638,16 @@ export function CruceForm({ cruceId, onClose, onSave }: { cruceId?: number | nul
         </div>
         <div className="col-md-6">
           <label className="form-label">Administrador</label>
-          <select
-            className="form-select"
-            name="administradorId"
-            value={formData.administradorId || ''}
-            onChange={handleChange}
-          >
-            <option value="">Seleccionar administrador...</option>
-            {administradores.map(admin => (
-              <option key={admin.id} value={admin.id}>{admin.nombre}</option>
-            ))}
-          </select>
+          <Select
+            options={[
+              { value: '', label: 'Seleccionar administrador...' },
+              ...administradores.map(admin => ({ value: admin.id, label: admin.nombre }))
+            ]}
+            value={formData.administradorId ? administradores.find(a => a.id === formData.administradorId) ? { value: formData.administradorId, label: administradores.find(a => a.id === formData.administradorId)?.nombre || '' } : null : null}
+            onChange={(option) => setFormData({ ...formData, administradorId: option?.value as number || undefined })}
+            isClearable
+            styles={customSelectStyles}
+          />
         </div>
         <div className="col-md-6">
           <label className="form-label">Empresa Eléctrica</label>

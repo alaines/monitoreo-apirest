@@ -1,4 +1,6 @@
 import { useState, useEffect } from 'react';
+import Select from 'react-select';
+import { customSelectStylesSmall } from '../../styles/react-select-custom';
 import { crucesService, Cruce } from '../../services/cruces.service';
 import { CruceDetail } from './CruceDetail';
 import { CruceForm } from './CruceForm';
@@ -179,15 +181,17 @@ export function CrucesList() {
               </div>
               <div className="col-md-3">
                 <label className="form-label small">Estado</label>
-                <select
-                  className="form-select form-select-sm"
-                  value={filters.estado}
-                  onChange={(e) => handleFilterChange('estado', e.target.value)}
-                >
-                  <option value="">Todos</option>
-                  <option value="true">Activos</option>
-                  <option value="false">Inactivos</option>
-                </select>
+                <Select
+                  options={[
+                    { value: '', label: 'Todos' },
+                    { value: 'true', label: 'Activos' },
+                    { value: 'false', label: 'Inactivos' }
+                  ]}
+                  value={filters.estado ? { value: filters.estado, label: filters.estado === 'true' ? 'Activos' : 'Inactivos' } : { value: '', label: 'Todos' }}
+                  onChange={(option) => handleFilterChange('estado', option?.value || '')}
+                  isClearable={false}
+                  styles={customSelectStylesSmall}
+                />
               </div>
               <div className="col-md-2 d-flex align-items-end">
                 <button 
@@ -215,19 +219,25 @@ export function CrucesList() {
             </div>
             <div className="d-flex align-items-center">
               <label className="me-2 small mb-0">Filas por página:</label>
-              <select 
-                className="form-select form-select-sm" 
-                style={{ width: 'auto' }}
-                value={limit}
-                onChange={(e) => {
-                  setLimit(parseInt(e.target.value));
-                  setPage(1);
-                }}
-              >
-                <option value="10">10</option>
-                <option value="20">20</option>
-                <option value="50">50</option>
-              </select>
+              <div style={{ width: '80px' }}>
+                <Select
+                  options={[
+                    { value: 10, label: '10' },
+                    { value: 20, label: '20' },
+                    { value: 50, label: '50' }
+                  ]}
+                  value={{ value: limit, label: limit.toString() }}
+                  onChange={(option) => {
+                    if (option) {
+                      setLimit(option.value);
+                      setPage(1);
+                    }
+                  }}
+                  isClearable={false}
+                  styles={customSelectStylesSmall}
+                  isSearchable={false}
+                />
+              </div>
             </div>
           </div>
         </div>
