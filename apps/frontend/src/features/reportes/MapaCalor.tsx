@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { MapContainer, TileLayer, useMap } from 'react-leaflet';
 import { incidentsService } from '../../services/incidents.service';
 import { HeatmapLayer } from '../../components/HeatmapLayer';
+import { SearchableSelect } from '../../components/SearchableSelect';
 import 'leaflet/dist/leaflet.css';
 
 // Interface simplificada para data del mapa
@@ -221,7 +222,7 @@ export function MapaCalor() {
           position: 'absolute',
           top: '10px',
           right: '10px',
-          zIndex: 1000,
+          zIndex: 900,
           maxWidth: '400px'
         }}>
           <div className="card shadow-sm">
@@ -288,20 +289,20 @@ export function MapaCalor() {
                     </div>
 
                     <div className="mb-2">
-                      <label className="form-label small mb-1 fw-bold">
-                        <i className="fas fa-exclamation-triangle me-1"></i>
-                        Tipo de Incidencia
-                      </label>
-                      <select
-                        className="form-select form-select-sm"
+                      <SearchableSelect
+                        label="Tipo de Incidencia"
+                        icon="fas fa-exclamation-triangle"
+                        options={[
+                          { value: '', label: 'Todos' },
+                          ...tiposIncidencia.map(tipo => ({
+                            value: tipo.id.toString(),
+                            label: tipo.tipo
+                          }))
+                        ]}
                         value={filters.tipoIncidencia}
-                        onChange={(e) => handleFilterChange('tipoIncidencia', e.target.value)}
-                      >
-                        <option value="">Todos</option>
-                        {tiposIncidencia.map(tipo => (
-                          <option key={tipo.id} value={tipo.id}>{tipo.tipo}</option>
-                        ))}
-                      </select>
+                        onChange={(value) => handleFilterChange('tipoIncidencia', value)}
+                        placeholder="Seleccionar tipo..."
+                      />
                     </div>
 
                     <div className="d-flex gap-2 mt-3">
