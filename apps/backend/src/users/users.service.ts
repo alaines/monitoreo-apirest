@@ -70,7 +70,7 @@ export class UsersService {
         estadoCivilId: createUserDto.estadoCivilId,
         email: createUserDto.email,
         movil1: createUserDto.telefono,
-        nomcomp: `${createUserDto.apellidoP} ${createUserDto.apellidoM} ${createUserDto.nombres}`,
+        nomcomp: `${createUserDto.nombres} ${createUserDto.apellidoP} ${createUserDto.apellidoM}`,
         estado: true,
         createdAt: new Date(),
         updatedAt: new Date(),
@@ -243,7 +243,7 @@ export class UsersService {
         const apePat = personaData.ape_pat ?? currentPersona?.ape_pat ?? '';
         const apeMat = personaData.ape_mat ?? currentPersona?.ape_mat ?? '';
         const nombres = personaData.nombres ?? currentPersona?.nombres ?? '';
-        personaData.nomcomp = `${apePat} ${apeMat} ${nombres}`.trim();
+        personaData.nomcomp = `${nombres} ${apePat} ${apeMat}`.trim();
         personaData.updatedAt = new Date();
 
         await this.prisma.persona.update({
