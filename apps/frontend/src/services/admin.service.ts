@@ -100,6 +100,7 @@ export interface User {
     nombres?: string;
     apePat?: string;
     apeMat?: string;
+    nomcomp?: string;
     genero?: string;
     fecnac?: string;
     estadoCivilId?: number;

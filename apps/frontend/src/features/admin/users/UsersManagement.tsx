@@ -105,10 +105,8 @@ export function UsersManagement() {
       const usersResponse = await usersService.getAll(1, 1000);
       
       let filteredUsers = (usersResponse.data || usersResponse).map((user: User) => {
-        // Calcular nombreCompleto desde persona si existe
-        const nombreCompleto = user.persona 
-          ? `${user.persona.apePat || ''} ${user.persona.apeMat || ''} ${user.persona.nombres || ''}`.trim()
-          : '';
+        // Usar nomcomp de la tabla personas
+        const nombreCompleto = user.persona?.nomcomp || '';
         
         return {
           ...user,
