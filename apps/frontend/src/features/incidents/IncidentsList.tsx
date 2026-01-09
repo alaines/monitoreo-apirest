@@ -49,7 +49,6 @@ export function IncidentsList() {
   const [filteredCruces, setFilteredCruces] = useState<any[]>([]);
   const [showCruceDropdown, setShowCruceDropdown] = useState(false);
   const [estados, setEstados] = useState<any[]>([]);
-  const [showEstadoDropdown, setShowEstadoDropdown] = useState(false);
   const [catalogsLoaded, setCatalogsLoaded] = useState(false);
 
   useEffect(() => {
@@ -67,9 +66,6 @@ export function IncidentsList() {
       }
       if (!target.closest('.cruce-dropdown')) {
         setShowCruceDropdown(false);
-      }
-      if (!target.closest('.estado-dropdown')) {
-        setShowEstadoDropdown(false);
       }
     };
     
@@ -352,25 +348,6 @@ export function IncidentsList() {
     }
   };
 
-  const handleEstadoToggle = (estadoId: number) => {
-    const currentEstados = filters.estadoId || [];
-    let newEstados: number[];
-    
-    if (currentEstados.includes(estadoId)) {
-      newEstados = currentEstados.filter(id => id !== estadoId);
-    } else {
-      newEstados = [...currentEstados, estadoId];
-    }
-    
-    if (newEstados.length === 0) {
-      const newFilters = { ...filters };
-      delete newFilters.estadoId;
-      applyFilters(newFilters);
-    } else {
-      applyFilters({ ...filters, estadoId: newEstados });
-    }
-  };
-
   const getStatusBadge = (estadoId: number | undefined) => {
     switch (estadoId) {
       case 1:
@@ -509,48 +486,21 @@ export function IncidentsList() {
               </div>
               <div className="col-md-2">
                 <label className="form-label small">Estados</label>
-                <div className="position-relative estado-dropdown">
-                  <button 
-                    type="button"
-                    className="form-control form-control-sm text-start d-flex justify-content-between align-items-center"
-                    onClick={() => setShowEstadoDropdown(!showEstadoDropdown)}
-                  >
-                    <span>
-                      {(filters.estadoId || []).length === 0 
-                        ? 'Seleccionar estados...' 
-                        : `${(filters.estadoId || []).length} seleccionado(s)`}
-                    </span>
-                    <i className={`fas fa-chevron-${showEstadoDropdown ? 'up' : 'down'} ms-2`}></i>
-                  </button>
-                  {showEstadoDropdown && (
-                    <div 
-                      className="position-absolute w-100 bg-white border rounded shadow-sm mt-1" 
-                      style={{ maxHeight: '200px', overflowY: 'auto', zIndex: 1000 }}
-                    >
-                      {estados.map(estado => (
-                        <div
-                          key={estado.id}
-                          className="p-2 d-flex align-items-center hover-bg-light"
-                          style={{ cursor: 'pointer' }}
-                          onClick={() => handleEstadoToggle(estado.id)}
-                          onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#f8f9fa'}
-                          onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'transparent'}
-                        >
-                          <input
-                            type="checkbox"
-                            className="form-check-input me-2"
-                            checked={(filters.estadoId || []).includes(estado.id)}
-                            onChange={() => {}}
-                            onClick={(e) => e.stopPropagation()}
-                          />
-                          <label className="small mb-0" style={{ cursor: 'pointer' }}>
-                            {estado.nombre}
-                          </label>
-                        </div>
-                      ))}
-                    </div>
-                  )}
-                </div>
+                <Select
+                  options={estados.map(estado => ({ value: estado.id, label: estado.nombre }))}
+                  value={(filters.estadoId || []).map(id => {
+                    const estado = estados.find(e => e.id === id);
+                    return estado ? { value: estado.id, label: estado.nombre } : null;
+                  }).filter(Boolean) as any}
+                  onChange={(selected) => {
+                    const estadoIds = selected ? (selected as any[]).map((s: any) => s.value) : [];
+                    applyFilters({ ...filters, estadoId: estadoIds.length > 0 ? estadoIds : undefined });
+                  }}
+                  isMulti
+                  isClearable
+                  placeholder="Seleccionar estados..."
+                  styles={customSelectStylesSmall}
+                />
               </div>
               <div className="col-md-3">
                 <label className="form-label small">Cruce</label>
