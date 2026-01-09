@@ -21,6 +21,21 @@ export class ResponsablesService {
     });
   }
 
+  async findByEquipo(equipoId: number) {
+    return this.prisma.responsable.findMany({
+      where: { equipoId, estado: true },
+      include: {
+        equipo: {
+          select: {
+            id: true,
+            nombre: true,
+          },
+        },
+      },
+      orderBy: { nombre: 'asc' },
+    });
+  }
+
   async findOne(id: number) {
     const responsable = await this.prisma.responsable.findUnique({
       where: { id },

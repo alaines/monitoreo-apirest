@@ -20,6 +20,13 @@ export class ResponsablesController {
     return this.responsablesService.findAll();
   }
 
+  @Get('equipo/:equipoId')
+  @RequirePermission('responsables', 'view')
+  @ApiOperation({ summary: 'Listar responsables por equipo' })
+  async findByEquipo(@Param('equipoId', ParseIntPipe) equipoId: number): Promise<ResponsableResponseDto[]> {
+    return this.responsablesService.findByEquipo(equipoId);
+  }
+
   @Get(':id')
   @RequirePermission('responsables', 'view')
   @ApiOperation({ summary: 'Obtener un responsable por ID' })
