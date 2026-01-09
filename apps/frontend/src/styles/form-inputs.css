@@ -64,11 +64,13 @@
 
 /* Date input personalizado */
 .custom-date-input {
-  height: 38px;
+  height: 38px !important;
+  min-height: 38px;
   font-size: 14px;
   border: 1px solid #dee2e6;
   border-radius: 4px;
   padding: 0 8px;
+  line-height: 1.5;
   transition: border-color 0.15s ease-in-out, box-shadow 0.15s ease-in-out;
 }
 
@@ -79,11 +81,13 @@
 }
 
 .custom-date-input-sm {
-  height: 31px;
+  height: 31px !important;
+  min-height: 31px;
   font-size: 14px;
   border: 1px solid #dee2e6;
   border-radius: 4px;
   padding: 0 8px;
+  line-height: 1.5;
   transition: border-color 0.15s ease-in-out, box-shadow 0.15s ease-in-out;
 }
 
