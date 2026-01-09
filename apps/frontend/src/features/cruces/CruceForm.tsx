@@ -676,7 +676,7 @@ export function CruceForm({ cruceId, onClose, onSave }: { cruceId?: number | nul
           </label>
           <input
             type="file"
-            className="form-control"
+            className="form-control custom-input"
             accept=".pdf"
             onChange={(e) => setPlanoPdfFile(e.target.files?.[0] || null)}
           />
@@ -693,7 +693,7 @@ export function CruceForm({ cruceId, onClose, onSave }: { cruceId?: number | nul
           </label>
           <input
             type="file"
-            className="form-control"
+            className="form-control custom-input"
             accept=".dwg"
             onChange={(e) => setPlanoDwgFile(e.target.files?.[0] || null)}
           />
