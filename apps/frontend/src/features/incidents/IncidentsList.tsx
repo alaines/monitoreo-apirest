@@ -1,5 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
+import Select from 'react-select';
+import { customSelectStylesSmall } from '../../styles/react-select-custom';
 import { incidentsService, Incident } from '../../services/incidents.service';
 import { IncidentDetail } from './IncidentDetail';
 import { IncidentForm } from './IncidentForm';
@@ -626,19 +628,22 @@ export function IncidentsList() {
             </div>
             <div className="d-flex align-items-center">
               <label className="me-2 small mb-0">Filas por página:</label>
-              <select 
-                className="form-select form-select-sm" 
-                style={{ width: 'auto' }}
-                value={pageSize}
-                onChange={(e) => {
-                  setPageSize(parseInt(e.target.value));
-                  setCurrentPage(1);
-                }}
-              >
-                <option value="10">10</option>
-                <option value="20">20</option>
-                <option value="50">50</option>
-              </select>
+              <div style={{ width: '80px' }}>
+                <Select
+                  options={[
+                    { value: 10, label: '10' },
+                    { value: 20, label: '20' },
+                    { value: 50, label: '50' }
+                  ]}
+                  value={{ value: pageSize, label: pageSize.toString() }}
+                  onChange={(option) => {
+                    setPageSize(option?.value || 10);
+                    setCurrentPage(1);
+                  }}
+                  styles={customSelectStylesSmall}
+                  isSearchable={false}
+                />
+              </div>
             </div>
           </div>
         </div>

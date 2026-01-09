@@ -1,4 +1,6 @@
 import { useState, useEffect } from 'react';
+import Select from 'react-select';
+import { customSelectStyles } from '../../styles/react-select-custom';
 import {
   incidentsService,
   CreateIncidentDto,
@@ -367,37 +369,31 @@ export function IncidentForm({ incidentId, onClose, onSave }: IncidentFormProps)
                 <div className="row">
                   <div className="col-md-6 mb-3">
                     <label className="form-label">Equipo Asignado</label>
-                    <select
-                      className="form-select"
-                      name="equipoId"
-                      value={formData.equipoId}
-                      onChange={handleChange}
-                    >
-                      <option value="">Sin equipo asignado</option>
-                      {equipos.map((equipo) => (
-                        <option key={equipo.id} value={equipo.id}>
-                          {equipo.nombre}
-                        </option>
-                      ))}
-                    </select>
+                    <Select
+                      options={[
+                        { value: '', label: 'Sin equipo asignado' },
+                        ...equipos.map(equipo => ({ value: equipo.id.toString(), label: equipo.nombre }))
+                      ]}
+                      value={formData.equipoId ? equipos.find(e => e.id.toString() === formData.equipoId) ? { value: formData.equipoId, label: equipos.find(e => e.id.toString() === formData.equipoId)?.nombre || '' } : { value: '', label: 'Sin equipo asignado' } : { value: '', label: 'Sin equipo asignado' }}
+                      onChange={(option) => handleChange({ target: { name: 'equipoId', value: option?.value || '' } } as any)}
+                      isClearable
+                      styles={customSelectStyles}
+                    />
                   </div>
 
                   {isEditing && (
                     <div className="col-md-6 mb-3">
                       <label className="form-label">Estado</label>
-                      <select
-                        className="form-select"
-                        name="estadoId"
-                        value={formData.estadoId}
-                        onChange={handleChange}
-                      >
-                        <option value="">Sin cambio</option>
-                        {estados.map((estado) => (
-                          <option key={estado.id} value={estado.id}>
-                            {estado.nombre}
-                          </option>
-                        ))}
-                      </select>
+                      <Select
+                        options={[
+                          { value: '', label: 'Sin cambio' },
+                          ...estados.map(estado => ({ value: estado.id.toString(), label: estado.nombre }))
+                        ]}
+                        value={formData.estadoId ? estados.find(e => e.id.toString() === formData.estadoId) ? { value: formData.estadoId, label: estados.find(e => e.id.toString() === formData.estadoId)?.nombre || '' } : { value: '', label: 'Sin cambio' } : { value: '', label: 'Sin cambio' }}
+                        onChange={(option) => handleChange({ target: { name: 'estadoId', value: option?.value || '' } } as any)}
+                        isClearable
+                        styles={customSelectStyles}
+                      />
                     </div>
                   )}
                 </div>
@@ -420,19 +416,16 @@ export function IncidentForm({ incidentId, onClose, onSave }: IncidentFormProps)
                 <div className="row">
                   <div className="col-md-4 mb-3">
                     <label className="form-label">Tipo de Reportador</label>
-                    <select
-                      className="form-select"
-                      name="reportadorId"
-                      value={formData.reportadorId}
-                      onChange={handleChange}
-                    >
-                      <option value="">Seleccionar...</option>
-                      {reportadores.map((rep) => (
-                        <option key={rep.id} value={rep.id}>
-                          {rep.nombre}
-                        </option>
-                      ))}
-                    </select>
+                    <Select
+                      options={[
+                        { value: '', label: 'Seleccionar...' },
+                        ...reportadores.map(rep => ({ value: rep.id.toString(), label: rep.nombre }))
+                      ]}
+                      value={formData.reportadorId ? reportadores.find(r => r.id.toString() === formData.reportadorId) ? { value: formData.reportadorId, label: reportadores.find(r => r.id.toString() === formData.reportadorId)?.nombre || '' } : { value: '', label: 'Seleccionar...' } : { value: '', label: 'Seleccionar...' }}
+                      onChange={(option) => handleChange({ target: { name: 'reportadorId', value: option?.value || '' } } as any)}
+                      isClearable
+                      styles={customSelectStyles}
+                    />
                   </div>
 
                   <div className="col-md-4 mb-3">
