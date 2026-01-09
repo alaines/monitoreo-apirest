@@ -15,8 +15,12 @@ interface Menu {
   submenus?: Menu[];
 }
 
+type SortField = 'nombre' | 'ruta' | 'orden' | 'menuPadre' | 'activo';
+type SortOrder = 'asc' | 'desc';
+
 export function MenusManagement() {
   const [menus, setMenus] = useState<Menu[]>([]);
+  const [allMenus, setAllMenus] = useState<Menu[]>([]);
   const [loading, setLoading] = useState(true);
   const [showModal, setShowModal] = useState(false);
   const [editingMenu, setEditingMenu] = useState<Menu | null>(null);
@@ -29,21 +33,139 @@ export function MenusManagement() {
     activo: true
   });
 
+  // Paginación
+  const [page, setPage] = useState(1);
+  const [limit, setLimit] = useState(10);
+  const [total, setTotal] = useState(0);
+  const [totalPages, setTotalPages] = useState(0);
+
+  // Ordenamiento
+  const [sortField, setSortField] = useState<SortField>('orden');
+  const [sortOrder, setSortOrder] = useState<SortOrder>('asc');
+
+  // Filtros
+  const [showFilters, setShowFilters] = useState(false);
+  const [filters, setFilters] = useState({
+    search: '',
+    menuPadreId: '' as string,
+    activo: '' as '' | 'true' | 'false',
+  });
+
   useEffect(() => {
     loadMenus();
   }, []);
+
+  useEffect(() => {
+    loadMenus();
+  }, [page, limit, filters]);
 
   const loadMenus = async () => {
     try {
       setLoading(true);
       const data = await adminService.getMenus();
-      setMenus(data);
+      setAllMenus(data);
+      
+      let filteredMenus = [...data];
+      
+      // Aplicar filtros
+      if (filters.search) {
+        const searchLower = filters.search.toLowerCase();
+        filteredMenus = filteredMenus.filter(menu =>
+          menu.nombre.toLowerCase().includes(searchLower) ||
+          menu.ruta.toLowerCase().includes(searchLower) ||
+          (menu.menuPadre?.nombre && menu.menuPadre.nombre.toLowerCase().includes(searchLower))
+        );
+      }
+      
+      if (filters.menuPadreId) {
+        if (filters.menuPadreId === '0') {
+          filteredMenus = filteredMenus.filter(menu => menu.menuPadreId === null);
+        } else {
+          filteredMenus = filteredMenus.filter(menu => 
+            menu.menuPadreId === parseInt(filters.menuPadreId)
+          );
+        }
+      }
+      
+      if (filters.activo !== '') {
+        const activoBool = filters.activo === 'true';
+        filteredMenus = filteredMenus.filter(menu => menu.activo === activoBool);
+      }
+      
+      // Calcular paginación
+      setTotal(filteredMenus.length);
+      setTotalPages(Math.ceil(filteredMenus.length / limit));
+      
+      // Aplicar paginación
+      const startIndex = (page - 1) * limit;
+      const endIndex = startIndex + limit;
+      const paginatedMenus = filteredMenus.slice(startIndex, endIndex);
+      
+      setMenus(paginatedMenus);
     } catch (error) {
       console.error('Error al cargar menús:', error);
     } finally {
       setLoading(false);
     }
   };
+
+  const handleFilterChange = (key: string, value: string) => {
+    setFilters(prev => ({ ...prev, [key]: value }));
+    setPage(1);
+  };
+
+  const handleSort = (field: SortField) => {
+    if (sortField === field) {
+      setSortOrder(sortOrder === 'asc' ? 'desc' : 'asc');
+    } else {
+      setSortField(field);
+      setSortOrder('asc');
+    }
+  };
+
+  const getSortIcon = (field: SortField) => {
+    if (sortField !== field) return <i className="fas fa-sort text-muted ms-1"></i>;
+    return sortOrder === 'asc'
+      ? <i className="fas fa-sort-up ms-1"></i>
+      : <i className="fas fa-sort-down ms-1"></i>;
+  };
+
+  const sortedMenus = [...menus].sort((a, b) => {
+    let aVal: any, bVal: any;
+
+    switch (sortField) {
+      case 'nombre':
+        aVal = a.nombre || '';
+        bVal = b.nombre || '';
+        break;
+      case 'ruta':
+        aVal = a.ruta || '';
+        bVal = b.ruta || '';
+        break;
+      case 'orden':
+        aVal = a.orden;
+        bVal = b.orden;
+        break;
+      case 'menuPadre':
+        aVal = a.menuPadre?.nombre || '';
+        bVal = b.menuPadre?.nombre || '';
+        break;
+      case 'activo':
+        aVal = a.activo ? 1 : 0;
+        bVal = b.activo ? 1 : 0;
+        break;
+      default:
+        return 0;
+    }
+
+    if (typeof aVal === 'string' && typeof bVal === 'string') {
+      return sortOrder === 'asc'
+        ? aVal.localeCompare(bVal)
+        : bVal.localeCompare(aVal);
+    }
+
+    return sortOrder === 'asc' ? aVal - bVal : bVal - aVal;
+  });
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -103,7 +225,7 @@ export function MenusManagement() {
     resetForm();
   };
 
-  const parentMenus = menus.filter(m => m.menuPadreId === null);
+  const parentMenus = allMenus.filter(m => m.menuPadreId === null);
 
   if (loading) {
     return (
@@ -122,14 +244,71 @@ export function MenusManagement() {
           <i className="fas fa-bars me-2"></i>
           Gestión de Menús
         </h2>
-        <button
-          className="btn btn-primary"
-          onClick={() => setShowModal(true)}
-        >
-          <i className="fas fa-plus me-2"></i>
-          Nuevo Menú
-        </button>
+        <div className="d-flex gap-2">
+          <button
+            className="btn btn-outline-secondary"
+            onClick={() => setShowFilters(!showFilters)}
+          >
+            <i className="fas fa-filter me-2"></i>
+            {showFilters ? 'Ocultar Filtros' : 'Mostrar Filtros'}
+          </button>
+          <button
+            className="btn btn-primary"
+            onClick={() => setShowModal(true)}
+          >
+            <i className="fas fa-plus me-2"></i>
+            Nuevo Menú
+          </button>
+        </div>
       </div>
+
+      {/* Filtros */}
+      {showFilters && (
+        <div className="card mb-4">
+          <div className="card-body">
+            <div className="row g-3">
+              <div className="col-md-4">
+                <label className="form-label">Buscar</label>
+                <input
+                  type="text"
+                  className="form-control form-control-custom"
+                  placeholder="Nombre, ruta..."
+                  value={filters.search}
+                  onChange={(e) => handleFilterChange('search', e.target.value)}
+                />
+              </div>
+
+              <div className="col-md-4">
+                <label className="form-label">Menú Padre</label>
+                <select
+                  className="form-select form-select-custom"
+                  value={filters.menuPadreId}
+                  onChange={(e) => handleFilterChange('menuPadreId', e.target.value)}
+                >
+                  <option value="">Todos</option>
+                  <option value="0">Sin menú padre</option>
+                  {allMenus.filter(m => m.menuPadreId === null).map(menu => (
+                    <option key={menu.id} value={menu.id}>{menu.nombre}</option>
+                  ))}
+                </select>
+              </div>
+
+              <div className="col-md-4">
+                <label className="form-label">Estado</label>
+                <select
+                  className="form-select form-select-custom"
+                  value={filters.activo}
+                  onChange={(e) => handleFilterChange('activo', e.target.value)}
+                >
+                  <option value="">Todos</option>
+                  <option value="true">Activo</option>
+                  <option value="false">Inactivo</option>
+                </select>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
 
       <div className="card">
         <div className="card-body">
@@ -138,17 +317,27 @@ export function MenusManagement() {
               <thead className="table-light">
                 <tr>
                   <th>ID</th>
-                  <th>Nombre</th>
+                  <th onClick={() => handleSort('nombre')} style={{ cursor: 'pointer', userSelect: 'none' }}>
+                    Nombre {getSortIcon('nombre')}
+                  </th>
                   <th>Icono</th>
-                  <th>Ruta</th>
-                  <th>Orden</th>
-                  <th>Menú Padre</th>
-                  <th>Estado</th>
+                  <th onClick={() => handleSort('ruta')} style={{ cursor: 'pointer', userSelect: 'none' }}>
+                    Ruta {getSortIcon('ruta')}
+                  </th>
+                  <th onClick={() => handleSort('orden')} style={{ cursor: 'pointer', userSelect: 'none' }}>
+                    Orden {getSortIcon('orden')}
+                  </th>
+                  <th onClick={() => handleSort('menuPadre')} style={{ cursor: 'pointer', userSelect: 'none' }}>
+                    Menú Padre {getSortIcon('menuPadre')}
+                  </th>
+                  <th onClick={() => handleSort('activo')} style={{ cursor: 'pointer', userSelect: 'none' }}>
+                    Estado {getSortIcon('activo')}
+                  </th>
                   <th>Acciones</th>
                 </tr>
               </thead>
               <tbody>
-                {menus.map(menu => (
+                {sortedMenus.map(menu => (
                   <tr key={menu.id}>
                     <td>{menu.id}</td>
                     <td>{menu.nombre}</td>
@@ -195,6 +384,50 @@ export function MenusManagement() {
                 ))}
               </tbody>
             </table>
+          </div>
+
+          {/* Paginación */}
+          <div className="d-flex justify-content-between align-items-center mt-3">
+            <div className="text-muted">
+              Mostrando {((page - 1) * limit) + 1} a {Math.min(page * limit, total)} de {total} registros
+            </div>
+            <div className="d-flex gap-2 align-items-center">
+              <select
+                className="form-select form-select-sm"
+                style={{ width: 'auto' }}
+                value={limit}
+                onChange={(e) => {
+                  setLimit(parseInt(e.target.value));
+                  setPage(1);
+                }}
+              >
+                <option value="5">5</option>
+                <option value="10">10</option>
+                <option value="25">25</option>
+                <option value="50">50</option>
+              </select>
+              <nav>
+                <ul className="pagination pagination-sm mb-0">
+                  <li className={`page-item ${page === 1 ? 'disabled' : ''}`}>
+                    <button className="page-link" onClick={() => setPage(page - 1)}>
+                      Anterior
+                    </button>
+                  </li>
+                  {[...Array(totalPages)].map((_, i) => (
+                    <li key={i + 1} className={`page-item ${page === i + 1 ? 'active' : ''}`}>
+                      <button className="page-link" onClick={() => setPage(i + 1)}>
+                        {i + 1}
+                      </button>
+                    </li>
+                  ))}
+                  <li className={`page-item ${page === totalPages ? 'disabled' : ''}`}>
+                    <button className="page-link" onClick={() => setPage(page + 1)}>
+                      Siguiente
+                    </button>
+                  </li>
+                </ul>
+              </nav>
+            </div>
           </div>
         </div>
       </div>
