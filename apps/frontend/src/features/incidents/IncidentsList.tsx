@@ -41,13 +41,7 @@ export function IncidentsList() {
   
   // Catálogos para filtros
   const [tiposIncidencia, setTiposIncidencia] = useState<any[]>([]);
-  const [incidenciaSearch, setIncidenciaSearch] = useState('');
-  const [filteredIncidencias, setFilteredIncidencias] = useState<any[]>([]);
-  const [showIncidenciaDropdown, setShowIncidenciaDropdown] = useState(false);
   const [cruces, setCruces] = useState<any[]>([]);
-  const [cruceSearch, setCruceSearch] = useState('');
-  const [filteredCruces, setFilteredCruces] = useState<any[]>([]);
-  const [showCruceDropdown, setShowCruceDropdown] = useState(false);
   const [estados, setEstados] = useState<any[]>([]);
   const [catalogsLoaded, setCatalogsLoaded] = useState(false);
 
@@ -57,20 +51,6 @@ export function IncidentsList() {
     };
     
     init();
-    
-    // Cerrar dropdowns al hacer clic fuera
-    const handleClickOutside = (e: MouseEvent) => {
-      const target = e.target as HTMLElement;
-      if (!target.closest('.incidencia-dropdown')) {
-        setShowIncidenciaDropdown(false);
-      }
-      if (!target.closest('.cruce-dropdown')) {
-        setShowCruceDropdown(false);
-      }
-    };
-    
-    document.addEventListener('click', handleClickOutside);
-    return () => document.removeEventListener('click', handleClickOutside);
   }, []);
 
   // Aplicar filtro desde URL después de que los catálogos estén cargados
@@ -87,12 +67,6 @@ export function IncidentsList() {
       if (incidenciaIdParam) {
         const incidenciaId = parseInt(incidenciaIdParam);
         newFilters.incidenciaId = incidenciaId;
-        
-        // Buscar el nombre del tipo de incidencia para mostrarlo en el input
-        const tipo = tiposIncidencia.find(t => t.id === incidenciaId);
-        if (tipo) {
-          setIncidenciaSearch(tipo.tipo);
-        }
       }
       
       // Procesar estadoId (puede ser una lista separada por comas)
@@ -105,30 +79,6 @@ export function IncidentsList() {
       setShowFilters(true);
     }
   }, [catalogsLoaded, searchParams, tiposIncidencia]);
-
-  useEffect(() => {
-    // Filtrar incidencias basado en búsqueda
-    if (incidenciaSearch.trim() === '') {
-      setFilteredIncidencias(tiposIncidencia.slice(0, 20));
-    } else {
-      const filtered = tiposIncidencia.filter(inc => 
-        inc.tipo.toLowerCase().includes(incidenciaSearch.toLowerCase())
-      ).slice(0, 20);
-      setFilteredIncidencias(filtered);
-    }
-  }, [incidenciaSearch, tiposIncidencia]);
-
-  useEffect(() => {
-    // Filtrar cruces basado en búsqueda
-    if (cruceSearch.trim() === '') {
-      setFilteredCruces(cruces.slice(0, 20)); // Mostrar solo los primeros 20
-    } else {
-      const filtered = cruces.filter(cruce => 
-        cruce.nombre.toLowerCase().includes(cruceSearch.toLowerCase())
-      ).slice(0, 20);
-      setFilteredCruces(filtered);
-    }
-  }, [cruceSearch, cruces]);
 
   useEffect(() => {
     loadIncidents();
@@ -164,7 +114,6 @@ export function IncidentsList() {
       setCruces(crucesData);
       setEstados(estadosData);
       setCatalogsLoaded(true);
-      setFilteredCruces(crucesData.slice(0, 20));
     } catch (error) {
       console.error('Error loading catalogs:', error);
     }
@@ -311,41 +260,7 @@ export function IncidentsList() {
 
   const clearFilters = () => {
     setFilters({});
-    setCruceSearch('');
-    setIncidenciaSearch('');
     setCurrentPage(1);
-  };
-
-  const handleIncidenciaSelect = (incidenciaId: number, incidenciaTipo: string) => {
-    applyFilters({ ...filters, incidenciaId });
-    setIncidenciaSearch(incidenciaTipo);
-    setShowIncidenciaDropdown(false);
-  };
-
-  const handleIncidenciaInputChange = (value: string) => {
-    setIncidenciaSearch(value);
-    setShowIncidenciaDropdown(true);
-    if (value === '') {
-      const newFilters = { ...filters };
-      delete newFilters.incidenciaId;
-      applyFilters(newFilters);
-    }
-  };
-
-  const handleCruceSelect = (cruceId: number, cruceNombre: string) => {
-    applyFilters({ ...filters, cruceId });
-    setCruceSearch(cruceNombre);
-    setShowCruceDropdown(false);
-  };
-
-  const handleCruceInputChange = (value: string) => {
-    setCruceSearch(value);
-    setShowCruceDropdown(true);
-    if (value === '') {
-      const newFilters = { ...filters };
-      delete newFilters.cruceId;
-      applyFilters(newFilters);
-    }
   };
 
   const getStatusBadge = (estadoId: number | undefined) => {
@@ -450,39 +365,22 @@ export function IncidentsList() {
             <div className="row g-2">
               <div className="col-md-3">
                 <label className="form-label small">Tipo de Incidencia</label>
-                <div className="position-relative incidencia-dropdown">
-                  <input 
-                    type="text" 
-                    className="form-control custom-input-sm"
-                    placeholder="Buscar tipo de incidencia..."
-                    value={incidenciaSearch}
-                    onChange={(e) => handleIncidenciaInputChange(e.target.value)}
-                    onFocus={() => setShowIncidenciaDropdown(true)}
-                  />
-                  {showIncidenciaDropdown && (
-                    <div 
-                      className="position-absolute w-100 bg-white border rounded shadow-sm mt-1" 
-                      style={{ maxHeight: '200px', overflowY: 'auto', zIndex: 1000 }}
-                    >
-                      {filteredIncidencias.length === 0 ? (
-                        <div className="p-2 text-muted small">No se encontraron tipos</div>
-                      ) : (
-                        filteredIncidencias.map(inc => (
-                          <div
-                            key={inc.id}
-                            className="p-2 hover-bg-light cursor-pointer small"
-                            style={{ cursor: 'pointer' }}
-                            onClick={() => handleIncidenciaSelect(inc.id, inc.tipo)}
-                            onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#f8f9fa'}
-                            onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'transparent'}
-                          >
-                            {inc.tipo}
-                          </div>
-                        ))
-                      )}
-                    </div>
-                  )}
-                </div>
+                <Select
+                  options={tiposIncidencia.map(inc => ({ value: inc.id, label: inc.tipo }))}
+                  value={filters.incidenciaId ? tiposIncidencia.find(i => i.id === filters.incidenciaId) ? { value: filters.incidenciaId, label: tiposIncidencia.find(i => i.id === filters.incidenciaId)?.tipo || '' } : null : null}
+                  onChange={(option) => {
+                    if (option) {
+                      applyFilters({ ...filters, incidenciaId: option.value });
+                    } else {
+                      const newFilters = { ...filters };
+                      delete newFilters.incidenciaId;
+                      applyFilters(newFilters);
+                    }
+                  }}
+                  isClearable
+                  placeholder="Buscar tipo de incidencia..."
+                  styles={customSelectStylesSmall}
+                />
               </div>
               <div className="col-md-2">
                 <label className="form-label small">Estados</label>
@@ -504,39 +402,22 @@ export function IncidentsList() {
               </div>
               <div className="col-md-3">
                 <label className="form-label small">Cruce</label>
-                <div className="position-relative cruce-dropdown">
-                  <input 
-                    type="text" 
-                    className="form-control custom-input-sm"
-                    placeholder="Buscar cruce..."
-                    value={cruceSearch}
-                    onChange={(e) => handleCruceInputChange(e.target.value)}
-                    onFocus={() => setShowCruceDropdown(true)}
-                  />
-                  {showCruceDropdown && cruceSearch.length > 0 && (
-                    <div 
-                      className="position-absolute w-100 bg-white border rounded shadow-sm mt-1" 
-                      style={{ maxHeight: '200px', overflowY: 'auto', zIndex: 1000 }}
-                    >
-                      {filteredCruces.length === 0 ? (
-                        <div className="p-2 text-muted small">No se encontraron cruces</div>
-                      ) : (
-                        filteredCruces.map(cruce => (
-                          <div
-                            key={cruce.id}
-                            className="p-2 hover-bg-light cursor-pointer small"
-                            style={{ cursor: 'pointer' }}
-                            onClick={() => handleCruceSelect(cruce.id, cruce.nombre)}
-                            onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#f8f9fa'}
-                            onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'transparent'}
-                          >
-                            {cruce.nombre}
-                          </div>
-                        ))
-                      )}
-                    </div>
-                  )}
-                </div>
+                <Select
+                  options={cruces.map(cruce => ({ value: cruce.id, label: cruce.nombre }))}
+                  value={filters.cruceId ? cruces.find(c => c.id === filters.cruceId) ? { value: filters.cruceId, label: cruces.find(c => c.id === filters.cruceId)?.nombre || '' } : null : null}
+                  onChange={(option) => {
+                    if (option) {
+                      applyFilters({ ...filters, cruceId: option.value });
+                    } else {
+                      const newFilters = { ...filters };
+                      delete newFilters.cruceId;
+                      applyFilters(newFilters);
+                    }
+                  }}
+                  isClearable
+                  placeholder="Buscar cruce..."
+                  styles={customSelectStylesSmall}
+                />
               </div>
               <div className="col-md-2">
                 <label className="form-label small">Fecha Desde</label>
