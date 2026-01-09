@@ -9,7 +9,16 @@ set -e
 
 cd ~/monitoreo-apirest
 
-echo "📦 Instalando PM2 globalmente..."
+echo "� Obteniendo últimos cambios del repositorio..."
+git stash push -m "Auto-stash before deployment $(date '+%Y-%m-%d %H:%M:%S')"
+git fetch origin
+git pull origin main
+git stash pop || echo "No hay cambios locales que restaurar"
+
+echo "📦 Instalando dependencias..."
+npm install
+
+echo "�📦 Instalando PM2 globalmente..."
 sudo npm install -g pm2 || echo "PM2 ya instalado"
 
 echo "🔧 Generando Prisma Client..."
@@ -23,15 +32,23 @@ echo "🎨 Compilando frontend..."
 cd ../frontend
 npm run build
 
-echo "📝 Creando ecosystem.config.js para PM2..."
+echo "� Copiando archivos del frontend a nginx..."
+sudo cp -r dist/* /var/www/alertas-web/
+sudo chown -R www-data:www-data /var/www/alertas-web
+
+echo "🔄 Recargando nginx..."
+sudo nginx -t && sudo systemctl reload nginx
+
+echo "�📝 Creando ecosystem.config.js para PM2..."
 cd ~/monitoreo-apirest
 cat > ecosystem.config.js << 'EOF'
 module.exports = {
   apps: [
     {
       name: 'monitoreo-backend',
-      script: 'apps/backend/dist/main.js',
-      cwd: '/home/daddyplayerperu/monitoreo-apirest',
+      script: 'npm',
+      args: 'run start:prod',
+      cwd: '/home/daddyplayerperu/monitoreo-apirest/apps/backend',
       instances: 1,
       exec_mode: 'fork',
       env: {

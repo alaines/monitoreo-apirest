@@ -77,7 +77,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
           {isActive('/incidents') && 'Gestión de Incidencias'}
           {isActivePath('/cruces') && 'Cruces'}
           {isActivePath('/reportes') && 'Reportes'}
-          {isActivePath('/admin') && 'Administración'}
+          {isActivePath('/admin') && 'Panel de Control'}
           {isActive('/users') && 'Gestión de Usuarios'}
         </div>
 
@@ -421,89 +421,6 @@ export function Layout({ children }: { children: React.ReactNode }) {
             )}
           </div>
 
-          {/* Administración con submenú */}
-          {canManageUsers && (
-            <div>
-              <button
-                onClick={() => setAdminSubmenuOpen(!adminSubmenuOpen)}
-                style={{
-                  width: '100%',
-                  padding: '12px 20px',
-                  border: 'none',
-                  background: isActivePath('/admin') ? 'rgba(95, 149, 152, 0.2)' : 'transparent',
-                  color: 'white',
-                  textAlign: 'left',
-                  cursor: 'pointer',
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: '12px',
-                  fontSize: '14px',
-                  transition: 'background 0.2s',
-                  borderLeft: isActivePath('/admin') ? '4px solid var(--primary-light)' : '4px solid transparent'
-                }}
-                onMouseEnter={(e) => !isActivePath('/admin') && (e.currentTarget.style.background = 'rgba(255,255,255,0.05)')}
-                onMouseLeave={(e) => !isActivePath('/admin') && (e.currentTarget.style.background = 'transparent')}
-              >
-                <i className="fas fa-cog" style={{ width: '20px' }}></i>
-                Administración
-                <i
-                  className={`fas fa-chevron-${adminSubmenuOpen ? 'down' : 'right'} ms-auto`}
-                  style={{ fontSize: '12px' }}
-                ></i>
-              </button>
-
-              {adminSubmenuOpen && (
-                <div style={{ background: 'rgba(0,0,0,0.2)', paddingLeft: '20px' }}>
-                  <button
-                    onClick={() => navigate('/admin/users')}
-                    style={{
-                      width: '100%',
-                      padding: '10px 20px',
-                      border: 'none',
-                      background: isActive('/admin/users') ? 'rgba(95, 149, 152, 0.3)' : 'transparent',
-                      color: 'white',
-                      textAlign: 'left',
-                      cursor: 'pointer',
-                      display: 'flex',
-                      alignItems: 'center',
-                      gap: '12px',
-                      fontSize: '13px',
-                      transition: 'background 0.2s'
-                    }}
-                    onMouseEnter={(e) => !isActive('/admin/users') && (e.currentTarget.style.background = 'rgba(255,255,255,0.05)')}
-                    onMouseLeave={(e) => !isActive('/admin/users') && (e.currentTarget.style.background = 'transparent')}
-                  >
-                    <i className="fas fa-users" style={{ width: '16px', fontSize: '12px' }}></i>
-                    Usuarios
-                  </button>
-
-                  <button
-                    onClick={() => navigate('/admin/grupos')}
-                    style={{
-                      width: '100%',
-                      padding: '10px 20px',
-                      border: 'none',
-                      background: isActive('/admin/grupos') ? 'rgba(95, 149, 152, 0.3)' : 'transparent',
-                      color: 'white',
-                      textAlign: 'left',
-                      cursor: 'pointer',
-                      display: 'flex',
-                      alignItems: 'center',
-                      gap: '12px',
-                      fontSize: '13px',
-                      transition: 'background 0.2s'
-                    }}
-                    onMouseEnter={(e) => !isActive('/admin/grupos') && (e.currentTarget.style.background = 'rgba(255,255,255,0.05)')}
-                    onMouseLeave={(e) => !isActive('/admin/grupos') && (e.currentTarget.style.background = 'transparent')}
-                  >
-                    <i className="fas fa-shield-alt" style={{ width: '16px', fontSize: '12px' }}></i>
-                    Grupos y Permisos
-                  </button>
-                </div>
-              )}
-            </div>
-          )}
-
           {/* Mantenimientos con submenú */}
           {canManageUsers && (
             <div>
@@ -742,6 +659,135 @@ export function Layout({ children }: { children: React.ReactNode }) {
                   >
                     <i className="fas fa-exclamation-triangle" style={{ width: '16px', fontSize: '12px' }}></i>
                     Tipos de Incidencias
+                  </button>
+                </div>
+              )}
+            </div>
+          )}
+
+          {/* Panel de Control con submenú - AL FINAL */}
+          {canManageUsers && (
+            <div>
+              <button
+                onClick={() => setAdminSubmenuOpen(!adminSubmenuOpen)}
+                style={{
+                  width: '100%',
+                  padding: '12px 20px',
+                  border: 'none',
+                  background: isActivePath('/admin') ? 'rgba(95, 149, 152, 0.2)' : 'transparent',
+                  color: 'white',
+                  textAlign: 'left',
+                  cursor: 'pointer',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '12px',
+                  fontSize: '14px',
+                  transition: 'background 0.2s',
+                  borderLeft: isActivePath('/admin') ? '4px solid var(--primary-light)' : '4px solid transparent'
+                }}
+                onMouseEnter={(e) => !isActivePath('/admin') && (e.currentTarget.style.background = 'rgba(255,255,255,0.05)')}
+                onMouseLeave={(e) => !isActivePath('/admin') && (e.currentTarget.style.background = 'transparent')}
+              >
+                <i className="fas fa-tools" style={{ width: '20px' }}></i>
+                Panel de Control
+                <i
+                  className={`fas fa-chevron-${adminSubmenuOpen ? 'down' : 'right'} ms-auto`}
+                  style={{ fontSize: '12px' }}
+                ></i>
+              </button>
+
+              {adminSubmenuOpen && (
+                <div style={{ background: 'rgba(0,0,0,0.2)', paddingLeft: '20px' }}>
+                  <button
+                    onClick={() => navigate('/admin/users')}
+                    style={{
+                      width: '100%',
+                      padding: '10px 20px',
+                      border: 'none',
+                      background: isActive('/admin/users') ? 'rgba(95, 149, 152, 0.3)' : 'transparent',
+                      color: 'white',
+                      textAlign: 'left',
+                      cursor: 'pointer',
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '12px',
+                      fontSize: '13px',
+                      transition: 'background 0.2s'
+                    }}
+                    onMouseEnter={(e) => !isActive('/admin/users') && (e.currentTarget.style.background = 'rgba(255,255,255,0.05)')}
+                    onMouseLeave={(e) => !isActive('/admin/users') && (e.currentTarget.style.background = 'transparent')}
+                  >
+                    <i className="fas fa-users" style={{ width: '16px', fontSize: '12px' }}></i>
+                    Usuarios
+                  </button>
+
+                  <button
+                    onClick={() => navigate('/admin/grupos')}
+                    style={{
+                      width: '100%',
+                      padding: '10px 20px',
+                      border: 'none',
+                      background: isActive('/admin/grupos') ? 'rgba(95, 149, 152, 0.3)' : 'transparent',
+                      color: 'white',
+                      textAlign: 'left',
+                      cursor: 'pointer',
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '12px',
+                      fontSize: '13px',
+                      transition: 'background 0.2s'
+                    }}
+                    onMouseEnter={(e) => !isActive('/admin/grupos') && (e.currentTarget.style.background = 'rgba(255,255,255,0.05)')}
+                    onMouseLeave={(e) => !isActive('/admin/grupos') && (e.currentTarget.style.background = 'transparent')}
+                  >
+                    <i className="fas fa-shield-alt" style={{ width: '16px', fontSize: '12px' }}></i>
+                    Grupos y Permisos
+                  </button>
+
+                  <button
+                    onClick={() => navigate('/admin/menus')}
+                    style={{
+                      width: '100%',
+                      padding: '10px 20px',
+                      border: 'none',
+                      background: isActive('/admin/menus') ? 'rgba(95, 149, 152, 0.3)' : 'transparent',
+                      color: 'white',
+                      textAlign: 'left',
+                      cursor: 'pointer',
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '12px',
+                      fontSize: '13px',
+                      transition: 'background 0.2s'
+                    }}
+                    onMouseEnter={(e) => !isActive('/admin/menus') && (e.currentTarget.style.background = 'rgba(255,255,255,0.05)')}
+                    onMouseLeave={(e) => !isActive('/admin/menus') && (e.currentTarget.style.background = 'transparent')}
+                  >
+                    <i className="fas fa-bars" style={{ width: '16px', fontSize: '12px' }}></i>
+                    Menús
+                  </button>
+
+                  <button
+                    onClick={() => navigate('/admin/catalogos')}
+                    style={{
+                      width: '100%',
+                      padding: '10px 20px',
+                      border: 'none',
+                      background: isActive('/admin/catalogos') ? 'rgba(95, 149, 152, 0.3)' : 'transparent',
+                      color: 'white',
+                      textAlign: 'left',
+                      cursor: 'pointer',
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '12px',
+                      fontSize: '13px',
+                      transition: 'background 0.2s'
+                    }}
+                    onMouseEnter={(e) => !isActive('/admin/catalogos') && (e.currentTarget.style.background = 'rgba(255,255,255,0.05)')}
+                    onMouseLeave={(e) => !isActive('/admin/catalogos') && (e.currentTarget.style.background = 'transparent')}
+                  >
+                    <i className="fas fa-database" style={{ width: '16px', fontSize: '12px' }}></i>
+                    Catálogos
                   </button>
                 </div>
               )}

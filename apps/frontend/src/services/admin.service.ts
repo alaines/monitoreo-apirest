@@ -619,3 +619,23 @@ export const incidenciasService = {
   }
 };
 
+// ============= MENÚS =============
+
+export const adminService = {
+  async getMenus() {
+    const { data } = await api.get(`/menus`);
+    return data;
+  },
+  async createMenu(menu: { nombre: string; icono: string; ruta: string; orden: number; menuPadreId?: number | null; activo: boolean }) {
+    const { data } = await api.post(`/menus`, menu);
+    return data;
+  },
+  async updateMenu(id: number, menu: { nombre?: string; icono?: string; ruta?: string; orden?: number; menuPadreId?: number | null; activo?: boolean }) {
+    const { data } = await api.patch(`/menus/${id}`, menu);
+    return data;
+  },
+  async deleteMenu(id: number) {
+    const { data } = await api.delete(`/menus/${id}`);
+    return data;
+  }
+};

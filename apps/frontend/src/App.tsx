@@ -19,6 +19,7 @@ const ReporteGrafico = lazy(() => import('./features/reportes/ReporteGrafico'));
 const MapaCalor = lazy(() => import('./features/reportes/MapaCalor').then(m => ({ default: m.MapaCalor })));
 const UsersManagement = lazy(() => import('./features/admin/users/UsersManagement').then(m => ({ default: m.UsersManagement })));
 const GruposPermisosManagement = lazy(() => import('./features/admin/grupos/GruposPermisosManagement').then(m => ({ default: m.GruposPermisosManagement })));
+const MenusManagement = lazy(() => import('./features/admin/menus/MenusManagement').then(m => ({ default: m.MenusManagement })));
 const CatalogosManagement = lazy(() => import('./features/admin/catalogos/CatalogosManagement').then(m => ({ default: m.CatalogosManagement })));
 const AreasManagement = lazy(() => import('./features/mantenimientos/areas/AreasManagement'));
 const EquiposManagement = lazy(() => import('./features/mantenimientos/equipos/EquiposManagement'));
@@ -206,6 +207,16 @@ function App() {
             <ProtectedRoute>
               <Layout>
                 <GruposPermisosManagement />
+              </Layout>
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/admin/menus"
+          element={
+            <ProtectedRoute>
+              <Layout>
+                <MenusManagement />
               </Layout>
             </ProtectedRoute>
           }
