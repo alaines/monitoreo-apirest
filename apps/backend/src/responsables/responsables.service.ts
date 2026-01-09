@@ -6,9 +6,9 @@ import { CreateResponsableDto, UpdateResponsableDto } from './responsables.dto';
 export class ResponsablesService {
   constructor(private prisma: PrismaService) {}
 
-  async findAll(equipoId?: number) {
+  async findAll() {
     return this.prisma.responsable.findMany({
-      where: equipoId ? { equipoId, estado: true } : { estado: true },
+      where: { estado: true },
       include: {
         equipo: {
           select: {
