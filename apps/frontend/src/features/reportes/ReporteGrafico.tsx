@@ -482,7 +482,7 @@ const ReporteGrafico: React.FC = () => {
                   </label>
                   <input
                     type="number"
-                    className="form-control form-control-sm"
+                    className="form-control custom-input-sm"
                     min="1"
                     max="31"
                     value={filtros.dia || ''}

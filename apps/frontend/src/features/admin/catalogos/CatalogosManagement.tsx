@@ -248,7 +248,7 @@ export function CatalogosManagement() {
                     <label className="form-label">Nombre *</label>
                     <input
                       type="text"
-                      className="form-control"
+                      className="form-control custom-input"
                       value={formData.name}
                       onChange={(e) => setFormData({ ...formData, name: e.target.value })}
                       required

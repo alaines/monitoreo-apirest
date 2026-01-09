@@ -450,7 +450,7 @@ export function IncidentDetail({ incidentId: propIncidentId, onClose }: Incident
                     <div className="mb-3">
                       <label className="form-label">Reporte / Comentario *</label>
                       <textarea
-                        className="form-control"
+                        className="form-control custom-textarea"
                         rows={3}
                         value={trackingForm.reporte}
                         onChange={(e) => setTrackingForm({ ...trackingForm, reporte: e.target.value.toUpperCase() })}

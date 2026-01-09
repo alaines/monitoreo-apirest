@@ -193,7 +193,7 @@ const ResponsablesManagement: React.FC = () => {
                 <div className="row g-2">
                   <div className="col-md-4">
                     <label className="form-label small">Buscar</label>
-                    <input type="text" className="form-control form-control-sm" placeholder="Nombre..." value={filters.search} onChange={(e) => handleFilterChange('search', e.target.value)} />
+                    <input type="text" className="form-control custom-input-sm" placeholder="Nombre..." value={filters.search} onChange={(e) => handleFilterChange('search', e.target.value)} />
                   </div>
                   <div className="col-md-3">
                     <label className="form-label small">Equipo</label>
@@ -360,7 +360,7 @@ const ResponsablesManagement: React.FC = () => {
                     <label className="form-label">Nombre *</label>
                     <input
                       type="text"
-                      className="form-control"
+                      className="form-control custom-input"
                       value={formData.nombre}
                       onChange={(e) => setFormData({ ...formData, nombre: e.target.value })}
                       required

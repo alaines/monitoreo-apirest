@@ -359,7 +359,7 @@ export function UsersManagement() {
                 <label className="form-label small">Buscar</label>
                 <input
                   type="text"
-                  className="form-control form-control-sm"
+                  className="form-control custom-input-sm"
                   placeholder="Usuario, nombre o email..."
                   value={filters.search}
                   onChange={(e) => handleFilterChange('search', e.target.value)}
@@ -556,7 +556,7 @@ export function UsersManagement() {
                       <label className="form-label">Usuario *</label>
                       <input
                         type="text"
-                        className="form-control"
+                        className="form-control custom-input"
                         value={formData.usuario}
                         onChange={(e) => setFormData({ ...formData, usuario: e.target.value })}
                         required
@@ -569,7 +569,7 @@ export function UsersManagement() {
                       </label>
                       <input
                         type="password"
-                        className="form-control"
+                        className="form-control custom-input"
                         value={formData.password}
                         onChange={(e) => setFormData({ ...formData, password: e.target.value })}
                         required={!editingUser}
@@ -637,7 +637,7 @@ export function UsersManagement() {
                       <label className="form-label">Número de Documento *</label>
                       <input
                         type="text"
-                        className="form-control"
+                        className="form-control custom-input"
                         value={formData.nroDoc}
                         onChange={(e) => setFormData({ ...formData, nroDoc: e.target.value })}
                         required
@@ -660,7 +660,7 @@ export function UsersManagement() {
                       <label className="form-label">Nombres *</label>
                       <input
                         type="text"
-                        className="form-control"
+                        className="form-control custom-input"
                         value={formData.nombres}
                         onChange={(e) => setFormData({ ...formData, nombres: e.target.value })}
                         required
@@ -670,7 +670,7 @@ export function UsersManagement() {
                       <label className="form-label">Apellido Paterno *</label>
                       <input
                         type="text"
-                        className="form-control"
+                        className="form-control custom-input"
                         value={formData.apellidoP}
                         onChange={(e) => setFormData({ ...formData, apellidoP: e.target.value })}
                         required
@@ -680,7 +680,7 @@ export function UsersManagement() {
                       <label className="form-label">Apellido Materno *</label>
                       <input
                         type="text"
-                        className="form-control"
+                        className="form-control custom-input"
                         value={formData.apellidoM}
                         onChange={(e) => setFormData({ ...formData, apellidoM: e.target.value })}
                         required
@@ -690,7 +690,7 @@ export function UsersManagement() {
                       <label className="form-label">Fecha de Nacimiento</label>
                       <input
                         type="date"
-                        className="form-control"
+                        className="form-control custom-date-input"
                         value={formData.fechaNacimiento}
                         onChange={(e) => setFormData({ ...formData, fechaNacimiento: e.target.value })}
                       />
@@ -720,7 +720,7 @@ export function UsersManagement() {
                       <label className="form-label">Email</label>
                       <input
                         type="email"
-                        className="form-control"
+                        className="form-control custom-input"
                         value={formData.email}
                         onChange={(e) => setFormData({ ...formData, email: e.target.value })}
                       />
@@ -729,7 +729,7 @@ export function UsersManagement() {
                       <label className="form-label">Teléfono / Celular</label>
                       <input
                         type="tel"
-                        className="form-control"
+                        className="form-control custom-input"
                         value={formData.telefono}
                         onChange={(e) => setFormData({ ...formData, telefono: e.target.value })}
                         maxLength={15}

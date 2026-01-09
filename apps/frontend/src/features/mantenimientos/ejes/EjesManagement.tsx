@@ -185,7 +185,7 @@ const EjesManagement: React.FC = () => {
                 <div className="row g-2">
                   <div className="col-md-8">
                     <label className="form-label small">Buscar</label>
-                    <input type="text" className="form-control form-control-sm" placeholder="Nombre de vía..." value={filters.search} onChange={(e) => handleFilterChange('search', e.target.value)} />
+                    <input type="text" className="form-control custom-input-sm" placeholder="Nombre de vía..." value={filters.search} onChange={(e) => handleFilterChange('search', e.target.value)} />
                   </div>
                   <div className="col-md-2">
                     <label className="form-label small">Ciclovía</label>
@@ -343,7 +343,7 @@ const EjesManagement: React.FC = () => {
                     <label className="form-label">Nombre de Vía *</label>
                     <input
                       type="text"
-                      className="form-control"
+                      className="form-control custom-input"
                       value={formData.nombreVia}
                       onChange={(e) => setFormData({ ...formData, nombreVia: e.target.value })}
                       required
@@ -355,7 +355,7 @@ const EjesManagement: React.FC = () => {
                       <label className="form-label">Tipo de Vía</label>
                       <input
                         type="number"
-                        className="form-control"
+                        className="form-control custom-input"
                         value={formData.tipoVia || ''}
                         onChange={(e) => setFormData({ ...formData, tipoVia: e.target.value ? Number(e.target.value) : null })}
                       />
@@ -365,7 +365,7 @@ const EjesManagement: React.FC = () => {
                       <label className="form-label">Número de Carriles</label>
                       <input
                         type="number"
-                        className="form-control"
+                        className="form-control custom-input"
                         value={formData.nroCarriles || ''}
                         onChange={(e) => setFormData({ ...formData, nroCarriles: e.target.value ? Number(e.target.value) : null })}
                         min="1"
@@ -389,7 +389,7 @@ const EjesManagement: React.FC = () => {
                   <div className="mb-3">
                     <label className="form-label">Observaciones</label>
                     <textarea
-                      className="form-control"
+                      className="form-control custom-textarea"
                       rows={3}
                       value={formData.observaciones}
                       onChange={(e) => setFormData({ ...formData, observaciones: e.target.value })}

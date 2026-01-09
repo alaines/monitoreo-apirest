@@ -402,7 +402,7 @@ export function CruceForm({ cruceId, onClose, onSave }: { cruceId?: number | nul
           <label className="form-label">Nombre del Cruce <span className="text-danger">*</span></label>
           <input
             type="text"
-            className="form-control"
+            className="form-control custom-input"
             name="nombre"
             value={formData.nombre || ''}
             onChange={handleChange}
@@ -417,7 +417,7 @@ export function CruceForm({ cruceId, onClose, onSave }: { cruceId?: number | nul
           <label className="form-label">Código</label>
           <input
             type="text"
-            className="form-control"
+            className="form-control custom-input"
             name="codigo"
             value={formData.codigo || ''}
             onChange={handleChange}
@@ -456,7 +456,7 @@ export function CruceForm({ cruceId, onClose, onSave }: { cruceId?: number | nul
           <label className="form-label">Latitud <span className="text-danger">*</span></label>
           <input
             type="number"
-            className="form-control"
+            className="form-control custom-input"
             name="latitud"
             value={formData.latitud || ''}
             onChange={handleChange}
@@ -470,7 +470,7 @@ export function CruceForm({ cruceId, onClose, onSave }: { cruceId?: number | nul
           <label className="form-label">Longitud <span className="text-danger">*</span></label>
           <input
             type="number"
-            className="form-control"
+            className="form-control custom-input"
             name="longitud"
             value={formData.longitud || ''}
             onChange={handleChange}
@@ -487,7 +487,7 @@ export function CruceForm({ cruceId, onClose, onSave }: { cruceId?: number | nul
           <label className="form-label">Código Anterior</label>
           <input
             type="text"
-            className="form-control"
+            className="form-control custom-input"
             name="codigoAnterior"
             value={formData.codigoAnterior || ''}
             onChange={handleChange}
@@ -498,7 +498,7 @@ export function CruceForm({ cruceId, onClose, onSave }: { cruceId?: number | nul
           <div className="position-relative" ref={distritoRef}>
             <input
               type="text"
-              className="form-control"
+              className="form-control custom-input"
               value={distritoSearch}
               onChange={(e) => {
                 setDistritoSearch(e.target.value);
@@ -634,7 +634,7 @@ export function CruceForm({ cruceId, onClose, onSave }: { cruceId?: number | nul
           <label className="form-label">Año de Implementación</label>
           <input
             type="number"
-            className="form-control"
+            className="form-control custom-input"
             name="anoImplementacion"
             value={formData.anoImplementacion || ''}
             onChange={handleChange}
@@ -660,7 +660,7 @@ export function CruceForm({ cruceId, onClose, onSave }: { cruceId?: number | nul
           <label className="form-label">Empresa Eléctrica</label>
           <input
             type="text"
-            className="form-control"
+            className="form-control custom-input"
             name="electricoEmpresa"
             value={formData.electricoEmpresa || ''}
             onChange={handleChange}
@@ -670,7 +670,7 @@ export function CruceForm({ cruceId, onClose, onSave }: { cruceId?: number | nul
           <label className="form-label">Suministro Eléctrico</label>
           <input
             type="text"
-            className="form-control"
+            className="form-control custom-input"
             name="electricoSuministro"
             value={formData.electricoSuministro || ''}
             onChange={handleChange}
@@ -713,7 +713,7 @@ export function CruceForm({ cruceId, onClose, onSave }: { cruceId?: number | nul
         <div className="col-12">
           <label className="form-label">Observaciones</label>
           <textarea
-            className="form-control"
+            className="form-control custom-textarea"
             name="observaciones"
             value={formData.observaciones || ''}
             onChange={handleChange}

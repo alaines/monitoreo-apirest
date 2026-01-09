@@ -189,7 +189,7 @@ const AdministradoresManagement: React.FC = () => {
                 <div className="row g-2">
                   <div className="col-md-8">
                     <label className="form-label small">Buscar</label>
-                    <input type="text" className="form-control form-control-sm" placeholder="Nombre o email..." value={filters.search} onChange={(e) => handleFilterChange('search', e.target.value)} />
+                    <input type="text" className="form-control custom-input-sm" placeholder="Nombre o email..." value={filters.search} onChange={(e) => handleFilterChange('search', e.target.value)} />
                   </div>
                   <div className="col-md-2">
                     <label className="form-label small">Estado</label>
@@ -352,7 +352,7 @@ const AdministradoresManagement: React.FC = () => {
                       <label className="form-label">Nombre *</label>
                       <input
                         type="text"
-                        className="form-control"
+                        className="form-control custom-input"
                         value={formData.nombre}
                         onChange={(e) => setFormData({ ...formData, nombre: e.target.value })}
                         required
@@ -364,7 +364,7 @@ const AdministradoresManagement: React.FC = () => {
                       <label className="form-label">Responsable</label>
                       <input
                         type="text"
-                        className="form-control"
+                        className="form-control custom-input"
                         value={formData.responsable}
                         onChange={(e) => setFormData({ ...formData, responsable: e.target.value })}
                         maxLength={255}
@@ -377,7 +377,7 @@ const AdministradoresManagement: React.FC = () => {
                       <label className="form-label">Teléfono</label>
                       <input
                         type="number"
-                        className="form-control"
+                        className="form-control custom-input"
                         value={formData.telefono || ''}
                         onChange={(e) => setFormData({ ...formData, telefono: e.target.value ? Number(e.target.value) : null })}
                       />
@@ -387,7 +387,7 @@ const AdministradoresManagement: React.FC = () => {
                       <label className="form-label">Email</label>
                       <input
                         type="email"
-                        className="form-control"
+                        className="form-control custom-input"
                         value={formData.email}
                         onChange={(e) => setFormData({ ...formData, email: e.target.value })}
                         maxLength={255}

@@ -161,7 +161,7 @@ export function CrucesList() {
                 <label className="form-label small">Buscar por nombre</label>
                 <input
                   type="text"
-                  className="form-control form-control-sm"
+                  className="form-control custom-input-sm"
                   placeholder="Buscar..."
                   value={filters.search}
                   onChange={(e) => handleFilterChange('search', e.target.value)}
@@ -171,7 +171,7 @@ export function CrucesList() {
                 <label className="form-label small">Código</label>
                 <input
                   type="text"
-                  className="form-control form-control-sm"
+                  className="form-control custom-input-sm"
                   placeholder="Código..."
                   value={filters.codigo}
                   onChange={(e) => handleFilterChange('codigo', e.target.value)}

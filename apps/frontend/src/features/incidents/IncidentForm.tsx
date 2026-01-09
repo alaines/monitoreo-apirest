@@ -268,7 +268,7 @@ export function IncidentForm({ incidentId, onClose, onSave }: IncidentFormProps)
               <div className="position-relative">
                 <input
                   type="text"
-                  className="form-control"
+                  className="form-control custom-input"
                   placeholder="Buscar tipo de incidencia..."
                   value={incidenciaSearch}
                   onChange={handleIncidenciaSearchChange}
@@ -328,7 +328,7 @@ export function IncidentForm({ incidentId, onClose, onSave }: IncidentFormProps)
                     <div className="position-relative">
                       <input
                         type="text"
-                        className="form-control"
+                        className="form-control custom-input"
                         placeholder="Buscar cruce..."
                         value={cruceSearch}
                         onChange={handleCruceSearchChange}
@@ -405,7 +405,7 @@ export function IncidentForm({ incidentId, onClose, onSave }: IncidentFormProps)
                 <div className="mb-3">
                   <label className="form-label">Descripción</label>
                   <textarea
-                    className="form-control"
+                    className="form-control custom-textarea"
                     name="descripcion"
                     rows={4}
                     value={formData.descripcion}
@@ -439,7 +439,7 @@ export function IncidentForm({ incidentId, onClose, onSave }: IncidentFormProps)
                     <label className="form-label">Nombre del Reportador</label>
                     <input
                       type="text"
-                      className="form-control"
+                      className="form-control custom-input"
                       name="reportadorNombres"
                       value={formData.reportadorNombres}
                       onChange={(e) => {
@@ -454,7 +454,7 @@ export function IncidentForm({ incidentId, onClose, onSave }: IncidentFormProps)
                     <label className="form-label">Contacto del Reportador</label>
                     <input
                       type="text"
-                      className="form-control"
+                      className="form-control custom-input"
                       name="reportadorDatoContacto"
                       value={formData.reportadorDatoContacto}
                       onChange={(e) => {

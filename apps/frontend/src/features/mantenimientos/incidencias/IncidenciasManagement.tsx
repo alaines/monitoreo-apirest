@@ -179,7 +179,7 @@ const IncidenciasManagement: React.FC = () => {
                     <label className="form-label">Tipo *</label>
                     <input
                       type="text"
-                      className="form-control"
+                      className="form-control custom-input"
                       value={formData.tipo}
                       onChange={(e) => setFormData({ ...formData, tipo: e.target.value })}
                       required
@@ -191,7 +191,7 @@ const IncidenciasManagement: React.FC = () => {
                     <label className="form-label">Característica</label>
                     <input
                       type="text"
-                      className="form-control"
+                      className="form-control custom-input"
                       value={formData.caracteristica}
                       onChange={(e) => setFormData({ ...formData, caracteristica: e.target.value })}
                       maxLength={2}
@@ -217,7 +217,7 @@ const IncidenciasManagement: React.FC = () => {
                     <label className="form-label">ID Prioridad</label>
                     <input
                       type="number"
-                      className="form-control"
+                      className="form-control custom-input"
                       value={formData.prioridadId || ''}
                       onChange={(e) => setFormData({ ...formData, prioridadId: e.target.value ? Number(e.target.value) : null })}
                     />

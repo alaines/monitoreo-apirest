@@ -1,0 +1,94 @@
+/* Estilos personalizados para inputs que coincidan con react-select */
+
+/* Input estándar que coincide con react-select normal */
+.custom-input {
+  height: 38px;
+  font-size: 14px;
+  border: 1px solid #dee2e6;
+  border-radius: 4px;
+  padding: 0 8px;
+  transition: border-color 0.15s ease-in-out, box-shadow 0.15s ease-in-out;
+}
+
+.custom-input:focus {
+  border-color: #1D546D;
+  outline: 0;
+  box-shadow: 0 0 0 0.25rem rgba(29, 84, 109, 0.25);
+}
+
+.custom-input:disabled {
+  background-color: #e9ecef;
+  opacity: 1;
+}
+
+/* Input pequeño que coincide con react-select small */
+.custom-input-sm {
+  height: 31px;
+  font-size: 14px;
+  border: 1px solid #dee2e6;
+  border-radius: 4px;
+  padding: 0 8px;
+  transition: border-color 0.15s ease-in-out, box-shadow 0.15s ease-in-out;
+}
+
+.custom-input-sm:focus {
+  border-color: #1D546D;
+  outline: 0;
+  box-shadow: 0 0 0 0.25rem rgba(29, 84, 109, 0.25);
+}
+
+.custom-input-sm:disabled {
+  background-color: #e9ecef;
+  opacity: 1;
+}
+
+/* Textarea que coincide con el estilo */
+.custom-textarea {
+  font-size: 14px;
+  border: 1px solid #dee2e6;
+  border-radius: 4px;
+  padding: 8px;
+  transition: border-color 0.15s ease-in-out, box-shadow 0.15s ease-in-out;
+}
+
+.custom-textarea:focus {
+  border-color: #1D546D;
+  outline: 0;
+  box-shadow: 0 0 0 0.25rem rgba(29, 84, 109, 0.25);
+}
+
+.custom-textarea:disabled {
+  background-color: #e9ecef;
+  opacity: 1;
+}
+
+/* Date input personalizado */
+.custom-date-input {
+  height: 38px;
+  font-size: 14px;
+  border: 1px solid #dee2e6;
+  border-radius: 4px;
+  padding: 0 8px;
+  transition: border-color 0.15s ease-in-out, box-shadow 0.15s ease-in-out;
+}
+
+.custom-date-input:focus {
+  border-color: #1D546D;
+  outline: 0;
+  box-shadow: 0 0 0 0.25rem rgba(29, 84, 109, 0.25);
+}
+
+.custom-date-input-sm {
+  height: 31px;
+  font-size: 14px;
+  border: 1px solid #dee2e6;
+  border-radius: 4px;
+  padding: 0 8px;
+  transition: border-color 0.15s ease-in-out, box-shadow 0.15s ease-in-out;
+}
+
+.custom-date-input-sm:focus {
+  border-color: #1D546D;
+  outline: 0;
+  box-shadow: 0 0 0 0.25rem rgba(29, 84, 109, 0.25);
+}

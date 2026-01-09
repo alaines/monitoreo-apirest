@@ -588,7 +588,7 @@ export function CruceDetail({ cruceId, onClose }: CruceDetailProps) {
                     <label className="form-label fw-bold">Fabricante</label>
                     <input
                       type="text"
-                      className="form-control"
+                      className="form-control custom-input"
                       value={newPeriferico.fabricante}
                       onChange={(e) => setNewPeriferico({...newPeriferico, fabricante: e.target.value})}
                       placeholder="Ej: Siemens, Swarco..."
@@ -599,7 +599,7 @@ export function CruceDetail({ cruceId, onClose }: CruceDetailProps) {
                     <label className="form-label fw-bold">Modelo</label>
                     <input
                       type="text"
-                      className="form-control"
+                      className="form-control custom-input"
                       value={newPeriferico.modelo}
                       onChange={(e) => setNewPeriferico({...newPeriferico, modelo: e.target.value})}
                       placeholder="Ej: MC-7000, XYZ-100..."
@@ -610,7 +610,7 @@ export function CruceDetail({ cruceId, onClose }: CruceDetailProps) {
                     <label className="form-label fw-bold">Número de Serie</label>
                     <input
                       type="text"
-                      className="form-control"
+                      className="form-control custom-input"
                       value={newPeriferico.numeroSerie}
                       onChange={(e) => setNewPeriferico({...newPeriferico, numeroSerie: e.target.value})}
                       placeholder="Número de serie del dispositivo"
@@ -634,7 +634,7 @@ export function CruceDetail({ cruceId, onClose }: CruceDetailProps) {
                     <label className="form-label fw-bold">Usuario</label>
                     <input
                       type="text"
-                      className="form-control"
+                      className="form-control custom-input"
                       value={newPeriferico.usuario}
                       onChange={(e) => setNewPeriferico({...newPeriferico, usuario: e.target.value})}
                       placeholder="Usuario de acceso"
@@ -645,7 +645,7 @@ export function CruceDetail({ cruceId, onClose }: CruceDetailProps) {
                     <label className="form-label fw-bold">Contraseña</label>
                     <input
                       type="password"
-                      className="form-control"
+                      className="form-control custom-input"
                       value={newPeriferico.password}
                       onChange={(e) => setNewPeriferico({...newPeriferico, password: e.target.value})}
                       placeholder="Contraseña de acceso"
@@ -670,7 +670,7 @@ export function CruceDetail({ cruceId, onClose }: CruceDetailProps) {
                   <div className="col-12">
                     <label className="form-label fw-bold">Observaciones</label>
                     <textarea
-                      className="form-control"
+                      className="form-control custom-textarea"
                       rows={3}
                       value={newPeriferico.observaciones}
                       onChange={(e) => setNewPeriferico({...newPeriferico, observaciones: e.target.value})}

@@ -193,7 +193,7 @@ const ProyectosManagement: React.FC = () => {
                 <div className="row g-2">
                   <div className="col-md-8">
                     <label className="form-label small">Buscar</label>
-                    <input type="text" className="form-control form-control-sm" placeholder="Siglas o nombre..." value={filters.search} onChange={(e) => handleFilterChange('search', e.target.value)} />
+                    <input type="text" className="form-control custom-input-sm" placeholder="Siglas o nombre..." value={filters.search} onChange={(e) => handleFilterChange('search', e.target.value)} />
                   </div>
                   <div className="col-md-2">
                     <label className="form-label small">Estado</label>
@@ -358,7 +358,7 @@ const ProyectosManagement: React.FC = () => {
                       <label className="form-label">Siglas</label>
                       <input
                         type="text"
-                        className="form-control"
+                        className="form-control custom-input"
                         value={formData.siglas}
                         onChange={(e) => setFormData({ ...formData, siglas: e.target.value })}
                         maxLength={6}
@@ -369,7 +369,7 @@ const ProyectosManagement: React.FC = () => {
                       <label className="form-label">Nombre</label>
                       <input
                         type="text"
-                        className="form-control"
+                        className="form-control custom-input"
                         value={formData.nombre}
                         onChange={(e) => setFormData({ ...formData, nombre: e.target.value })}
                       />
@@ -381,7 +381,7 @@ const ProyectosManagement: React.FC = () => {
                       <label className="form-label">Etapa</label>
                       <input
                         type="text"
-                        className="form-control"
+                        className="form-control custom-input"
                         value={formData.etapa}
                         onChange={(e) => setFormData({ ...formData, etapa: e.target.value })}
                       />
@@ -391,7 +391,7 @@ const ProyectosManagement: React.FC = () => {
                       <label className="form-label">Empresa Ejecutora</label>
                       <input
                         type="text"
-                        className="form-control"
+                        className="form-control custom-input"
                         value={formData.ejecutado_x_empresa}
                         onChange={(e) => setFormData({ ...formData, ejecutado_x_empresa: e.target.value })}
                         maxLength={255}
@@ -404,7 +404,7 @@ const ProyectosManagement: React.FC = () => {
                       <label className="form-label">Año del Proyecto</label>
                       <input
                         type="number"
-                        className="form-control"
+                        className="form-control custom-input"
                         value={formData.ano_proyecto || ''}
                         onChange={(e) => setFormData({ ...formData, ano_proyecto: e.target.value ? Number(e.target.value) : null })}
                         min="1900"
@@ -416,7 +416,7 @@ const ProyectosManagement: React.FC = () => {
                       <label className="form-label">Red</label>
                       <input
                         type="text"
-                        className="form-control"
+                        className="form-control custom-input"
                         value={formData.red}
                         onChange={(e) => setFormData({ ...formData, red: e.target.value })}
                         maxLength={255}

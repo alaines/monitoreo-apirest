@@ -10,6 +10,9 @@ import 'bootstrap/dist/css/bootstrap.min.css';
 // Tema personalizado (debe ir después de Bootstrap para sobreescribir)
 import './theme.css';
 
+// Estilos personalizados para formularios
+import './styles/form-inputs.css';
+
 // Fix Leaflet marker icons
 import markerIcon2x from 'leaflet/dist/images/marker-icon-2x.png';
 import markerIcon from 'leaflet/dist/images/marker-icon.png';

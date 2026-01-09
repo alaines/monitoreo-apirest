@@ -474,7 +474,7 @@ export function IncidentsList() {
                 <div className="position-relative incidencia-dropdown">
                   <input 
                     type="text" 
-                    className="form-control form-control-sm"
+                    className="form-control custom-input-sm"
                     placeholder="Buscar tipo de incidencia..."
                     value={incidenciaSearch}
                     onChange={(e) => handleIncidenciaInputChange(e.target.value)}
@@ -555,7 +555,7 @@ export function IncidentsList() {
                 <div className="position-relative cruce-dropdown">
                   <input 
                     type="text" 
-                    className="form-control form-control-sm"
+                    className="form-control custom-input-sm"
                     placeholder="Buscar cruce..."
                     value={cruceSearch}
                     onChange={(e) => handleCruceInputChange(e.target.value)}
@@ -590,7 +590,7 @@ export function IncidentsList() {
                 <label className="form-label small">Fecha Desde</label>
                 <input 
                   type="date" 
-                  className="form-control form-control-sm"
+                  className="form-control custom-date-input-sm"
                   value={filters.fechaDesde || ''}
                   onChange={(e) => applyFilters({ ...filters, fechaDesde: e.target.value })}
                 />
@@ -599,7 +599,7 @@ export function IncidentsList() {
                 <label className="form-label small">Fecha Hasta</label>
                 <input 
                   type="date" 
-                  className="form-control form-control-sm"
+                  className="form-control custom-date-input-sm"
                   value={filters.fechaHasta || ''}
                   onChange={(e) => applyFilters({ ...filters, fechaHasta: e.target.value })}
                 />

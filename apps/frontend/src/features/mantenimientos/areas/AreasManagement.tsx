@@ -229,7 +229,7 @@ const AreasManagement: React.FC = () => {
                     <label className="form-label small">Buscar</label>
                     <input
                       type="text"
-                      className="form-control form-control-sm"
+                      className="form-control custom-input-sm"
                       placeholder="Nombre o código..."
                       value={filters.search}
                       onChange={(e) => handleFilterChange('search', e.target.value)}
@@ -407,7 +407,7 @@ const AreasManagement: React.FC = () => {
                     <label className="form-label">Nombre *</label>
                     <input
                       type="text"
-                      className="form-control"
+                      className="form-control custom-input"
                       value={formData.nombre}
                       onChange={(e) => setFormData({ ...formData, nombre: e.target.value })}
                       required
@@ -418,7 +418,7 @@ const AreasManagement: React.FC = () => {
                     <label className="form-label">Código</label>
                     <input
                       type="text"
-                      className="form-control"
+                      className="form-control custom-input"
                       value={formData.codigo}
                       onChange={(e) => setFormData({ ...formData, codigo: e.target.value })}
                       maxLength={10}

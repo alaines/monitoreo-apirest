@@ -388,7 +388,7 @@ export function ReporteIncidencias() {
                   <label className="form-label small">Fecha Inicio</label>
                   <input
                     type="date"
-                    className="form-control form-control-sm"
+                    className="form-control custom-date-input-sm"
                     value={fechaInicio}
                     onChange={(e) => setFechaInicio(e.target.value)}
                   />
@@ -397,7 +397,7 @@ export function ReporteIncidencias() {
                   <label className="form-label small">Fecha Fin</label>
                   <input
                     type="date"
-                    className="form-control form-control-sm"
+                    className="form-control custom-date-input-sm"
                     value={fechaFin}
                     onChange={(e) => setFechaFin(e.target.value)}
                   />
