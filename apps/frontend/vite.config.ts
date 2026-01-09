@@ -12,6 +12,25 @@ export default defineConfig({
       '@/core': path.resolve(__dirname, './src/core'),
     },
   },
+  build: {
+    rollupOptions: {
+      output: {
+        manualChunks: {
+          // Bibliotecas de React
+          'react-vendor': ['react', 'react-dom', 'react-router-dom'],
+          // Bibliotecas de UI
+          'ui-vendor': ['bootstrap', 'react-select'],
+          // Bibliotecas de mapas
+          'map-vendor': ['leaflet'],
+          // Bibliotecas de reportes
+          'reports-vendor': ['html2canvas', 'jspdf'],
+          // Bibliotecas de utilidades
+          'utils-vendor': ['axios', 'date-fns', 'zustand'],
+        },
+      },
+    },
+    chunkSizeWarningLimit: 1000,
+  },
   server: {
     host: '0.0.0.0',
     port: 5173,

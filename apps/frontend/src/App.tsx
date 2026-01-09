@@ -1,33 +1,35 @@
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
-import { useEffect, useState } from 'react';
+import { useEffect, useState, lazy, Suspense } from 'react';
 import { useAuthStore } from './features/auth/authStore';
 import { ProtectedRoute } from './components/ProtectedRoute';
 import { LoginPage } from './features/auth/pages/LoginPage';
 import { Layout } from './components/Layout';
 import { Inicio } from './pages/Inicio';
-import { IncidentsList } from './features/incidents/IncidentsList';
-import { IncidentForm } from './features/incidents/IncidentForm';
-import { IncidentDetail } from './features/incidents/IncidentDetail';
-import { CrucesList } from './features/cruces/CrucesList';
-import { CruceForm } from './features/cruces/CruceForm';
-import { CruceDetail } from './features/cruces/CruceDetail';
-import { CrucesMap } from './features/cruces/CrucesMap';
-import { ReporteIncidencias } from './features/reportes/ReporteIncidencias';
-import ReporteGrafico from './features/reportes/ReporteGrafico';
-import { MapaCalor } from './features/reportes/MapaCalor';
-import { UsersManagement } from './features/admin/users/UsersManagement';
-import { GruposPermisosManagement } from './features/admin/grupos/GruposPermisosManagement';
-import { CatalogosManagement } from './features/admin/catalogos/CatalogosManagement';
-import AreasManagement from './features/mantenimientos/areas/AreasManagement';
-import EquiposManagement from './features/mantenimientos/equipos/EquiposManagement';
-import ReportadoresManagement from './features/mantenimientos/reportadores/ReportadoresManagement';
-import ResponsablesManagement from './features/mantenimientos/responsables/ResponsablesManagement';
-import AdministradoresManagement from './features/mantenimientos/administradores/AdministradoresManagement';
-import EjesManagement from './features/mantenimientos/ejes/EjesManagement';
-import ProyectosManagement from './features/mantenimientos/proyectos/ProyectosManagement';
-import IncidenciasManagement from './features/mantenimientos/incidencias/IncidenciasManagement';
-import { MiPerfil } from './features/perfil/MiPerfil';
-import { Configuracion } from './features/configuracion/Configuracion';
+
+// Lazy load de componentes
+const IncidentsList = lazy(() => import('./features/incidents/IncidentsList').then(m => ({ default: m.IncidentsList })));
+const IncidentForm = lazy(() => import('./features/incidents/IncidentForm').then(m => ({ default: m.IncidentForm })));
+const IncidentDetail = lazy(() => import('./features/incidents/IncidentDetail').then(m => ({ default: m.IncidentDetail })));
+const CrucesList = lazy(() => import('./features/cruces/CrucesList').then(m => ({ default: m.CrucesList })));
+const CruceForm = lazy(() => import('./features/cruces/CruceForm').then(m => ({ default: m.CruceForm })));
+const CruceDetail = lazy(() => import('./features/cruces/CruceDetail').then(m => ({ default: m.CruceDetail })));
+const CrucesMap = lazy(() => import('./features/cruces/CrucesMap').then(m => ({ default: m.CrucesMap })));
+const ReporteIncidencias = lazy(() => import('./features/reportes/ReporteIncidencias').then(m => ({ default: m.ReporteIncidencias })));
+const ReporteGrafico = lazy(() => import('./features/reportes/ReporteGrafico'));
+const MapaCalor = lazy(() => import('./features/reportes/MapaCalor').then(m => ({ default: m.MapaCalor })));
+const UsersManagement = lazy(() => import('./features/admin/users/UsersManagement').then(m => ({ default: m.UsersManagement })));
+const GruposPermisosManagement = lazy(() => import('./features/admin/grupos/GruposPermisosManagement').then(m => ({ default: m.GruposPermisosManagement })));
+const CatalogosManagement = lazy(() => import('./features/admin/catalogos/CatalogosManagement').then(m => ({ default: m.CatalogosManagement })));
+const AreasManagement = lazy(() => import('./features/mantenimientos/areas/AreasManagement'));
+const EquiposManagement = lazy(() => import('./features/mantenimientos/equipos/EquiposManagement'));
+const ReportadoresManagement = lazy(() => import('./features/mantenimientos/reportadores/ReportadoresManagement'));
+const ResponsablesManagement = lazy(() => import('./features/mantenimientos/responsables/ResponsablesManagement'));
+const AdministradoresManagement = lazy(() => import('./features/mantenimientos/administradores/AdministradoresManagement'));
+const EjesManagement = lazy(() => import('./features/mantenimientos/ejes/EjesManagement'));
+const ProyectosManagement = lazy(() => import('./features/mantenimientos/proyectos/ProyectosManagement'));
+const IncidenciasManagement = lazy(() => import('./features/mantenimientos/incidencias/IncidenciasManagement'));
+const MiPerfil = lazy(() => import('./features/perfil/MiPerfil').then(m => ({ default: m.MiPerfil })));
+const Configuracion = lazy(() => import('./features/configuracion/Configuracion').then(m => ({ default: m.Configuracion })));
 
 function App() {
   const { initialize, isAuthenticated } = useAuthStore();
@@ -38,33 +40,36 @@ function App() {
     setIsInitialized(true);
   }, [initialize]);
 
-  if (!isInitialized) {
-    return (
-      <div className="d-flex justify-content-center align-items-center" style={{ minHeight: '100vh' }}>
-        <div className="spinner-border" role="status">
-          <span className="visually-hidden">Cargando...</span>
-        </div>
+  const LoadingFallback = () => (
+    <div className="d-flex justify-content-center align-items-center" style={{ minHeight: '100vh' }}>
+      <div className="spinner-border" role="status">
+        <span className="visually-hidden">Cargando...</span>
       </div>
-    );
+    </div>
+  );
+
+  if (!isInitialized) {
+    return <LoadingFallback />;
   }
 
   return (
     <BrowserRouter>
-      <Routes>
-        <Route
-          path="/login"
-          element={isAuthenticated ? <Navigate to="/" replace /> : <LoginPage />}
-        />
-        <Route
-          path="/"
-          element={
-            <ProtectedRoute>
-              <Layout>
-                <Inicio />
-              </Layout>
-            </ProtectedRoute>
-          }
-        />
+      <Suspense fallback={<LoadingFallback />}>
+        <Routes>
+          <Route
+            path="/login"
+            element={isAuthenticated ? <Navigate to="/" replace /> : <LoginPage />}
+          />
+          <Route
+            path="/"
+            element={
+              <ProtectedRoute>
+                <Layout>
+                  <Inicio />
+                </Layout>
+              </ProtectedRoute>
+            }
+          />
         <Route
           path="/incidents"
           element={
@@ -327,6 +332,7 @@ function App() {
         />
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
+      </Suspense>
     </BrowserRouter>
   );
 }
