@@ -130,10 +130,10 @@ export interface User {
   persona?: {
     id: number;
     tipoDocId?: number;
-    numDoc?: string;
+    num_doc?: string;
     nombres?: string;
-    apePat?: string;
-    apeMat?: string;
+    ape_pat?: string;
+    ape_mat?: string;
     nomcomp?: string;
     genero?: string;
     fecnac?: string;

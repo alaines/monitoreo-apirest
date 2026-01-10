@@ -123,7 +123,7 @@ export function UsersManagement() {
           user.usuario.toLowerCase().includes(searchLower) ||
           (user.nombreCompleto && user.nombreCompleto.toLowerCase().includes(searchLower)) ||
           (user.email && user.email.toLowerCase().includes(searchLower)) ||
-          (user.persona?.numDoc && user.persona.numDoc.includes(filters.search))
+          (user.persona?.num_doc && user.persona.num_doc.includes(filters.search))
         );
       }
       
@@ -219,10 +219,10 @@ export function UsersManagement() {
         usuario: user.usuario,
         password: '',
         tipoDocId: persona?.tipoDocId || 0,
-        nroDoc: persona?.numDoc || '',
+        nroDoc: persona?.num_doc || '',
         nombres: persona?.nombres || '',
-        apellidoP: persona?.apePat || '',
-        apellidoM: persona?.apeMat || '',
+        apellidoP: persona?.ape_pat || '',
+        apellidoM: persona?.ape_mat || '',
         fechaNacimiento: persona?.fecnac ? persona.fecnac.toString().split('T')[0] : '',
         genero: persona?.genero || 'M',
         estadoCivilId: persona?.estadoCivilId,
@@ -298,13 +298,14 @@ export function UsersManagement() {
     }
   };
 
-  const handleDelete = async (id: number) => {
-    if (!confirm('¿Está seguro de eliminar este usuario?')) return;
+  const handleDelete = async (user: User) => {
+    if (!confirm(`¿Está seguro de eliminar al usuario "${user.usuario}"? El usuario será desactivado.`)) return;
 
     try {
-      await usersService.delete(id);
+      await usersService.delete(user.id);
       await loadData();
     } catch (error: any) {
+      console.error('Error eliminando usuario:', error);
       setErrors(error.response?.data?.message || 'Error al eliminar usuario');
     }
   };
@@ -481,7 +482,7 @@ export function UsersManagement() {
                       </button>
                       <button
                         className="btn btn-sm btn-outline-danger"
-                        onClick={() => handleDelete(user.id)}
+                        onClick={() => handleDelete(user)}
                         title="Eliminar"
                       >
                         <i className="fas fa-trash"></i>
