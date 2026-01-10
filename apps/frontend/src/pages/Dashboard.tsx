@@ -116,23 +116,31 @@ export function Dashboard() {
       const incidentsData = await incidentsService.getIncidents({ page: 1, limit: 5000 });
 
       const now = new Date();
-      const periodStart = new Date();
+      
+      // Para el filtro "today", usar comparación de strings para evitar problemas de zona horaria
+      const todayStr = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
+      
+      let filteredIncidents = incidentsData.data;
+      
       if (selectedPeriod === 'today') {
-        periodStart.setHours(0, 0, 0, 0);
-      } else if (selectedPeriod === 'week') {
-        periodStart.setDate(now.getDate() - 7);
-      } else if (selectedPeriod === 'month') {
-        periodStart.setMonth(now.getMonth() - 1);
-      } else if (selectedPeriod === 'year') {
-        periodStart.setFullYear(now.getFullYear() - 1);
-      } else {
-        // 'all' - no filtrar por fecha, usar una fecha muy antigua
-        periodStart.setFullYear(2000, 0, 1);
+        // Comparar por fecha YYYY-MM-DD del string ISO
+        filteredIncidents = incidentsData.data.filter((i: Incident) => 
+          i.createdAt.split('T')[0] === todayStr
+        );
+      } else if (selectedPeriod !== 'all') {
+        // Para otros periodos, podemos usar comparación de Date ya que no es crítico el día exacto
+        const periodStart = new Date();
+        if (selectedPeriod === 'week') {
+          periodStart.setDate(now.getDate() - 7);
+        } else if (selectedPeriod === 'month') {
+          periodStart.setMonth(now.getMonth() - 1);
+        } else if (selectedPeriod === 'year') {
+          periodStart.setFullYear(now.getFullYear() - 1);
+        }
+        filteredIncidents = incidentsData.data.filter((i: Incident) => 
+          new Date(i.createdAt) >= periodStart
+        );
       }
-
-      const filteredIncidents = incidentsData.data.filter((i: Incident) => 
-        new Date(i.createdAt) >= periodStart
-      );
 
       const openTickets = filteredIncidents.filter((t: Incident) => t.estadoId === 1).length;
       const inProgressTickets = filteredIncidents.filter((t: Incident) => t.estadoId === 2).length;

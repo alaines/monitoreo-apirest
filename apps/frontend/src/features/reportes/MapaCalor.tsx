@@ -107,18 +107,19 @@ export function MapaCalor() {
   const applyFilters = () => {
     let filtered = [...incidents];
 
-    // Filtro por año
+    // Filtro por año - usar string para evitar problemas de zona horaria
+    // Las fechas vienen como "2026-01-10T00:27:08.474Z", extraemos YYYY-MM
     if (filters.year) {
       filtered = filtered.filter(incident => {
-        const year = new Date(incident.createdAt).getFullYear().toString();
+        const year = incident.createdAt.substring(0, 4); // "2026"
         return year === filters.year;
       });
     }
 
-    // Filtro por mes
+    // Filtro por mes - usar string para evitar problemas de zona horaria
     if (filters.month) {
       filtered = filtered.filter(incident => {
-        const month = (new Date(incident.createdAt).getMonth() + 1).toString();
+        const month = parseInt(incident.createdAt.substring(5, 7), 10).toString(); // "01" -> "1"
         return month === filters.month;
       });
     }

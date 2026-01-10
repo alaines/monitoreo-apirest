@@ -163,20 +163,18 @@ export function IncidentsList() {
       let sortedData = [...allData];
       
       // Filtrar por rango de fechas en el cliente
+      // Usar comparación de strings para evitar problemas de zona horaria
       if (filters.fechaDesde || filters.fechaHasta) {
         sortedData = sortedData.filter(incident => {
-          const incidentDate = new Date(incident.createdAt);
+          // Extraer YYYY-MM-DD del string ISO
+          const incidentDateStr = incident.createdAt.split('T')[0];
           
-          if (filters.fechaDesde) {
-            const [year, month, day] = filters.fechaDesde.split('-').map(Number);
-            const desde = new Date(year, month - 1, day, 0, 0, 0, 0);
-            if (incidentDate < desde) return false;
+          if (filters.fechaDesde && incidentDateStr < filters.fechaDesde) {
+            return false;
           }
           
-          if (filters.fechaHasta) {
-            const [year, month, day] = filters.fechaHasta.split('-').map(Number);
-            const hasta = new Date(year, month - 1, day, 23, 59, 59, 999);
-            if (incidentDate > hasta) return false;
+          if (filters.fechaHasta && incidentDateStr > filters.fechaHasta) {
+            return false;
           }
           
           return true;
