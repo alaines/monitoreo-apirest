@@ -1,31 +1,89 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, NotFoundException, BadRequestException } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 
 @Injectable()
 export class MenusService {
   constructor(private prisma: PrismaService) {}
 
-  async findAll() {
+  /**
+   * Recalcula los valores lft y rght para todo el árbol
+   * Implementa Nested Set Model (Modified Preorder Tree Traversal)
+   */
+  async rebuildTree(): Promise<void> {
     const menus = await this.prisma.menu.findMany({
-      select: {
-        id: true,
-        codigo: true,
-        name: true,
-        modulo: true,
-        url: true,
-        icono: true,
-        orden: true,
-        parentId: true,
-        estado: true,
-        created: true,
-        modified: true,
-      },
-      orderBy: [
-        { orden: 'asc' },
-      ],
+      orderBy: { orden: 'asc' },
     });
 
-    // Mapear campos a nombres esperados por el frontend
+    let counter = 1;
+    const updates: any[] = [];
+
+    const traverse = (parentId: number | null): number => {
+      const children = menus
+        .filter(m => m.parentId === parentId)
+        .sort((a, b) => (a.orden || 0) - (b.orden || 0));
+      
+      children.forEach(menu => {
+        const left = counter++;
+        const right = traverse(menu.id);
+        
+        updates.push({
+          where: { id: menu.id },
+          data: { lft: left, rght: right }
+        });
+      });
+
+      return counter++;
+    };
+
+    traverse(null);
+    
+    // Ejecutar todas las actualizaciones
+    for (const update of updates) {
+      await this.prisma.menu.update(update);
+    }
+  }
+
+  /**
+   * Obtiene todo el árbol de menús ordenado por lft
+   */
+  async getTree() {
+    await this.rebuildTree();
+    
+    const menus = await this.prisma.menu.findMany({
+      orderBy: [{ lft: 'asc' }],
+    });
+
+    return menus.map(menu => ({
+      id: menu.id,
+      nombre: menu.name || 'Sin nombre',
+      codigo: menu.codigo || '',
+      ruta: menu.url || '#',
+      icono: menu.icono || '',
+      orden: menu.orden || 0,
+      menuPadreId: menu.parentId,
+      activo: menu.estado ?? true,
+      lft: menu.lft,
+      rght: menu.rght,
+      nivel: this.calculateLevel(menu.lft, menu.rght),
+    }));
+  }
+
+  /**
+   * Calcula el nivel de profundidad basándose en lft y rght
+   */
+  private calculateLevel(lft: number | null, rght: number | null): number {
+    if (!lft || !rght) return 0;
+    return Math.floor((rght - lft - 1) / 2);
+  }
+
+  /**
+   * Obtiene todos los menús con formato para el frontend
+   */
+  async findAll() {
+    const menus = await this.prisma.menu.findMany({
+      orderBy: [{ orden: 'asc' }],
+    });
+
     return menus.map(menu => ({
       id: menu.id,
       codigo: menu.codigo || '',
@@ -41,13 +99,27 @@ export class MenusService {
     }));
   }
 
+  /**
+   * Crea un nuevo menú
+   */
   async create(createMenuDto: any) {
+    // Obtener el siguiente orden dentro del padre
+    const siblings = await this.prisma.menu.findMany({
+      where: { parentId: createMenuDto.menuPadreId || null },
+    });
+    
+    const nextOrden = siblings.length > 0 
+      ? Math.max(...siblings.map(s => s.orden || 0)) + 1 
+      : 1;
+
     const menu = await this.prisma.menu.create({
       data: {
         name: createMenuDto.nombre,
-        url: createMenuDto.ruta,
-        icono: createMenuDto.icono,
-        orden: createMenuDto.orden,
+        url: createMenuDto.ruta || '#',
+        icono: createMenuDto.icono || '',
+        codigo: createMenuDto.codigo,
+        modulo: createMenuDto.modulo,
+        orden: createMenuDto.orden ?? nextOrden,
         parentId: createMenuDto.menuPadreId || null,
         estado: createMenuDto.activo ?? true,
         created: new Date(),
@@ -55,79 +127,245 @@ export class MenusService {
       },
     });
 
+    await this.rebuildTree();
+
     return {
       id: menu.id,
       nombre: menu.name,
+      codigo: menu.codigo,
       ruta: menu.url,
       icono: menu.icono,
       orden: menu.orden,
       menuPadreId: menu.parentId,
       activo: menu.estado,
-      createdAt: menu.created,
     };
   }
 
+  /**
+   * Actualiza un menú existente
+   */
   async update(id: number, updateMenuDto: any) {
-    const dataToUpdate: any = {
-      modified: new Date(),
-    };
-
-    if (updateMenuDto.nombre !== undefined) dataToUpdate.name = updateMenuDto.nombre;
-    if (updateMenuDto.ruta !== undefined) dataToUpdate.url = updateMenuDto.ruta;
-    if (updateMenuDto.icono !== undefined) dataToUpdate.icono = updateMenuDto.icono;
-    if (updateMenuDto.orden !== undefined) dataToUpdate.orden = updateMenuDto.orden;
-    if (updateMenuDto.menuPadreId !== undefined) dataToUpdate.parentId = updateMenuDto.menuPadreId;
-    if (updateMenuDto.activo !== undefined) dataToUpdate.estado = updateMenuDto.activo;
-
-    const menu = await this.prisma.menu.update({
-      where: { id },
-      data: dataToUpdate,
-    });
-
-    return {
-      id: menu.id,
-      nombre: menu.name,
-      ruta: menu.url,
-      icono: menu.icono,
-      orden: menu.orden,
-      menuPadreId: menu.parentId,
-      activo: menu.estado,
-      updatedAt: menu.modified,
-    };
-  }
-
-  async remove(id: number) {
-    await this.prisma.menu.delete({
-      where: { id },
-    });
-    return { message: 'Menú eliminado correctamente' };
-  }
-
-  async findByGrupo(grupoId: number) {
-    // Obtener menús permitidos para el grupo
-    const menusPermitidos = await this.prisma.grupoMenu.findMany({
-      where: {
-        grupoId: grupoId,
-        accion: {
-          codigo: 'view', // Solo necesitamos verificar permiso de "ver"
-        },
-      },
-      select: {
-        menuId: true,
-      },
-    });
-
-    const menuIds = menusPermitidos.map(gm => gm.menuId);
-
-    if (menuIds.length === 0) {
-      return [];
+    const menu = await this.prisma.menu.findUnique({ where: { id } });
+    if (!menu) {
+      throw new NotFoundException(`Menú con ID ${id} no encontrado`);
     }
 
-    // Obtener los menús con sus datos completos
+    const updated = await this.prisma.menu.update({
+      where: { id },
+      data: {
+        name: updateMenuDto.nombre ?? menu.name,
+        url: updateMenuDto.ruta ?? menu.url,
+        icono: updateMenuDto.icono ?? menu.icono,
+        codigo: updateMenuDto.codigo ?? menu.codigo,
+        modulo: updateMenuDto.modulo ?? menu.modulo,
+        orden: updateMenuDto.orden ?? menu.orden,
+        parentId: updateMenuDto.menuPadreId !== undefined ? updateMenuDto.menuPadreId : menu.parentId,
+        estado: updateMenuDto.activo ?? menu.estado,
+        modified: new Date(),
+      },
+    });
+
+    await this.rebuildTree();
+
+    return {
+      id: updated.id,
+      nombre: updated.name,
+      codigo: updated.codigo,
+      ruta: updated.url,
+      icono: updated.icono,
+      orden: updated.orden,
+      menuPadreId: updated.parentId,
+      activo: updated.estado,
+    };
+  }
+
+  /**
+   * Elimina un menú (y sus hijos si existen)
+   */
+  async remove(id: number) {
+    const menu = await this.prisma.menu.findUnique({ where: { id } });
+    if (!menu) {
+      throw new NotFoundException(`Menú con ID ${id} no encontrado`);
+    }
+
+    // Verificar si tiene hijos
+    const children = await this.prisma.menu.findMany({
+      where: { parentId: id },
+    });
+
+    if (children.length > 0) {
+      throw new BadRequestException(
+        `No se puede eliminar el menú porque tiene ${children.length} submenú(s)`
+      );
+    }
+
+    await this.prisma.menu.delete({ where: { id } });
+    await this.rebuildTree();
+
+    return { message: 'Menú eliminado exitosamente' };
+  }
+
+  /**
+   * Mueve un menú hacia arriba (decrementa orden)
+   */
+  async moveUp(id: number) {
+    const menu = await this.prisma.menu.findUnique({ where: { id } });
+    if (!menu) {
+      throw new NotFoundException(`Menú con ID ${id} no encontrado`);
+    }
+
+    const currentOrden = menu.orden || 0;
+
+    // Buscar el hermano anterior con el mismo padre
+    const previousSibling = await this.prisma.menu.findFirst({
+      where: {
+        parentId: menu.parentId,
+        orden: { lt: currentOrden },
+      },
+      orderBy: { orden: 'desc' },
+    });
+
+    if (!previousSibling) {
+      throw new BadRequestException('El menú ya está en la primera posición');
+    }
+
+    // Intercambiar órdenes
+    const tempOrden = currentOrden;
+    await this.prisma.menu.update({
+      where: { id: menu.id },
+      data: { orden: previousSibling.orden },
+    });
+    await this.prisma.menu.update({
+      where: { id: previousSibling.id },
+      data: { orden: tempOrden },
+    });
+
+    await this.rebuildTree();
+
+    return { message: 'Menú movido hacia arriba' };
+  }
+
+  /**
+   * Mueve un menú hacia abajo (incrementa orden)
+   */
+  async moveDown(id: number) {
+    const menu = await this.prisma.menu.findUnique({ where: { id } });
+    if (!menu) {
+      throw new NotFoundException(`Menú con ID ${id} no encontrado`);
+    }
+
+    const currentOrden = menu.orden || 0;
+
+    // Buscar el hermano siguiente con el mismo padre
+    const nextSibling = await this.prisma.menu.findFirst({
+      where: {
+        parentId: menu.parentId,
+        orden: { gt: currentOrden },
+      },
+      orderBy: { orden: 'asc' },
+    });
+
+    if (!nextSibling) {
+      throw new BadRequestException('El menú ya está en la última posición');
+    }
+
+    // Intercambiar órdenes
+    const tempOrden = currentOrden;
+    await this.prisma.menu.update({
+      where: { id: menu.id },
+      data: { orden: nextSibling.orden },
+    });
+    await this.prisma.menu.update({
+      where: { id: nextSibling.id },
+      data: { orden: tempOrden },
+    });
+
+    await this.rebuildTree();
+
+    return { message: 'Menú movido hacia abajo' };
+  }
+
+  /**
+   * Cambia el padre de un menú
+   */
+  async changeParent(id: number, newParentId: number | null) {
+    const menu = await this.prisma.menu.findUnique({ where: { id } });
+    if (!menu) {
+      throw new NotFoundException(`Menú con ID ${id} no encontrado`);
+    }
+
+    // Verificar que no se esté intentando mover a sí mismo
+    if (newParentId === id) {
+      throw new BadRequestException('Un menú no puede ser padre de sí mismo');
+    }
+
+    if (newParentId) {
+      const newParent = await this.prisma.menu.findUnique({ 
+        where: { id: newParentId} 
+      });
+      if (!newParent) {
+        throw new NotFoundException(`Menú padre con ID ${newParentId} no encontrado`);
+      }
+
+      // Verificar que el nuevo padre no sea un descendiente del menú actual
+      const descendants = await this.getDescendants(id);
+      if (descendants.some(d => d.id === newParentId)) {
+        throw new BadRequestException('No se puede mover a un menú descendiente');
+      }
+    }
+
+    // Obtener el siguiente orden en el nuevo padre
+    const siblings = await this.prisma.menu.findMany({
+      where: { parentId: newParentId },
+    });
+    const nextOrden = siblings.length > 0 
+      ? Math.max(...siblings.map(s => s.orden || 0)) + 1 
+      : 1;
+
+    await this.prisma.menu.update({
+      where: { id },
+      data: { 
+        parentId: newParentId,
+        orden: nextOrden,
+        modified: new Date(),
+      },
+    });
+
+    await this.rebuildTree();
+
+    return { message: 'Menú movido exitosamente' };
+  }
+
+  /**
+   * Obtiene todos los descendientes de un menú
+   */
+  private async getDescendants(menuId: number): Promise<any[]> {
+    const menu = await this.prisma.menu.findUnique({ where: { id: menuId } });
+    if (!menu || !menu.lft || !menu.rght) return [];
+
+    return await this.prisma.menu.findMany({
+      where: {
+        lft: { gt: menu.lft },
+        rght: { lt: menu.rght },
+      },
+    });
+  }
+
+  /**
+   * Obtiene menús filtrados por grupo (para el sidebar dinámico)
+   */
+  async findByGrupo(grupoId: number) {
     const menus = await this.prisma.menu.findMany({
       where: {
-        id: { in: menuIds },
         estado: true,
+        gruposMenus: {
+          some: {
+            grupoId: grupoId,
+            accion: {
+              codigo: 'view',
+            },
+          },
+        },
       },
       select: {
         id: true,
@@ -143,7 +381,6 @@ export class MenusService {
       ],
     });
 
-    // Mapear y estructurar jerárquicamente
     const menusFormateados = menus.map(menu => ({
       id: menu.id,
       nombre: menu.name || 'Sin nombre',
@@ -154,7 +391,6 @@ export class MenusService {
       codigo: menu.codigo || '',
     }));
 
-    // Construir jerarquía
     return this.buildMenuHierarchy(menusFormateados);
   }
 
@@ -162,35 +398,20 @@ export class MenusService {
     const menuMap = new Map<number, any>();
     const rootMenus: any[] = [];
 
-    // Crear mapa de menús
     menus.forEach(menu => {
       menuMap.set(menu.id, { ...menu, submenus: [] });
     });
 
-    // Construir jerarquía
     menus.forEach(menu => {
       const menuNode = menuMap.get(menu.id);
-      if (menu.menuPadreId === null) {
-        rootMenus.push(menuNode);
-      } else {
+      if (menu.menuPadreId && menuMap.has(menu.menuPadreId)) {
         const parent = menuMap.get(menu.menuPadreId);
-        if (parent) {
-          parent.submenus.push(menuNode);
-        }
+        parent.submenus.push(menuNode);
+      } else {
+        rootMenus.push(menuNode);
       }
     });
 
-    // Ordenar recursivamente
-    const sortMenus = (menuList: any[]) => {
-      menuList.sort((a, b) => a.orden - b.orden);
-      menuList.forEach(menu => {
-        if (menu.submenus && menu.submenus.length > 0) {
-          sortMenus(menu.submenus);
-        }
-      });
-    };
-
-    sortMenus(rootMenus);
     return rootMenus;
   }
 }

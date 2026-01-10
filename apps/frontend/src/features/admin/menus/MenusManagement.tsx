@@ -1,599 +1,361 @@
 import { useState, useEffect } from 'react';
-import Select from 'react-select';
-import { adminService } from '../../../services/admin.service';
-import { customSelectStylesSmall } from '../../../styles/react-select-custom';
+import axios from 'axios';
+import { useAuthStore } from '../../auth/authStore';
+import { toast } from 'react-hot-toast';
 
 interface Menu {
   id: number;
   nombre: string;
-  icono: string;
+  codigo: string;
   ruta: string;
+  icono: string;
   orden: number;
   menuPadreId: number | null;
   activo: boolean;
-  createdAt?: string;
-  menuPadre?: {
-    nombre: string;
-  };
-  submenus?: Menu[];
+  lft?: number;
+  rght?: number;
+  nivel?: number;
 }
-
-type SortField = 'nombre' | 'ruta' | 'orden' | 'menuPadre' | 'activo';
-type SortOrder = 'asc' | 'desc';
 
 export function MenusManagement() {
   const [menus, setMenus] = useState<Menu[]>([]);
-  const [allMenus, setAllMenus] = useState<Menu[]>([]);
   const [loading, setLoading] = useState(true);
   const [showModal, setShowModal] = useState(false);
   const [editingMenu, setEditingMenu] = useState<Menu | null>(null);
   const [formData, setFormData] = useState({
     nombre: '',
+    codigo: '',
+    ruta: '#',
     icono: '',
-    ruta: '',
-    orden: 0,
     menuPadreId: null as number | null,
-    activo: true
+    activo: true,
   });
-
-  // Paginación
-  const [page, setPage] = useState(1);
-  const [limit, setLimit] = useState(10);
-  const [total, setTotal] = useState(0);
-  const [totalPages, setTotalPages] = useState(0);
-
-  // Ordenamiento
-  const [sortField, setSortField] = useState<SortField>('orden');
-  const [sortOrder, setSortOrder] = useState<SortOrder>('asc');
-
-  // Filtros
-  const [showFilters, setShowFilters] = useState(false);
-  const [filters, setFilters] = useState({
-    search: '',
-    menuPadreId: '' as string,
-    activo: '' as '' | 'true' | 'false',
-  });
-
-  useEffect(() => {
-    loadMenus();
-  }, []);
-
-  useEffect(() => {
-    loadMenus();
-  }, [page, limit, filters]);
+  const { token } = useAuthStore();
 
   const loadMenus = async () => {
     try {
       setLoading(true);
-      const data = await adminService.getMenus();
-      setAllMenus(data);
-      
-      let filteredMenus = [...data];
-      
-      // Aplicar filtros
-      if (filters.search) {
-        const searchLower = filters.search.toLowerCase();
-        filteredMenus = filteredMenus.filter(menu =>
-          menu.nombre.toLowerCase().includes(searchLower) ||
-          menu.ruta.toLowerCase().includes(searchLower) ||
-          (menu.menuPadre?.nombre && menu.menuPadre.nombre.toLowerCase().includes(searchLower))
-        );
-      }
-      
-      if (filters.menuPadreId) {
-        if (filters.menuPadreId === '0') {
-          filteredMenus = filteredMenus.filter(menu => menu.menuPadreId === null);
-        } else {
-          filteredMenus = filteredMenus.filter(menu => 
-            menu.menuPadreId === parseInt(filters.menuPadreId)
-          );
-        }
-      }
-      
-      if (filters.activo !== '') {
-        const activoBool = filters.activo === 'true';
-        filteredMenus = filteredMenus.filter(menu => menu.activo === activoBool);
-      }
-      
-      // Calcular paginación
-      setTotal(filteredMenus.length);
-      setTotalPages(Math.ceil(filteredMenus.length / limit));
-      
-      // Aplicar paginación
-      const startIndex = (page - 1) * limit;
-      const endIndex = startIndex + limit;
-      const paginatedMenus = filteredMenus.slice(startIndex, endIndex);
-      
-      setMenus(paginatedMenus);
-    } catch (error) {
-      console.error('Error al cargar menús:', error);
+      const response = await axios.get(`${import.meta.env.VITE_API_URL}/menus/tree`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      setMenus(response.data);
+    } catch (error: any) {
+      toast.error('Error al cargar los menús');
+      console.error(error);
     } finally {
       setLoading(false);
     }
   };
 
-  const handleFilterChange = (key: string, value: string) => {
-    setFilters(prev => ({ ...prev, [key]: value }));
-    setPage(1);
-  };
+  useEffect(() => {
+    loadMenus();
+  }, []);
 
-  const handleSort = (field: SortField) => {
-    if (sortField === field) {
-      setSortOrder(sortOrder === 'asc' ? 'desc' : 'asc');
-    } else {
-      setSortField(field);
-      setSortOrder('asc');
-    }
-  };
-
-  const getSortIcon = (field: SortField) => {
-    if (sortField !== field) return <i className="fas fa-sort text-muted ms-1"></i>;
-    return sortOrder === 'asc'
-      ? <i className="fas fa-sort-up ms-1"></i>
-      : <i className="fas fa-sort-down ms-1"></i>;
-  };
-
-  const sortedMenus = [...menus].sort((a, b) => {
-    let aVal: any, bVal: any;
-
-    switch (sortField) {
-      case 'nombre':
-        aVal = a.nombre || '';
-        bVal = b.nombre || '';
-        break;
-      case 'ruta':
-        aVal = a.ruta || '';
-        bVal = b.ruta || '';
-        break;
-      case 'orden':
-        aVal = a.orden;
-        bVal = b.orden;
-        break;
-      case 'menuPadre':
-        aVal = a.menuPadre?.nombre || '';
-        bVal = b.menuPadre?.nombre || '';
-        break;
-      case 'activo':
-        aVal = a.activo ? 1 : 0;
-        bVal = b.activo ? 1 : 0;
-        break;
-      default:
-        return 0;
-    }
-
-    if (typeof aVal === 'string' && typeof bVal === 'string') {
-      return sortOrder === 'asc'
-        ? aVal.localeCompare(bVal)
-        : bVal.localeCompare(aVal);
-    }
-
-    return sortOrder === 'asc' ? aVal - bVal : bVal - aVal;
-  });
-
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    try {
-      if (editingMenu) {
-        await adminService.updateMenu(editingMenu.id, formData);
-      } else {
-        await adminService.createMenu(formData);
-      }
-      setShowModal(false);
-      resetForm();
-      loadMenus();
-    } catch (error) {
-      console.error('Error al guardar menú:', error);
-      alert('Error al guardar el menú');
-    }
+  const handleCreate = () => {
+    setEditingMenu(null);
+    setFormData({
+      nombre: '',
+      codigo: '',
+      ruta: '#',
+      icono: '',
+      menuPadreId: null,
+      activo: true,
+    });
+    setShowModal(true);
   };
 
   const handleEdit = (menu: Menu) => {
     setEditingMenu(menu);
     setFormData({
       nombre: menu.nombre,
-      icono: menu.icono,
+      codigo: menu.codigo,
       ruta: menu.ruta,
-      orden: menu.orden,
+      icono: menu.icono,
       menuPadreId: menu.menuPadreId,
-      activo: menu.activo
+      activo: menu.activo,
     });
     setShowModal(true);
   };
 
-  const handleDelete = async (id: number) => {
-    if (!confirm('¿Está seguro de eliminar este menú?')) return;
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
     try {
-      await adminService.deleteMenu(id);
+      if (editingMenu) {
+        await axios.patch(
+          `${import.meta.env.VITE_API_URL}/menus/${editingMenu.id}`,
+          formData,
+          { headers: { Authorization: `Bearer ${token}` } }
+        );
+        toast.success('Menú actualizado');
+      } else {
+        await axios.post(
+          `${import.meta.env.VITE_API_URL}/menus`,
+          formData,
+          { headers: { Authorization: `Bearer ${token}` } }
+        );
+        toast.success('Menú creado');
+      }
+      setShowModal(false);
       loadMenus();
-    } catch (error) {
-      console.error('Error al eliminar menú:', error);
-      alert('Error al eliminar el menú');
+    } catch (error: any) {
+      toast.error(error.response?.data?.message || 'Error al guardar');
     }
   };
 
-  const resetForm = () => {
-    setFormData({
-      nombre: '',
-      icono: '',
-      ruta: '',
-      orden: 0,
-      menuPadreId: null,
-      activo: true
-    });
-    setEditingMenu(null);
+  const handleDelete = async (id: number) => {
+    if (!confirm('¿Está seguro de eliminar este menú?')) return;
+    
+    try {
+      await axios.delete(`${import.meta.env.VITE_API_URL}/menus/${id}`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      toast.success('Menú eliminado');
+      loadMenus();
+    } catch (error: any) {
+      toast.error(error.response?.data?.message || 'Error al eliminar');
+    }
   };
 
-  const handleCloseModal = () => {
-    setShowModal(false);
-    resetForm();
+  const handleMoveUp = async (id: number) => {
+    try {
+      await axios.put(
+        `${import.meta.env.VITE_API_URL}/menus/${id}/move-up`,
+        {},
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+      toast.success('Menú movido');
+      loadMenus();
+    } catch (error: any) {
+      toast.error(error.response?.data?.message || 'Error al mover');
+    }
   };
 
-  const parentMenus = allMenus.filter(m => m.menuPadreId === null);
+  const handleMoveDown = async (id: number) => {
+    try {
+      await axios.put(
+        `${import.meta.env.VITE_API_URL}/menus/${id}/move-down`,
+        {},
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+      toast.success('Menú movido');
+      loadMenus();
+    } catch (error: any) {
+      toast.error(error.response?.data?.message || 'Error al mover');
+    }
+  };
 
-  if (loading) {
-    return (
-      <div className="d-flex justify-content-center align-items-center" style={{ minHeight: '400px' }}>
-        <div className="spinner-border text-primary" role="status">
-          <span className="visually-hidden">Cargando...</span>
-        </div>
-      </div>
-    );
-  }
+  const handleChangeParent = async (id: number, newParentId: number | null) => {
+    try {
+      await axios.put(
+        `${import.meta.env.VITE_API_URL}/menus/${id}/change-parent`,
+        { newParentId },
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+      toast.success('Padre cambiado');
+      loadMenus();
+    } catch (error: any) {
+      toast.error(error.response?.data?.message || 'Error al cambiar padre');
+    }
+  };
+
+  const getRootMenus = () => menus.filter(m => !m.menuPadreId);
 
   return (
-    <div className="container-fluid py-4">
-      <div className="d-flex justify-content-between align-items-center mb-4">
-        <h2 className="mb-0">
-          <i className="fas fa-bars me-2"></i>
-          Gestión de Menús
-        </h2>
+    <div className="p-6">
+      <div className="flex justify-between items-center mb-6">
+        <h1 className="text-2xl font-bold">Gestión de Menús</h1>
         <button
-          className="btn btn-primary"
-          onClick={() => setShowModal(true)}
+          onClick={handleCreate}
+          className="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded"
         >
-          <i className="fas fa-plus me-2"></i>
+          <i className="fas fa-plus mr-2"></i>
           Nuevo Menú
         </button>
       </div>
 
-      {/* Filtros */}
-      <div className="card border-0 shadow-sm mb-3">
-        <div className="card-header bg-white border-bottom">
-          <button
-            className="btn btn-sm btn-outline-secondary"
-            onClick={() => setShowFilters(!showFilters)}
-          >
-            <i className="fas fa-filter me-2"></i>
-            {showFilters ? 'Ocultar Filtros' : 'Mostrar Filtros'}
-          </button>
-        </div>
-        {showFilters && (
-          <div className="card-body">
-            <div className="row g-2">
-              <div className="col-md-4">
-                <label className="form-label small">Buscar</label>
-                <input
-                  type="text"
-                  className="form-control custom-input-sm"
-                  placeholder="Nombre, ruta..."
-                  value={filters.search}
-                  onChange={(e) => handleFilterChange('search', e.target.value)}
-                />
-              </div>
-
-              <div className="col-md-3">
-                <label className="form-label small">Menú Padre</label>
-                <Select
-                  options={[
-                    { value: '', label: 'Todos' },
-                    { value: '0', label: 'Sin menú padre' },
-                    ...allMenus.filter(m => m.menuPadreId === null).map(menu => ({ 
-                      value: String(menu.id), 
-                      label: menu.nombre 
-                    }))
-                  ]}
-                  value={
-                    filters.menuPadreId === '0' 
-                      ? { value: '0', label: 'Sin menú padre' }
-                      : filters.menuPadreId 
-                        ? { 
-                            value: filters.menuPadreId, 
-                            label: allMenus.find(m => m.id === parseInt(filters.menuPadreId))?.nombre || filters.menuPadreId 
-                          }
-                        : { value: '', label: 'Todos' }
-                  }
-                  onChange={(option) => handleFilterChange('menuPadreId', option?.value || '')}
-                  isClearable
-                  styles={customSelectStylesSmall}
-                />
-              </div>
-
-              <div className="col-md-3">
-                <label className="form-label small">Estado</label>
-                <Select
-                  options={[
-                    { value: '', label: 'Todos' },
-                    { value: 'true', label: 'Activos' },
-                    { value: 'false', label: 'Inactivos' }
-                  ]}
-                  value={
-                    filters.activo === 'true' 
-                      ? { value: 'true', label: 'Activos' } 
-                      : filters.activo === 'false' 
-                        ? { value: 'false', label: 'Inactivos' } 
-                        : { value: '', label: 'Todos' }
-                  }
-                  onChange={(option) => handleFilterChange('activo', option?.value || '')}
-                  isClearable
-                  styles={customSelectStylesSmall}
-                />
-              </div>
-
-              <div className="col-md-2 d-flex align-items-end">
-                <button
-                  className="btn btn-outline-secondary btn-sm w-100"
-                  onClick={() => {
-                    setFilters({ search: '', menuPadreId: '', activo: '' });
-                    setPage(1);
-                  }}
-                  title="Limpiar filtros"
-                >
-                  <i className="fas fa-eraser me-1"></i>
-                  Limpiar
-                </button>
-              </div>
-            </div>
-          </div>
-        )}
-      </div>
-
-      <div className="card">
-        <div className="card-body">
-          <div className="table-responsive">
-            <table className="table table-hover">
-              <thead className="table-light">
-                <tr>
-                  <th style={{ width: '80px' }}>ID</th>
-                  <th onClick={() => handleSort('menuPadre')} style={{ cursor: 'pointer', userSelect: 'none' }}>
-                    Menú Padre {getSortIcon('menuPadre')}
-                  </th>
-                  <th onClick={() => handleSort('nombre')} style={{ cursor: 'pointer', userSelect: 'none' }}>
-                    Nombre {getSortIcon('nombre')}
-                  </th>
-                  <th onClick={() => handleSort('ruta')} style={{ cursor: 'pointer', userSelect: 'none' }}>
-                    Ruta {getSortIcon('ruta')}
-                  </th>
-                  <th style={{ width: '180px' }}>Fecha Creación</th>
-                  <th onClick={() => handleSort('activo')} style={{ cursor: 'pointer', userSelect: 'none', width: '120px' }}>
-                    Estado {getSortIcon('activo')}
-                  </th>
-                  <th style={{ width: '120px' }}>Acciones</th>
-                </tr>
-              </thead>
-              <tbody>
-                {sortedMenus.map(menu => (
-                  <tr key={menu.id}>
-                    <td>{menu.id}</td>
-                    <td>
-                      {menu.menuPadreId ? (
-                        <span className="badge bg-secondary">
-                          {allMenus.find(m => m.id === menu.menuPadreId)?.nombre || `ID: ${menu.menuPadreId}`}
-                        </span>
-                      ) : (
-                        <span className="text-muted">-</span>
-                      )}
-                    </td>
-                    <td>
-                      <strong>{menu.nombre}</strong>
-                    </td>
-                    <td>
-                      <code className="text-primary">{menu.ruta}</code>
-                    </td>
-                    <td>
-                      {menu.createdAt ? new Date(menu.createdAt).toLocaleDateString('es-ES', {
-                        year: 'numeric',
-                        month: '2-digit',
-                        day: '2-digit',
-                        hour: '2-digit',
-                        minute: '2-digit'
-                      }) : '-'}
-                    </td>
-                    <td>
-                      {menu.activo === true ? (
-                        <span className="badge bg-success">Activo</span>
-                      ) : (
-                        <span className="badge bg-danger">Inactivo</span>
-                      )}
-                    </td>
-                    <td>
-                      <div className="btn-group" role="group">
-                        <button
-                          className="btn btn-sm btn-outline-primary"
-                          onClick={() => handleEdit(menu)}
-                          title="Editar"
-                        >
-                          <i className="fas fa-edit"></i>
-                        </button>
-                        <button
-                          className="btn btn-sm btn-outline-danger"
-                          onClick={() => handleDelete(menu.id)}
-                          title="Eliminar"
-                        >
-                          <i className="fas fa-trash"></i>
-                        </button>
-                      </div>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-
-          {/* Paginación */}
-          <div className="d-flex justify-content-between align-items-center mt-3">
-            <div className="text-muted">
-              Mostrando {((page - 1) * limit) + 1} a {Math.min(page * limit, total)} de {total} registros
-            </div>
-            <div className="d-flex gap-2 align-items-center">
-              <select
-                className="form-select form-select-sm"
-                style={{ width: 'auto' }}
-                value={limit}
-                onChange={(e) => {
-                  setLimit(parseInt(e.target.value));
-                  setPage(1);
-                }}
-              >
-                <option value="5">5</option>
-                <option value="10">10</option>
-                <option value="25">25</option>
-                <option value="50">50</option>
-              </select>
-              <nav>
-                <ul className="pagination pagination-sm mb-0">
-                  <li className={`page-item ${page === 1 ? 'disabled' : ''}`}>
-                    <button className="page-link" onClick={() => setPage(page - 1)}>
-                      Anterior
-                    </button>
-                  </li>
-                  {[...Array(totalPages)].map((_, i) => (
-                    <li key={i + 1} className={`page-item ${page === i + 1 ? 'active' : ''}`}>
-                      <button className="page-link" onClick={() => setPage(i + 1)}>
-                        {i + 1}
+      {loading ? (
+        <div className="text-center py-8">Cargando...</div>
+      ) : (
+        <div className="bg-white rounded-lg shadow overflow-hidden">
+          <table className="min-w-full">
+            <thead className="bg-gray-50">
+              <tr>
+                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Nombre</th>
+                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Código</th>
+                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Ruta</th>
+                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Icono</th>
+                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Padre</th>
+                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Orden</th>
+                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">lft/rght</th>
+                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Estado</th>
+                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Acciones</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-gray-200">
+              {menus.map((menu) => (
+                <tr key={menu.id} style={{ paddingLeft: `${(menu.nivel || 0) * 20}px` }}>
+                  <td className="px-4 py-3 whitespace-nowrap">
+                    <span style={{ marginLeft: `${(menu.nivel || 0) * 20}px` }}>
+                      {menu.nivel && menu.nivel > 0 ? '└─ ' : ''}
+                      {menu.nombre}
+                    </span>
+                  </td>
+                  <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-600">{menu.codigo}</td>
+                  <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-600">{menu.ruta}</td>
+                  <td className="px-4 py-3 whitespace-nowrap">
+                    <i className={menu.icono}></i>
+                  </td>
+                  <td className="px-4 py-3 whitespace-nowrap text-sm">
+                    {menu.menuPadreId ? (
+                      <select
+                        value={menu.menuPadreId || ''}
+                        onChange={(e) => handleChangeParent(menu.id, e.target.value ? +e.target.value : null)}
+                        className="border rounded px-2 py-1 text-xs"
+                      >
+                        <option value="">Sin padre</option>
+                        {getRootMenus().map((m) => (
+                          <option key={m.id} value={m.id}>{m.nombre}</option>
+                        ))}
+                      </select>
+                    ) : (
+                      <span className="text-gray-400">-</span>
+                    )}
+                  </td>
+                  <td className="px-4 py-3 whitespace-nowrap text-sm">{menu.orden}</td>
+                  <td className="px-4 py-3 whitespace-nowrap text-xs text-gray-500">
+                    {menu.lft}/{menu.rght}
+                  </td>
+                  <td className="px-4 py-3 whitespace-nowrap">
+                    <span className={`px-2 py-1 text-xs rounded ${menu.activo ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}`}>
+                      {menu.activo ? 'Activo' : 'Inactivo'}
+                    </span>
+                  </td>
+                  <td className="px-4 py-3 whitespace-nowrap text-sm">
+                    <div className="flex gap-1">
+                      <button
+                        onClick={() => handleMoveUp(menu.id)}
+                        className="text-blue-600 hover:text-blue-800 p-1"
+                        title="Subir"
+                      >
+                        <i className="fas fa-arrow-up"></i>
                       </button>
-                    </li>
-                  ))}
-                  <li className={`page-item ${page === totalPages ? 'disabled' : ''}`}>
-                    <button className="page-link" onClick={() => setPage(page + 1)}>
-                      Siguiente
-                    </button>
-                  </li>
-                </ul>
-              </nav>
-            </div>
-          </div>
+                      <button
+                        onClick={() => handleMoveDown(menu.id)}
+                        className="text-blue-600 hover:text-blue-800 p-1"
+                        title="Bajar"
+                      >
+                        <i className="fas fa-arrow-down"></i>
+                      </button>
+                      <button
+                        onClick={() => handleEdit(menu)}
+                        className="text-yellow-600 hover:text-yellow-800 p-1"
+                        title="Editar"
+                      >
+                        <i className="fas fa-edit"></i>
+                      </button>
+                      <button
+                        onClick={() => handleDelete(menu.id)}
+                        className="text-red-600 hover:text-red-800 p-1"
+                        title="Eliminar"
+                      >
+                        <i className="fas fa-trash"></i>
+                      </button>
+                    </div>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
         </div>
-      </div>
+      )}
 
       {/* Modal */}
       {showModal && (
-        <div className="modal show d-block" style={{ backgroundColor: 'rgba(0,0,0,0.5)' }}>
-          <div className="modal-dialog modal-lg">
-            <div className="modal-content">
-              <div className="modal-header">
-                <h5 className="modal-title">
-                  {editingMenu ? 'Editar Menú' : 'Nuevo Menú'}
-                </h5>
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-lg p-6 w-full max-w-md">
+            <h2 className="text-xl font-bold mb-4">
+              {editingMenu ? 'Editar Menú' : 'Nuevo Menú'}
+            </h2>
+            <form onSubmit={handleSubmit}>
+              <div className="mb-4">
+                <label className="block text-sm font-medium mb-1">Nombre</label>
+                <input
+                  type="text"
+                  value={formData.nombre}
+                  onChange={(e) => setFormData({ ...formData, nombre: e.target.value })}
+                  className="w-full border rounded px-3 py-2"
+                  required
+                />
+              </div>
+              <div className="mb-4">
+                <label className="block text-sm font-medium mb-1">Código</label>
+                <input
+                  type="text"
+                  value={formData.codigo}
+                  onChange={(e) => setFormData({ ...formData, codigo: e.target.value })}
+                  className="w-full border rounded px-3 py-2"
+                  required
+                />
+              </div>
+              <div className="mb-4">
+                <label className="block text-sm font-medium mb-1">Ruta</label>
+                <input
+                  type="text"
+                  value={formData.ruta}
+                  onChange={(e) => setFormData({ ...formData, ruta: e.target.value })}
+                  className="w-full border rounded px-3 py-2"
+                />
+              </div>
+              <div className="mb-4">
+                <label className="block text-sm font-medium mb-1">Icono (FontAwesome)</label>
+                <input
+                  type="text"
+                  value={formData.icono}
+                  onChange={(e) => setFormData({ ...formData, icono: e.target.value })}
+                  className="w-full border rounded px-3 py-2"
+                  placeholder="fas fa-home"
+                />
+              </div>
+              <div className="mb-4">
+                <label className="block text-sm font-medium mb-1">Menú Padre</label>
+                <select
+                  value={formData.menuPadreId || ''}
+                  onChange={(e) => setFormData({ ...formData, menuPadreId: e.target.value ? +e.target.value : null })}
+                  className="w-full border rounded px-3 py-2"
+                >
+                  <option value="">Sin padre (menú principal)</option>
+                  {getRootMenus().map((menu) => (
+                    <option key={menu.id} value={menu.id}>{menu.nombre}</option>
+                  ))}
+                </select>
+              </div>
+              <div className="mb-4">
+                <label className="flex items-center">
+                  <input
+                    type="checkbox"
+                    checked={formData.activo}
+                    onChange={(e) => setFormData({ ...formData, activo: e.target.checked })}
+                    className="mr-2"
+                  />
+                  <span className="text-sm font-medium">Activo</span>
+                </label>
+              </div>
+              <div className="flex justify-end gap-2">
                 <button
                   type="button"
-                  className="btn-close"
-                  onClick={handleCloseModal}
-                ></button>
+                  onClick={() => setShowModal(false)}
+                  className="px-4 py-2 border rounded hover:bg-gray-50"
+                >
+                  Cancelar
+                </button>
+                <button
+                  type="submit"
+                  className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600"
+                >
+                  {editingMenu ? 'Actualizar' : 'Crear'}
+                </button>
               </div>
-              <form onSubmit={handleSubmit}>
-                <div className="modal-body">
-                  <div className="row g-3">
-                    <div className="col-md-6">
-                      <label className="form-label">Nombre</label>
-                      <input
-                        type="text"
-                        className="form-control"
-                        value={formData.nombre}
-                        onChange={(e) => setFormData({ ...formData, nombre: e.target.value })}
-                        required
-                      />
-                    </div>
-
-                    <div className="col-md-6">
-                      <label className="form-label">Icono (FontAwesome)</label>
-                      <div className="input-group">
-                        <span className="input-group-text">
-                          <i className={formData.icono || 'fas fa-question'}></i>
-                        </span>
-                        <input
-                          type="text"
-                          className="form-control"
-                          placeholder="fas fa-home"
-                          value={formData.icono}
-                          onChange={(e) => setFormData({ ...formData, icono: e.target.value })}
-                          required
-                        />
-                      </div>
-                    </div>
-
-                    <div className="col-md-6">
-                      <label className="form-label">Ruta</label>
-                      <input
-                        type="text"
-                        className="form-control"
-                        placeholder="/ruta"
-                        value={formData.ruta}
-                        onChange={(e) => setFormData({ ...formData, ruta: e.target.value })}
-                        required
-                      />
-                    </div>
-
-                    <div className="col-md-6">
-                      <label className="form-label">Orden</label>
-                      <input
-                        type="number"
-                        className="form-control"
-                        value={formData.orden}
-                        onChange={(e) => setFormData({ ...formData, orden: parseInt(e.target.value) })}
-                        required
-                      />
-                    </div>
-
-                    <div className="col-md-6">
-                      <label className="form-label">Menú Padre (opcional)</label>
-                      <select
-                        className="form-select"
-                        value={formData.menuPadreId || ''}
-                        onChange={(e) => setFormData({
-                          ...formData,
-                          menuPadreId: e.target.value ? parseInt(e.target.value) : null
-                        })}
-                      >
-                        <option value="">Sin menú padre</option>
-                        {parentMenus.map(menu => (
-                          <option key={menu.id} value={menu.id}>
-                            {menu.nombre}
-                          </option>
-                        ))}
-                      </select>
-                    </div>
-
-                    <div className="col-md-6">
-                      <label className="form-label">Estado</label>
-                      <div className="form-check form-switch">
-                        <input
-                          className="form-check-input"
-                          type="checkbox"
-                          checked={formData.activo}
-                          onChange={(e) => setFormData({ ...formData, activo: e.target.checked })}
-                        />
-                        <label className="form-check-label">
-                          {formData.activo ? 'Activo' : 'Inactivo'}
-                        </label>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-                <div className="modal-footer">
-                  <button
-                    type="button"
-                    className="btn btn-secondary"
-                    onClick={handleCloseModal}
-                  >
-                    Cancelar
-                  </button>
-                  <button type="submit" className="btn btn-primary">
-                    <i className="fas fa-save me-2"></i>
-                    Guardar
-                  </button>
-                </div>
-              </form>
-            </div>
+            </form>
           </div>
         </div>
       )}
