@@ -1,5 +1,6 @@
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { useEffect, useState, lazy, Suspense } from 'react';
+import { Toaster } from 'react-hot-toast';
 import { useAuthStore } from './features/auth/authStore';
 import { ProtectedRoute } from './components/ProtectedRoute';
 import { LoginPage } from './features/auth/pages/LoginPage';
@@ -55,6 +56,30 @@ function App() {
 
   return (
     <BrowserRouter>
+      <Toaster 
+        position="top-right"
+        toastOptions={{
+          duration: 3000,
+          style: {
+            background: '#363636',
+            color: '#fff',
+          },
+          success: {
+            duration: 3000,
+            iconTheme: {
+              primary: '#10b981',
+              secondary: '#fff',
+            },
+          },
+          error: {
+            duration: 4000,
+            iconTheme: {
+              primary: '#ef4444',
+              secondary: '#fff',
+            },
+          },
+        }}
+      />
       <Suspense fallback={<LoadingFallback />}>
         <Routes>
           <Route
