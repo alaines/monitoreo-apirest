@@ -326,15 +326,21 @@ export class UsersService {
   }
 
   async remove(id: number) {
-    await this.findOne(id); // Validate user exists
+    const existingUser = await this.findOne(id); // Validate user exists
 
-    // Soft delete - set estado to false
-    const user = await this.prisma.user.update({
+    // Hard delete - eliminar usuario permanentemente
+    await this.prisma.user.delete({
       where: { id },
-      data: { estado: false },
     });
 
-    return { message: 'Usuario desactivado exitosamente', id: user.id };
+    // También eliminar la persona asociada si existe
+    if (existingUser.personaId) {
+      await this.prisma.persona.delete({
+        where: { id: existingUser.personaId },
+      });
+    }
+
+    return { message: 'Usuario eliminado permanentemente', id };
   }
 
   async getMe(userId: number) {

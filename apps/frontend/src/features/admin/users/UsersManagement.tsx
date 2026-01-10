@@ -2,11 +2,15 @@ import { useState, useEffect } from 'react';
 import Select from 'react-select';
 import { usersService, gruposService, areasService, catalogosPersonasService, type User, type Grupo, type Area, type CreateUserDto, type UpdateUserDto, type TipoDoc, type EstadoCivil } from '../../../services/admin.service';
 import { customSelectStyles, customSelectStylesSmall } from '../../../styles/react-select-custom';
+import { useAuthStore } from '../../auth/authStore';
 
 type SortField = 'usuario' | 'nombreCompleto' | 'email' | 'grupo' | 'estado';
 type SortOrder = 'asc' | 'desc';
 
 export function UsersManagement() {
+  const { user: currentUser } = useAuthStore();
+  const isSuperAdmin = currentUser?.grupo?.nombre === 'SUPER_ADMIN';
+  
   const [users, setUsers] = useState<User[]>([]);
   const [grupos, setGrupos] = useState<Grupo[]>([]);
   const [areas, setAreas] = useState<Area[]>([]);
@@ -299,7 +303,7 @@ export function UsersManagement() {
   };
 
   const handleDelete = async (user: User) => {
-    if (!confirm(`¿Está seguro de eliminar al usuario "${user.usuario}"? El usuario será desactivado.`)) return;
+    if (!confirm(`⚠️ ATENCIÓN: Esta acción eliminará PERMANENTEMENTE al usuario "${user.usuario}" y todos sus datos asociados. Esta acción NO se puede deshacer.\n\n¿Está seguro de continuar?`)) return;
 
     try {
       await usersService.delete(user.id);
@@ -480,13 +484,15 @@ export function UsersManagement() {
                       >
                         <i className={`fas ${user.estado ? 'fa-user-slash' : 'fa-user-check'}`}></i>
                       </button>
-                      <button
-                        className="btn btn-sm btn-outline-danger"
-                        onClick={() => handleDelete(user)}
-                        title="Eliminar"
-                      >
-                        <i className="fas fa-trash"></i>
-                      </button>
+                      {isSuperAdmin && (
+                        <button
+                          className="btn btn-sm btn-outline-danger"
+                          onClick={() => handleDelete(user)}
+                          title="Eliminar permanentemente"
+                        >
+                          <i className="fas fa-trash"></i>
+                        </button>
+                      )}
                     </td>
                   </tr>
                 ))}
