@@ -1,0 +1,246 @@
+{
+  "menus": [
+    {
+      "id": 1,
+      "nombre": "Inicio",
+      "icono": "fas fa-chart-line",
+      "ruta": "/",
+      "orden": 1,
+      "menuPadreId": null,
+      "activo": true,
+      "codigo": "inicio"
+    },
+    {
+      "id": 2,
+      "nombre": "Incidencias",
+      "icono": "fas fa-ticket-alt",
+      "ruta": "/incidents",
+      "orden": 2,
+      "menuPadreId": null,
+      "activo": true,
+      "codigo": "incidencias"
+    },
+    {
+      "id": 3,
+      "nombre": "Cruces",
+      "icono": "fas fa-traffic-light",
+      "ruta": "#",
+      "orden": 3,
+      "menuPadreId": null,
+      "activo": true,
+      "codigo": "cruces"
+    },
+    {
+      "id": 4,
+      "nombre": "Gestión",
+      "icono": "fas fa-list",
+      "ruta": "/cruces",
+      "orden": 1,
+      "menuPadreId": 3,
+      "activo": true,
+      "codigo": "cruces-gestion"
+    },
+    {
+      "id": 5,
+      "nombre": "Mapa",
+      "icono": "fas fa-map-marked-alt",
+      "ruta": "/cruces/mapa",
+      "orden": 2,
+      "menuPadreId": 3,
+      "activo": true,
+      "codigo": "cruces-mapa"
+    },
+    {
+      "id": 6,
+      "nombre": "Reportes",
+      "icono": "fas fa-file-alt",
+      "ruta": "#",
+      "orden": 4,
+      "menuPadreId": null,
+      "activo": true,
+      "codigo": "reportes"
+    },
+    {
+      "id": 7,
+      "nombre": "Incidencias",
+      "icono": "fas fa-ticket-alt",
+      "ruta": "/reportes/incidencias",
+      "orden": 1,
+      "menuPadreId": 6,
+      "activo": true,
+      "codigo": "reportes-incidencias"
+    },
+    {
+      "id": 8,
+      "nombre": "Reporte Gráfico",
+      "icono": "fas fa-chart-bar",
+      "ruta": "/reportes/grafico",
+      "orden": 2,
+      "menuPadreId": 6,
+      "activo": true,
+      "codigo": "reportes-grafico"
+    },
+    {
+      "id": 9,
+      "nombre": "Mapa de Calor",
+      "icono": "fas fa-map-marked-alt",
+      "ruta": "/reportes/mapa",
+      "orden": 3,
+      "menuPadreId": 6,
+      "activo": true,
+      "codigo": "reportes-mapa"
+    },
+    {
+      "id": 10,
+      "nombre": "Mantenimientos",
+      "icono": "fas fa-cogs",
+      "ruta": "#",
+      "orden": 5,
+      "menuPadreId": null,
+      "activo": true,
+      "codigo": "mantenimientos",
+      "requierePermiso": true
+    },
+    {
+      "id": 11,
+      "nombre": "Tipos",
+      "icono": "fas fa-folder-tree",
+      "ruta": "/mantenimientos/tipos",
+      "orden": 1,
+      "menuPadreId": 10,
+      "activo": true,
+      "codigo": "mantenimientos-tipos"
+    },
+    {
+      "id": 12,
+      "nombre": "Áreas",
+      "icono": "fas fa-building",
+      "ruta": "/mantenimientos/areas",
+      "orden": 2,
+      "menuPadreId": 10,
+      "activo": true,
+      "codigo": "mantenimientos-areas"
+    },
+    {
+      "id": 13,
+      "nombre": "Equipos",
+      "icono": "fas fa-users-cog",
+      "ruta": "/mantenimientos/equipos",
+      "orden": 3,
+      "menuPadreId": 10,
+      "activo": true,
+      "codigo": "mantenimientos-equipos"
+    },
+    {
+      "id": 14,
+      "nombre": "Reportadores",
+      "icono": "fas fa-user-tie",
+      "ruta": "/mantenimientos/reportadores",
+      "orden": 4,
+      "menuPadreId": 10,
+      "activo": true,
+      "codigo": "mantenimientos-reportadores"
+    },
+    {
+      "id": 15,
+      "nombre": "Responsables",
+      "icono": "fas fa-user-check",
+      "ruta": "/mantenimientos/responsables",
+      "orden": 5,
+      "menuPadreId": 10,
+      "activo": true,
+      "codigo": "mantenimientos-responsables"
+    },
+    {
+      "id": 16,
+      "nombre": "Administradores",
+      "icono": "fas fa-user-shield",
+      "ruta": "/mantenimientos/administradores",
+      "orden": 6,
+      "menuPadreId": 10,
+      "activo": true,
+      "codigo": "mantenimientos-administradores"
+    },
+    {
+      "id": 17,
+      "nombre": "Ejes",
+      "icono": "fas fa-road",
+      "ruta": "/mantenimientos/ejes",
+      "orden": 7,
+      "menuPadreId": 10,
+      "activo": true,
+      "codigo": "mantenimientos-ejes"
+    },
+    {
+      "id": 18,
+      "nombre": "Proyectos",
+      "icono": "fas fa-project-diagram",
+      "ruta": "/mantenimientos/proyectos",
+      "orden": 8,
+      "menuPadreId": 10,
+      "activo": true,
+      "codigo": "mantenimientos-proyectos"
+    },
+    {
+      "id": 19,
+      "nombre": "Tipos de Incidencias",
+      "icono": "fas fa-exclamation-triangle",
+      "ruta": "/mantenimientos/incidencias",
+      "orden": 9,
+      "menuPadreId": 10,
+      "activo": true,
+      "codigo": "mantenimientos-incidencias"
+    },
+    {
+      "id": 20,
+      "nombre": "Panel de Control",
+      "icono": "fas fa-tools",
+      "ruta": "#",
+      "orden": 6,
+      "menuPadreId": null,
+      "activo": true,
+      "codigo": "panel-control",
+      "requierePermiso": true
+    },
+    {
+      "id": 21,
+      "nombre": "Usuarios",
+      "icono": "fas fa-users",
+      "ruta": "/admin/users",
+      "orden": 1,
+      "menuPadreId": 20,
+      "activo": true,
+      "codigo": "panel-usuarios"
+    },
+    {
+      "id": 22,
+      "nombre": "Grupos y Permisos",
+      "icono": "fas fa-shield-alt",
+      "ruta": "/admin/grupos",
+      "orden": 2,
+      "menuPadreId": 20,
+      "activo": true,
+      "codigo": "panel-grupos"
+    },
+    {
+      "id": 23,
+      "nombre": "Menús",
+      "icono": "fas fa-bars",
+      "ruta": "/admin/menus",
+      "orden": 3,
+      "menuPadreId": 20,
+      "activo": true,
+      "codigo": "panel-menus"
+    },
+    {
+      "id": 24,
+      "nombre": "Catálogos",
+      "icono": "fas fa-list",
+      "ruta": "/admin/catalogos",
+      "orden": 4,
+      "menuPadreId": 20,
+      "activo": true,
+      "codigo": "panel-catalogos"
+    }
+  ]
+}

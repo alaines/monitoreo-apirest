@@ -357,6 +357,9 @@ export function MenusManagement() {
                   <th onClick={() => handleSort('menuPadre')} style={{ cursor: 'pointer', userSelect: 'none' }}>
                     Menú Padre {getSortIcon('menuPadre')}
                   </th>
+                  <th onClick={() => handleSort('nombre')} style={{ cursor: 'pointer', userSelect: 'none' }}>
+                    Nombre {getSortIcon('nombre')}
+                  </th>
                   <th onClick={() => handleSort('ruta')} style={{ cursor: 'pointer', userSelect: 'none' }}>
                     Ruta {getSortIcon('ruta')}
                   </th>
@@ -379,6 +382,9 @@ export function MenusManagement() {
                       ) : (
                         <span className="text-muted">-</span>
                       )}
+                    </td>
+                    <td>
+                      <strong>{menu.nombre}</strong>
                     </td>
                     <td>
                       <code className="text-primary">{menu.ruta}</code>
