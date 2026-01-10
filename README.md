@@ -1,6 +1,6 @@
 # Sistema de Monitoreo de Semaforos e Incidencias
 
-[![Version](https://img.shields.io/badge/version-1.1.2-blue.svg)](./CHANGELOG.md)
+[![Version](https://img.shields.io/badge/version-1.1.3-blue.svg)](./CHANGELOG.md)
 [![License](https://img.shields.io/badge/license-MIT-green.svg)](./LICENSE)
 
 Sistema integral de gestion y monitoreo de cruces semaforizados e incidencias de trafico en tiempo real. Monorepo fullstack desarrollado con NestJS, React, PostgreSQL y PostGIS.

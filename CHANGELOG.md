@@ -5,6 +5,26 @@ Todos los cambios notables de este proyecto serán documentados en este archivo.
 El formato está basado en [Keep a Changelog](https://keepachangelog.com/es-ES/1.0.0/),
 y este proyecto adhiere a [Semantic Versioning](https://semver.org/lang/es/).
 
+## [1.1.3] - 2026-01-10
+
+### Agregado (Added)
+- **Gestión de Grupos**: CRUD completo para grupos/perfiles con modal
+- **Toggle Estado Usuarios**: Botón para activar/desactivar usuarios
+- **Eliminar Usuarios**: Eliminación permanente solo para SUPER_ADMIN
+
+### Corregido (Fixed)
+- **Z-index Header**: Dropdowns de notificaciones y usuario ahora aparecen sobre todos los componentes
+- **Campos Persona**: Corregido mapeo de campos snake_case (num_doc, ape_pat, ape_mat) en edición de usuarios
+- **Filtro Fechas Inicio**: Corrección de zona horaria en "Pendientes Hoy" usando comparación de strings YYYY-MM-DD
+- **Filtro Fechas Dashboard**: Período "today" corregido para zona horaria local
+- **Filtro Fechas Tickets**: Rango de fechas en listado de incidencias corregido
+- **Filtro Fechas Mapa Calor**: Filtros de año/mes corregidos para zona horaria
+
+### Técnico
+- Las fechas de la BD se almacenan como `timestamp without time zone` (hora local Perú)
+- Prisma devuelve fechas con sufijo Z (UTC), causando desfase de 5 horas
+- Solución: Comparar fechas usando strings YYYY-MM-DD en lugar de objetos Date
+
 ## [1.1.2] - 2026-01-09
 
 ### Agregado (Added)
