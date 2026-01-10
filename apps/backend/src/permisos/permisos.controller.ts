@@ -16,6 +16,7 @@ import {
   CreatePermisoDto,
   BulkCreatePermisosDto,
   BulkDeletePermisosDto,
+  BulkSavePermisosDto,
 } from './permisos.dto';
 
 @ApiTags('permisos')
@@ -77,6 +78,13 @@ export class PermisosController {
   @ApiResponse({ status: 201, description: 'Permisos creados exitosamente' })
   bulkCreatePermisos(@Body() bulkCreatePermisosDto: BulkCreatePermisosDto) {
     return this.permisosService.bulkCreatePermisos(bulkCreatePermisosDto);
+  }
+
+  @Post('bulk-save')
+  @ApiOperation({ summary: 'Guardar permisos completos de un grupo (reemplaza todos)' })
+  @ApiResponse({ status: 201, description: 'Permisos guardados exitosamente' })
+  bulkSavePermisos(@Body() bulkSavePermisosDto: BulkSavePermisosDto) {
+    return this.permisosService.bulkSavePermisos(bulkSavePermisosDto);
   }
 
   @Delete('bulk')

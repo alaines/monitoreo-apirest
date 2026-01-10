@@ -168,6 +168,36 @@ export class PermisosService {
   }
 
   /**
+   * Guardar permisos completos de un grupo (reemplaza todos los permisos existentes)
+   */
+  async bulkSavePermisos(bulkSavePermisosDto: any) {
+    const { grupoId, permisos } = bulkSavePermisosDto;
+
+    // Eliminar todos los permisos existentes del grupo
+    await this.prisma.grupoMenu.deleteMany({
+      where: { grupoId },
+    });
+
+    // Si hay permisos nuevos, crearlos
+    if (permisos && permisos.length > 0) {
+      const permisosData = permisos.map((p: any) => ({
+        grupoId,
+        menuId: p.menuId,
+        accionId: p.accionId,
+      }));
+
+      await this.prisma.grupoMenu.createMany({
+        data: permisosData,
+      });
+    }
+
+    return {
+      created: permisos?.length || 0,
+      message: `Se guardaron ${permisos?.length || 0} permiso(s)`,
+    };
+  }
+
+  /**
    * Eliminar permisos específicos
    */
   async bulkDeletePermisos(bulkDeletePermisosDto: BulkDeletePermisosDto) {

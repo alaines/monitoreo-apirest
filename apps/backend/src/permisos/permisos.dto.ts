@@ -47,6 +47,26 @@ export class BulkDeletePermisosDto {
   accionesIds!: number[];
 }
 
+export class BulkSavePermisosDto {
+  @ApiProperty({ description: 'ID del grupo (perfil)' })
+  @IsInt()
+  grupoId!: number;
+
+  @ApiProperty({ 
+    description: 'Array de permisos (menuId + accionId)', 
+    type: 'array',
+    items: {
+      type: 'object',
+      properties: {
+        menuId: { type: 'number' },
+        accionId: { type: 'number' }
+      }
+    }
+  })
+  @IsArray()
+  permisos!: Array<{ menuId: number; accionId: number }>;
+}
+
 export class GetPermisosGrupoDto {
   @ApiProperty({ description: 'ID del grupo (perfil)' })
   @IsInt()

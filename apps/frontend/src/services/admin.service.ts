@@ -287,7 +287,7 @@ export const permisosService = {
   },
 
   async bulkCreate(dto: BulkPermisosDto) {
-    const { data } = await api.post(`/permisos/bulk`, dto);
+    const { data } = await api.post(`/permisos/bulk-save`, dto);
     return data;
   },
 
