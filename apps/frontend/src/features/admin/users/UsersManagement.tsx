@@ -309,6 +309,18 @@ export function UsersManagement() {
     }
   };
 
+  const handleToggleEstado = async (user: User) => {
+    const action = user.estado ? 'desactivar' : 'activar';
+    if (!confirm(`¿Está seguro de ${action} al usuario "${user.usuario}"?`)) return;
+
+    try {
+      await usersService.toggleEstado(user.id);
+      await loadData();
+    } catch (error: any) {
+      setErrors(error.response?.data?.message || `Error al ${action} usuario`);
+    }
+  };
+
   if (loading) {
     return (
       <div className="d-flex justify-content-center align-items-center" style={{ height: '400px' }}>
@@ -454,11 +466,18 @@ export function UsersManagement() {
                     </td>
                     <td>
                       <button
-                        className="btn btn-sm btn-outline-primary me-2"
+                        className="btn btn-sm btn-outline-primary me-1"
                         onClick={() => handleOpenModal(user)}
                         title="Editar"
                       >
                         <i className="fas fa-edit"></i>
+                      </button>
+                      <button
+                        className={`btn btn-sm ${user.estado ? 'btn-outline-warning' : 'btn-outline-success'} me-1`}
+                        onClick={() => handleToggleEstado(user)}
+                        title={user.estado ? 'Desactivar' : 'Activar'}
+                      >
+                        <i className={`fas ${user.estado ? 'fa-user-slash' : 'fa-user-check'}`}></i>
                       </button>
                       <button
                         className="btn btn-sm btn-outline-danger"

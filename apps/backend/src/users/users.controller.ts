@@ -75,6 +75,15 @@ export class UsersController {
     return this.usersService.update(id, updateUserDto);
   }
 
+  @Patch(':id/toggle-estado')
+  @RequirePermission('users', 'edit')
+  @ApiOperation({ summary: 'Activar/Desactivar usuario' })
+  @ApiResponse({ status: 200, description: 'Estado del usuario actualizado exitosamente' })
+  @ApiResponse({ status: 404, description: 'Usuario no encontrado' })
+  toggleEstado(@Param('id', ParseIntPipe) id: number) {
+    return this.usersService.toggleEstado(id);
+  }
+
   @Delete(':id')
   @RequirePermission('users', 'delete')
   @ApiOperation({ summary: 'Desactivar usuario' })

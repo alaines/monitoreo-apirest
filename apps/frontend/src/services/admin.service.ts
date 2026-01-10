@@ -210,6 +210,11 @@ export const usersService = {
     return data;
   },
 
+  async toggleEstado(id: number) {
+    const { data } = await api.patch(`/users/${id}/toggle-estado`);
+    return data;
+  },
+
   async delete(id: number) {
     const { data } = await api.delete(`/users/${id}`);
     return data;

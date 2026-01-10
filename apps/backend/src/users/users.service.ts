@@ -294,6 +294,37 @@ export class UsersService {
     return result;
   }
 
+  async toggleEstado(id: number) {
+    const existingUser = await this.findOne(id);
+
+    const user = await this.prisma.user.update({
+      where: { id },
+      data: { 
+        estado: !existingUser.estado,
+        updatedAt: new Date()
+      },
+      include: {
+        grupo: {
+          select: {
+            id: true,
+            nombre: true,
+          },
+        },
+        area: {
+          select: {
+            id: true,
+            nombre: true,
+          },
+        },
+        persona: true,
+      },
+    });
+
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    const { clave, ...result } = user;
+    return result;
+  }
+
   async remove(id: number) {
     await this.findOne(id); // Validate user exists
 
