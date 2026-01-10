@@ -58,4 +58,43 @@ prisma/migrations/
 
 # OS
 Thumbs.db
-.ppk
+.DS_Store
+
+# Sensitive files - Private keys and credentials
+*.ppk
+*.pem
+*.key
+*.p12
+*.pfx
+*.jks
+*.keystore
+id_rsa
+id_rsa.pub
+id_ed25519
+id_ed25519.pub
+id_dsa
+id_dsa.pub
+*.crt
+*.cer
+
+# Credentials and secrets
+credentials.json
+secrets.json
+*.secret
+*.secrets
+**/secrets/
+**/credentials/
+.htpasswd
+.netrc
+.pgpass
+.my.cnf
+.npmrc
+.pypirc
+
+# SSH config with host info
+ssh_config
+config.ssh
+
+# Database dumps with potential credentials
+*.sql.gz
+*.dump
