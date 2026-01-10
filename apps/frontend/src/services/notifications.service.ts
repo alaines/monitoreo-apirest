@@ -69,6 +69,7 @@ class NotificationsService {
       reconnection: true,
       reconnectionDelay: 1000,
       reconnectionAttempts: 5,
+      timeout: 10000,
     });
 
     this.socket.on('connect', () => {
@@ -80,7 +81,10 @@ class NotificationsService {
     });
 
     this.socket.on('connect_error', (error) => {
-      console.error('WebSocket connection error:', error);
+      // Solo mostrar error si es relevante (no timeout inicial)
+      if (error.message !== 'websocket error' && error.message !== 'xhr poll error') {
+        console.warn('WebSocket connection error:', error.message);
+      }
     });
 
     return this.socket;
