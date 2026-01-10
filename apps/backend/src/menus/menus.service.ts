@@ -53,27 +53,31 @@ export class MenusService {
       orderBy: [{ lft: 'asc' }],
     });
 
-    return menus.map(menu => ({
-      id: menu.id,
-      nombre: menu.name || 'Sin nombre',
-      codigo: menu.codigo || '',
-      ruta: menu.url || '#',
-      icono: menu.icono || '',
-      orden: menu.orden || 0,
-      menuPadreId: menu.parentId,
-      activo: menu.estado ?? true,
-      lft: menu.lft,
-      rght: menu.rght,
-      nivel: this.calculateLevel(menu.lft, menu.rght),
-    }));
-  }
+    // Calcular nivel basándose en los valores lft
+    const menusWithLevel = menus.map(menu => {
+      // Contar cuántos menús envuelven a este menú (tienen lft < menu.lft y rght > menu.rght)
+      const nivel = menus.filter(m => 
+        m.lft !== null && m.rght !== null &&
+        menu.lft !== null && menu.rght !== null &&
+        m.lft < menu.lft && m.rght > menu.rght
+      ).length;
 
-  /**
-   * Calcula el nivel de profundidad basándose en lft y rght
-   */
-  private calculateLevel(lft: number | null, rght: number | null): number {
-    if (!lft || !rght) return 0;
-    return Math.floor((rght - lft - 1) / 2);
+      return {
+        id: menu.id,
+        nombre: menu.name || 'Sin nombre',
+        codigo: menu.codigo || '',
+        ruta: menu.url || '#',
+        icono: menu.icono || '',
+        orden: menu.orden || 0,
+        menuPadreId: menu.parentId,
+        activo: menu.estado ?? true,
+        lft: menu.lft,
+        rght: menu.rght,
+        nivel: nivel,
+      };
+    });
+
+    return menusWithLevel;
   }
 
   /**
