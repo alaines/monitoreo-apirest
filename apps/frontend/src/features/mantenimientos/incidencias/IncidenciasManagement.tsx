@@ -134,6 +134,7 @@ const IncidenciasManagement = () => {
                     <th>Tipo</th>
                     <th className="text-center">Caracteristica</th>
                     <th>Padre</th>
+                    <th className="text-center">Prioridad</th>
                     <th className="text-center">Estado</th>
                     <th className="text-center">Acciones</th>
                   </tr>
@@ -159,6 +160,15 @@ const IncidenciasManagement = () => {
                           <small className="text-muted">
                             {incidenciasPlanas.find(i => i.id === incidencia.parentId)?.tipo || '-'}
                           </small>
+                        ) : (
+                          <span className="text-muted">-</span>
+                        )}
+                      </td>
+                      <td className="text-center">
+                        {incidencia.prioridadId ? (
+                          <span className="badge bg-info">
+                            {prioridades.find(p => p.id === incidencia.prioridadId)?.nombre || '-'}
+                          </span>
                         ) : (
                           <span className="text-muted">-</span>
                         )}
