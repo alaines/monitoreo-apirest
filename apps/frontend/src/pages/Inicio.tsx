@@ -202,10 +202,9 @@ export function Inicio() {
         incidentsService.getCrucesApagadosCount()
       ]);
       
-      // Calcular fecha de hoy (inicio y fin del día)
+      // Calcular fecha de hoy en formato YYYY-MM-DD (hora local)
       const today = new Date();
-      const startOfToday = new Date(today.getFullYear(), today.getMonth(), today.getDate(), 0, 0, 0, 0);
-      const endOfToday = new Date(today.getFullYear(), today.getMonth(), today.getDate(), 23, 59, 59, 999);
+      const todayStr = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`;
       
       // Incidencias de hoy para las estadísticas diarias
       const todayIncidentsData = await incidentsService.getIncidents({ 
@@ -215,10 +214,13 @@ export function Inicio() {
 
       const allIncidents = todayIncidentsData.data;
       
-      // Filtrar incidencias de hoy - comparar rangos de fecha
+      // Filtrar incidencias de hoy - comparar por fecha YYYY-MM-DD
+      // Las fechas de la BD vienen como UTC pero representan hora local de Perú
+      // Extraemos solo la parte de fecha (YYYY-MM-DD) del string ISO
       const todayIncidents = allIncidents.filter((i: Incident) => {
-        const createdDate = new Date(i.createdAt);
-        return createdDate >= startOfToday && createdDate <= endOfToday;
+        // Extraer YYYY-MM-DD de la fecha ISO (ej: "2026-01-10T00:27:08.474Z" -> "2026-01-10")
+        const createdDateStr = i.createdAt.split('T')[0];
+        return createdDateStr === todayStr;
       });
 
       // Estadísticas de hoy
