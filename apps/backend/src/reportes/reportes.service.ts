@@ -83,8 +83,15 @@ export class ReportesService {
 
     switch (filtros.periodo) {
       case PeriodoReporte.DIA:
-        inicio = new Date(ahora.getFullYear(), ahora.getMonth(), ahora.getDate());
-        fin = new Date(ahora.getFullYear(), ahora.getMonth(), ahora.getDate(), 23, 59, 59);
+        if (filtros.dia && filtros.mes && filtros.anio) {
+          // Usar los valores proporcionados por el usuario
+          inicio = new Date(filtros.anio, filtros.mes - 1, filtros.dia);
+          fin = new Date(filtros.anio, filtros.mes - 1, filtros.dia, 23, 59, 59);
+        } else {
+          // Fallback al día actual
+          inicio = new Date(ahora.getFullYear(), ahora.getMonth(), ahora.getDate());
+          fin = new Date(ahora.getFullYear(), ahora.getMonth(), ahora.getDate(), 23, 59, 59);
+        }
         break;
 
       case PeriodoReporte.MES:

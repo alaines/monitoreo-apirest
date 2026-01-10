@@ -24,6 +24,11 @@ export class ReporteIncidenciasDto {
   @IsOptional()
   @Type(() => Number)
   @IsNumber()
+  dia?: number; // 1-31
+
+  @IsOptional()
+  @Type(() => Number)
+  @IsNumber()
   mes?: number; // 1-12
 
   @IsOptional()
