@@ -30,7 +30,7 @@ export function MenusManagement() {
     menuPadreId: null as number | null,
     activo: true,
   });
-  const { token } = useAuthStore();
+  const { token, refreshUserMenus } = useAuthStore();
 
   const loadMenus = async () => {
     try {
@@ -96,7 +96,9 @@ export function MenusManagement() {
         toast.success('Menú creado exitosamente');
       }
       setShowModal(false);
-      loadMenus();
+      await loadMenus();
+      // Refrescar menús del sidebar
+      await refreshUserMenus();
     } catch (error: any) {
       toast.error(error.response?.data?.message || 'Error al guardar el menú');
     }
@@ -110,7 +112,9 @@ export function MenusManagement() {
         headers: { Authorization: `Bearer ${token}` },
       });
       toast.success('Menú eliminado exitosamente');
-      loadMenus();
+      await loadMenus();
+      // Refrescar menús del sidebar
+      await refreshUserMenus();
     } catch (error: any) {
       toast.error(error.response?.data?.message || 'Error al eliminar el menú');
     }

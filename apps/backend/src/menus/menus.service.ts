@@ -127,6 +127,9 @@ export class MenusService {
       },
     });
 
+    // Asignar automáticamente todos los permisos al grupo SUPER_ADMIN
+    await this.assignPermissionsToSuperAdmin(menu.id);
+
     await this.rebuildTree();
 
     return {
@@ -139,6 +142,37 @@ export class MenusService {
       menuPadreId: menu.parentId,
       activo: menu.estado,
     };
+  }
+
+  /**
+   * Asigna todos los permisos de un menú al grupo SUPER_ADMIN
+   */
+  private async assignPermissionsToSuperAdmin(menuId: number): Promise<void> {
+    // Buscar el grupo SUPER_ADMIN
+    const superAdminGroup = await this.prisma.grupo.findFirst({
+      where: { nombre: 'SUPER_ADMIN' },
+    });
+
+    if (!superAdminGroup) {
+      console.warn('Grupo SUPER_ADMIN no encontrado');
+      return;
+    }
+
+    // Obtener todas las acciones disponibles
+    const acciones = await this.prisma.accion.findMany();
+
+    // Crear permisos para cada acción
+    const permissionsData = acciones.map(accion => ({
+      grupoId: superAdminGroup.id,
+      menuId: menuId,
+      accionId: accion.id,
+    }));
+
+    // Insertar todos los permisos
+    await this.prisma.grupoMenu.createMany({
+      data: permissionsData,
+      skipDuplicates: true, // Evitar errores si ya existe
+    });
   }
 
   /**

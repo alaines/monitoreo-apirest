@@ -125,6 +125,39 @@ export class AuthService {
     return user;
   }
 
+  async getUserWithMenus(userId: number) {
+    const user = await this.prisma.user.findUnique({
+      where: { id: userId },
+      select: {
+        id: true,
+        usuario: true,
+        grupoId: true,
+        estado: true,
+        grupo: {
+          select: {
+            id: true,
+            nombre: true,
+          },
+        },
+      },
+    });
+
+    if (!user || !user.estado) {
+      throw new UnauthorizedException('Usuario no válido');
+    }
+
+    // Obtener menús actualizados
+    const menus = user.grupoId ? await this.menusService.findByGrupo(user.grupoId) : [];
+
+    return {
+      id: user.id,
+      usuario: user.usuario,
+      grupoId: user.grupoId,
+      grupo: user.grupo,
+      menus: menus,
+    };
+  }
+
   private async generateTokens(userId: number, usuario: string, grupoId: number) {
     const payload = { sub: userId, usuario, grupoId };
 

@@ -12,6 +12,7 @@ interface AuthState {
   logout: () => void;
   clearError: () => void;
   initialize: () => void;
+  refreshUserMenus: () => Promise<void>;
 }
 
 export const useAuthStore = create<AuthState>((set) => ({
@@ -76,6 +77,42 @@ export const useAuthStore = create<AuthState>((set) => ({
         token,
         isAuthenticated: true,
       });
+    }
+  },
+
+  refreshUserMenus: async () => {
+    const token = authService.getAccessToken();
+    const currentUser = authService.getStoredUser();
+    
+    if (!token || !currentUser) {
+      return;
+    }
+
+    try {
+      // Re-autenticar para obtener los menús actualizados
+      const response = await fetch(`${import.meta.env.VITE_API_URL}/auth/me`, {
+        headers: {
+          'Authorization': `Bearer ${token}`,
+        },
+      });
+
+      if (response.ok) {
+        const userData = await response.json();
+        
+        // Actualizar solo los menús del usuario
+        const updatedUser = {
+          ...currentUser,
+          menus: userData.menus || currentUser.menus,
+        };
+
+        localStorage.setItem('user', JSON.stringify(updatedUser));
+        
+        set({
+          user: updatedUser,
+        });
+      }
+    } catch (error) {
+      console.error('Error al refrescar menús:', error);
     }
   },
 }));
