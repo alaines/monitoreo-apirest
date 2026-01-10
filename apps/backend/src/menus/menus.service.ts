@@ -102,4 +102,95 @@ export class MenusService {
     });
     return { message: 'Menú eliminado correctamente' };
   }
+
+  async findByGrupo(grupoId: number) {
+    // Obtener menús permitidos para el grupo
+    const menusPermitidos = await this.prisma.grupoMenu.findMany({
+      where: {
+        grupoId: grupoId,
+        accion: {
+          codigo: 'view', // Solo necesitamos verificar permiso de "ver"
+        },
+      },
+      select: {
+        menuId: true,
+      },
+    });
+
+    const menuIds = menusPermitidos.map(gm => gm.menuId);
+
+    if (menuIds.length === 0) {
+      return [];
+    }
+
+    // Obtener los menús con sus datos completos
+    const menus = await this.prisma.menu.findMany({
+      where: {
+        id: { in: menuIds },
+        estado: true,
+      },
+      select: {
+        id: true,
+        name: true,
+        url: true,
+        icono: true,
+        orden: true,
+        parentId: true,
+        codigo: true,
+      },
+      orderBy: [
+        { orden: 'asc' },
+      ],
+    });
+
+    // Mapear y estructurar jerárquicamente
+    const menusFormateados = menus.map(menu => ({
+      id: menu.id,
+      nombre: menu.name || 'Sin nombre',
+      ruta: menu.url || '#',
+      icono: menu.icono || '',
+      orden: menu.orden || 0,
+      menuPadreId: menu.parentId,
+      codigo: menu.codigo || '',
+    }));
+
+    // Construir jerarquía
+    return this.buildMenuHierarchy(menusFormateados);
+  }
+
+  private buildMenuHierarchy(menus: any[]): any[] {
+    const menuMap = new Map<number, any>();
+    const rootMenus: any[] = [];
+
+    // Crear mapa de menús
+    menus.forEach(menu => {
+      menuMap.set(menu.id, { ...menu, submenus: [] });
+    });
+
+    // Construir jerarquía
+    menus.forEach(menu => {
+      const menuNode = menuMap.get(menu.id);
+      if (menu.menuPadreId === null) {
+        rootMenus.push(menuNode);
+      } else {
+        const parent = menuMap.get(menu.menuPadreId);
+        if (parent) {
+          parent.submenus.push(menuNode);
+        }
+      }
+    });
+
+    // Ordenar recursivamente
+    const sortMenus = (menuList: any[]) => {
+      menuList.sort((a, b) => a.orden - b.orden);
+      menuList.forEach(menu => {
+        if (menu.submenus && menu.submenus.length > 0) {
+          sortMenus(menu.submenus);
+        }
+      });
+    };
+
+    sortMenus(rootMenus);
+    return rootMenus;
+  }
 }

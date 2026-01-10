@@ -7,12 +7,14 @@ import { AuthController } from './auth.controller';
 import { JwtStrategy } from './strategies/jwt.strategy';
 import { APP_GUARD } from '@nestjs/core';
 import { JwtAuthGuard } from './guards/jwt-auth.guard';
+import { MenusModule } from '../menus/menus.module';
 
 @Module({
   imports: [
     PassportModule,
     JwtModule.register({}), // Config handled in service
     ConfigModule,
+    MenusModule,
   ],
   controllers: [AuthController],
   providers: [

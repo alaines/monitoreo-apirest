@@ -3,6 +3,7 @@ import { JwtService } from '@nestjs/jwt';
 import { ConfigService } from '@nestjs/config';
 import { createHash, timingSafeEqual } from 'crypto';
 import { PrismaService } from '../prisma/prisma.service';
+import { MenusService } from '../menus/menus.service';
 import { LoginDto } from './dto/auth.dto';
 
 @Injectable()
@@ -11,6 +12,7 @@ export class AuthService {
     private prisma: PrismaService,
     private jwtService: JwtService,
     private configService: ConfigService,
+    private menusService: MenusService,
   ) {}
 
   async login(loginDto: LoginDto) {
@@ -52,6 +54,9 @@ export class AuthService {
 
     const tokens = await this.generateTokens(user.id, user.usuario, user.grupoId ?? 0);
 
+    // Obtener menús del usuario según su grupo
+    const menus = user.grupoId ? await this.menusService.findByGrupo(user.grupoId) : [];
+
     return {
       accessToken: tokens.accessToken,
       refreshToken: tokens.refreshToken,
@@ -60,6 +65,7 @@ export class AuthService {
         usuario: user.usuario,
         grupoId: user.grupoId,
         grupo: user.grupo,
+        menus: menus,
       },
     };
   }
