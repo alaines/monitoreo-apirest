@@ -1,12 +1,12 @@
 # Estado Actual del Proyecto - Sistema de Monitoreo
 
-**Fecha**: 8 de enero de 2026
-**Última actualización**: Enero 2026 - Sprint 8 Completado
-**Estado General**: Producción - Sprint 8: Notificaciones en Tiempo Real
+**Fecha**: 9 de enero de 2026
+**Ultima actualizacion**: Enero 2026 - Sprint 9 Completado
+**Estado General**: Produccion - Sprint 9: Menus Dinamicos y Optimizaciones
 
 ---
 
-## Sistema en Producción
+## Sistema en Produccion
 
 ### Servidores
 - **Apps**: apps.movingenia.com (34.66.18.138)
@@ -14,26 +14,36 @@
 - **Usuario**: daddyplayerperu
 - **Backend**: PM2 (Puerto 3001)
 - **Frontend**: PM2 + Vite dev mode (Puerto 5173)
-- **Nginx**: Proxy inverso `/api/` → `localhost:3001`
+- **Nginx**: Proxy inverso `/api/` -> `localhost:3001`
 
-### Última Versión Desplegada
-- **Commit**: `bcafd38` - Optimizar carga de mapa con endpoint ligero
+### Ultima Version Desplegada
+- **Version**: 1.1.2
+- **Commit**: `1d5d8fc` - fix(reportes): Corregir filtro DIA
 - **Branch**: main
-- **Commits desde inicio producción**: +15
 
 ---
 
-## Módulos Completamente Implementados
+## Modulos Completamente Implementados
 
-### 1. Autenticación y Usuarios
+### 1. Autenticacion y Usuarios
 - Login con JWT
-- Gestión de usuarios (CRUD)
+- Gestion de usuarios (CRUD)
 - Roles y grupos
 - Permisos granulares (RBAC)
 - Guards y decoradores personalizados
-- Middleware de autorización
+- Middleware de autorizacion
+- **[SPRINT 9]** Endpoint /auth/me para datos actualizados
 
-### 2. Dashboard Analítico
+### 2. Gestion de Menus Dinamicos [SPRINT 9]
+- Tree Behavior (Nested Set Model)
+- Campos lft/rght para jerarquia eficiente
+- Operaciones: mover arriba/abajo, cambiar padre
+- Auto-asignacion de permisos a SUPER_ADMIN
+- Validacion de codigo unico
+- Reconstruccion automatica del arbol
+- Sidebar con auto-refresh despues de cambios
+
+### 3. Dashboard Analitico
 - Cards de estadísticas en tiempo real
   - Pendientes del día
   - Cerrados del día

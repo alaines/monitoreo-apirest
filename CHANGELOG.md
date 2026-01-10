@@ -5,6 +5,34 @@ Todos los cambios notables de este proyecto serán documentados en este archivo.
 El formato está basado en [Keep a Changelog](https://keepachangelog.com/es-ES/1.0.0/),
 y este proyecto adhiere a [Semantic Versioning](https://semver.org/lang/es/).
 
+## [1.1.2] - 2026-01-09
+
+### Agregado (Added)
+- **Gestion de Menus**: Sistema completo con Tree Behavior (Nested Set Model)
+- **Permisos Automaticos**: Auto-asignacion de permisos a SUPER_ADMIN al crear menus
+- **Sidebar Dinamico**: Auto-refresh de menus en sidebar despues de cambios
+- **Endpoint /auth/me**: Obtener datos actualizados del usuario autenticado
+- **Endpoint /permisos/bulk-save**: Guardado masivo de permisos compatible con frontend
+- **Campo dia en filtros**: Soporte para filtrar reportes por dia especifico
+
+### Corregido (Fixed)
+- **Filtro DIA en reportes**: Ahora usa el dia/mes/anio seleccionado en lugar de fecha actual
+- **Codigo unico de menus**: Validacion ConflictException para codigos duplicados
+- **Calculo de nivel en arbol**: Corregido usando conteo de ancestros Nested Set
+- **Permisos en endpoints**: Permitir acceso cuando el menu no existe en BD
+- **WebSocket/CORS**: Mejorado manejo de errores y configuracion CORS
+- **Navegacion sin parpadeo**: Layout compartido con Outlet para evitar page jumps
+- **Suspense optimizado**: Movido dentro del Layout para evitar flicker completo
+
+### Mejorado (Changed)
+- **App.tsx**: Refactorizado con ProtectedLayout compartido y rutas anidadas
+- **PermissionsGuard**: Logica mejorada para validar permisos dinamicamente
+- **calcularRangoFechas()**: Soporte completo para periodo DIA con parametros
+
+### Documentacion
+- Actualizada documentacion de gestion de menus con permisos automaticos
+- Agregada seccion de troubleshooting en documentacion
+
 ## [1.0.1] - 2026-01-08
 
 ### Corregido (Fixed)

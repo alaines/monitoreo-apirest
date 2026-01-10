@@ -343,20 +343,104 @@ WHERE rght = lft + 1;
 
 ## Troubleshooting
 
-### Los valores lft/rght están desincronizados
-**Solución**: Llamar a `POST /menus/rebuild-tree`
+### Los valores lft/rght estan desincronizados
+**Solucion**: Llamar a `POST /menus/rebuild-tree`
 
-### No puedo mover un menú
+### No puedo mover un menu
 **Posibles causas**:
-- Intentando mover a sí mismo
+- Intentando mover a si mismo
 - Intentando mover a un descendiente
-- Intentando crear ciclos en el árbol
+- Intentando crear ciclos en el arbol
 
 ### El orden no se actualiza
 **Verificar**:
-- Que `rebuildTree()` se llama después de cambios
-- Que el campo `orden` está correcto en la BD
+- Que `rebuildTree()` se llama despues de cambios
+- Que el campo `orden` esta correcto en la BD
 - Revisar logs del backend para errores
+
+### Error 409 Conflict al crear menu
+**Causa**: Ya existe un menu con el mismo codigo
+**Solucion**: Usar un codigo unico para cada menu
+
+### Permisos no aparecen para nuevo menu
+**Verificar**:
+- Que el grupo SUPER_ADMIN existe en la BD
+- Revisar logs del backend para errores en auto-asignacion
+
+## Permisos Automaticos
+
+### Funcionamiento
+
+Al crear un nuevo menu, el sistema automaticamente:
+
+1. Busca el grupo SUPER_ADMIN en la base de datos
+2. Si existe, crea un registro en `grupos_menus` con todos los permisos:
+   - `view: true`
+   - `create: true`
+   - `edit: true`
+   - `delete: true`
+
+### Codigo relevante
+
+```typescript
+// En menus.service.ts - metodo create()
+const superAdminGroup = await this.prisma.grupo.findFirst({
+  where: { nombre: 'SUPER_ADMIN' },
+});
+
+if (superAdminGroup) {
+  await this.prisma.gruposMenus.create({
+    data: {
+      grupoId: superAdminGroup.id,
+      menuId: newMenu.id,
+      view: true,
+      create: true,
+      edit: true,
+      delete: true,
+    },
+  });
+}
+```
+
+### Endpoint para guardado masivo
+
+`POST /permisos/bulk-save`
+
+Formato del body:
+```json
+{
+  "permisos": [
+    {
+      "grupoId": 1,
+      "menuId": 5,
+      "view": true,
+      "create": true,
+      "edit": false,
+      "delete": false
+    }
+  ]
+}
+```
+
+## Auto-refresh del Sidebar
+
+Cuando se realizan cambios en menus, el sidebar se actualiza automaticamente:
+
+1. El frontend llama a `refreshUserMenus()` en el authStore
+2. Este metodo hace una peticion a `GET /auth/me`
+3. El backend retorna los menus actualizados del usuario
+4. El sidebar se re-renderiza con los nuevos menus
+
+### Uso en componentes
+
+```typescript
+const { refreshUserMenus } = useAuthStore();
+
+const handleMenuChange = async () => {
+  await menusService.create(data);
+  await refreshUserMenus(); // Actualiza el sidebar
+};
+```
 
 ## Mejoras Futuras
 
