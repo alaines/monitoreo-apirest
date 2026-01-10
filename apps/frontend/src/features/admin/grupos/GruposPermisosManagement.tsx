@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import Select from 'react-select';
-import { gruposService, permisosService, accionesService, menusService, type Grupo, type Accion, type Menu, type Permiso } from '../../../services/admin.service';
+import { gruposService, permisosService, accionesService, menusService, type Grupo, type Accion, type Menu, type Permiso, type CreateGrupoDto } from '../../../services/admin.service';
 import { customSelectStyles } from '../../../styles/react-select-custom';
 
 export function GruposPermisosManagement() {
@@ -15,6 +15,17 @@ export function GruposPermisosManagement() {
 
   // Estado local de permisos (matriz menuId x accionId)
   const [permisosMatrix, setPermisosMatrix] = useState<Record<string, boolean>>({});
+
+  // Modal para crear/editar grupo
+  const [showModal, setShowModal] = useState(false);
+  const [editingGrupo, setEditingGrupo] = useState<Grupo | null>(null);
+  const [formData, setFormData] = useState<CreateGrupoDto>({
+    nombre: '',
+    descripcion: '',
+    estado: true
+  });
+  const [formErrors, setFormErrors] = useState<string>('');
+  const [savingGrupo, setSavingGrupo] = useState(false);
 
   useEffect(() => {
     loadData();
@@ -143,6 +154,89 @@ export function GruposPermisosManagement() {
     }
   };
 
+  // --- Modal de Grupo ---
+  const openCreateModal = () => {
+    setEditingGrupo(null);
+    setFormData({ nombre: '', descripcion: '', estado: true });
+    setFormErrors('');
+    setShowModal(true);
+  };
+
+  const openEditModal = (grupo: Grupo) => {
+    setEditingGrupo(grupo);
+    setFormData({
+      nombre: grupo.nombre,
+      descripcion: grupo.descripcion || '',
+      estado: grupo.estado
+    });
+    setFormErrors('');
+    setShowModal(true);
+  };
+
+  const closeModal = () => {
+    setShowModal(false);
+    setEditingGrupo(null);
+    setFormData({ nombre: '', descripcion: '', estado: true });
+    setFormErrors('');
+  };
+
+  const handleFormChange = (field: keyof CreateGrupoDto, value: string | boolean) => {
+    setFormData({ ...formData, [field]: value });
+  };
+
+  const handleSubmitGrupo = async () => {
+    if (!formData.nombre.trim()) {
+      setFormErrors('El nombre es requerido');
+      return;
+    }
+
+    try {
+      setSavingGrupo(true);
+      setFormErrors('');
+
+      if (editingGrupo) {
+        await gruposService.update(editingGrupo.id, formData);
+        setSuccess('Grupo actualizado correctamente');
+      } else {
+        await gruposService.create(formData);
+        setSuccess('Grupo creado correctamente');
+      }
+
+      closeModal();
+      await loadData();
+      setTimeout(() => setSuccess(''), 3000);
+    } catch (error: any) {
+      setFormErrors(error.response?.data?.message || 'Error al guardar grupo');
+    } finally {
+      setSavingGrupo(false);
+    }
+  };
+
+  const handleDeleteGrupo = async (grupo: Grupo) => {
+    if (!confirm(`¿Está seguro de eliminar el grupo "${grupo.nombre}"? Los usuarios asignados a este grupo perderán sus permisos.`)) {
+      return;
+    }
+
+    try {
+      setSaving(true);
+      await gruposService.delete(grupo.id);
+      
+      // Si el grupo eliminado era el seleccionado, limpiar selección
+      if (selectedGrupo === grupo.id) {
+        setSelectedGrupo(null);
+        setPermisosMatrix({});
+      }
+      
+      await loadData();
+      setSuccess('Grupo eliminado correctamente');
+      setTimeout(() => setSuccess(''), 3000);
+    } catch (error: any) {
+      setErrors(error.response?.data?.message || 'Error al eliminar grupo');
+    } finally {
+      setSaving(false);
+    }
+  };
+
   if (loading) {
     return (
       <div className="d-flex justify-content-center align-items-center" style={{ height: '400px' }}>
@@ -201,36 +295,71 @@ export function GruposPermisosManagement() {
         {/* Selector de Grupo */}
         <div className="col-md-3">
           <div className="card mb-3">
-            <div className="card-header bg-primary text-white">
+            <div className="card-header bg-primary text-white d-flex justify-content-between align-items-center">
               <h5 className="mb-0">Grupos</h5>
+              <button
+                className="btn btn-sm btn-light"
+                onClick={openCreateModal}
+                title="Crear nuevo grupo"
+              >
+                <i className="fas fa-plus"></i>
+              </button>
             </div>
             <div className="list-group list-group-flush">
-              {grupos.map((grupo) => (
-                <button
-                  key={grupo.id}
-                  className={`list-group-item list-group-item-action ${selectedGrupo === grupo.id ? 'active' : ''}`}
-                  onClick={() => setSelectedGrupo(grupo.id)}
-                  style={selectedGrupo !== grupo.id ? { color: '#212529' } : undefined}
-                >
-                  <div className="d-flex justify-content-between align-items-center">
-                    <div>
-                      <strong>{grupo.nombre}</strong>
-                      <br />
-                      <small className={selectedGrupo === grupo.id ? 'text-white-50' : 'text-muted'}>{grupo.descripcion}</small>
+              {grupos.length === 0 ? (
+                <div className="list-group-item text-center text-muted py-4">
+                  <i className="fas fa-users-slash fa-2x mb-2"></i>
+                  <p className="mb-0">No hay grupos</p>
+                  <small>Cree un nuevo grupo para comenzar</small>
+                </div>
+              ) : (
+                grupos.map((grupo) => (
+                  <div
+                    key={grupo.id}
+                    className={`list-group-item list-group-item-action ${selectedGrupo === grupo.id ? 'active' : ''}`}
+                    onClick={() => setSelectedGrupo(grupo.id)}
+                    style={{ cursor: 'pointer', ...(selectedGrupo !== grupo.id ? { color: '#212529' } : {}) }}
+                  >
+                    <div className="d-flex justify-content-between align-items-start">
+                      <div className="flex-grow-1">
+                        <strong>{grupo.nombre}</strong>
+                        <br />
+                        <small className={selectedGrupo === grupo.id ? 'text-white-50' : 'text-muted'}>
+                          {grupo.descripcion || 'Sin descripción'}
+                        </small>
+                      </div>
+                      <div className="d-flex flex-column align-items-end gap-1">
+                        {grupo.estado ? (
+                          <span className="badge bg-success">Activo</span>
+                        ) : (
+                          <span className="badge bg-secondary">Inactivo</span>
+                        )}
+                        <div className="btn-group btn-group-sm" onClick={(e) => e.stopPropagation()}>
+                          <button
+                            className={`btn ${selectedGrupo === grupo.id ? 'btn-light' : 'btn-outline-primary'} btn-sm`}
+                            onClick={() => openEditModal(grupo)}
+                            title="Editar grupo"
+                          >
+                            <i className="fas fa-edit"></i>
+                          </button>
+                          <button
+                            className={`btn ${selectedGrupo === grupo.id ? 'btn-light' : 'btn-outline-danger'} btn-sm`}
+                            onClick={() => handleDeleteGrupo(grupo)}
+                            title="Eliminar grupo"
+                          >
+                            <i className="fas fa-trash"></i>
+                          </button>
+                        </div>
+                      </div>
                     </div>
-                    {grupo.estado ? (
-                      <span className="badge bg-success">Activo</span>
-                    ) : (
-                      <span className="badge bg-secondary">Inactivo</span>
-                    )}
                   </div>
-                </button>
-              ))}
+                ))
+              )}
             </div>
           </div>
 
           {/* Copiar permisos */}
-          {selectedGrupo && (
+          {selectedGrupo && grupos.length > 1 && (
             <div className="card">
               <div className="card-header">
                 <h6 className="mb-0">Copiar Permisos</h6>
@@ -349,6 +478,87 @@ export function GruposPermisosManagement() {
           )}
         </div>
       </div>
+
+      {/* Modal para Crear/Editar Grupo */}
+      {showModal && (
+        <div className="modal show d-block" tabIndex={-1} style={{ backgroundColor: 'rgba(0,0,0,0.5)' }}>
+          <div className="modal-dialog modal-dialog-centered">
+            <div className="modal-content">
+              <div className="modal-header">
+                <h5 className="modal-title">
+                  <i className={`fas ${editingGrupo ? 'fa-edit' : 'fa-plus-circle'} me-2`}></i>
+                  {editingGrupo ? 'Editar Grupo' : 'Nuevo Grupo'}
+                </h5>
+                <button type="button" className="btn-close" onClick={closeModal}></button>
+              </div>
+              <div className="modal-body">
+                {formErrors && (
+                  <div className="alert alert-danger py-2">{formErrors}</div>
+                )}
+                
+                <div className="mb-3">
+                  <label className="form-label">Nombre <span className="text-danger">*</span></label>
+                  <input
+                    type="text"
+                    className="form-control"
+                    value={formData.nombre}
+                    onChange={(e) => handleFormChange('nombre', e.target.value)}
+                    placeholder="Ej: Administradores"
+                    autoFocus
+                  />
+                </div>
+                
+                <div className="mb-3">
+                  <label className="form-label">Descripción</label>
+                  <textarea
+                    className="form-control"
+                    value={formData.descripcion || ''}
+                    onChange={(e) => handleFormChange('descripcion', e.target.value)}
+                    placeholder="Descripción del grupo"
+                    rows={3}
+                  />
+                </div>
+                
+                <div className="form-check form-switch">
+                  <input
+                    type="checkbox"
+                    className="form-check-input"
+                    id="grupoEstado"
+                    checked={formData.estado}
+                    onChange={(e) => handleFormChange('estado', e.target.checked)}
+                  />
+                  <label className="form-check-label" htmlFor="grupoEstado">
+                    Grupo activo
+                  </label>
+                </div>
+              </div>
+              <div className="modal-footer">
+                <button type="button" className="btn btn-secondary" onClick={closeModal}>
+                  Cancelar
+                </button>
+                <button
+                  type="button"
+                  className="btn btn-primary"
+                  onClick={handleSubmitGrupo}
+                  disabled={savingGrupo}
+                >
+                  {savingGrupo ? (
+                    <>
+                      <span className="spinner-border spinner-border-sm me-2"></span>
+                      Guardando...
+                    </>
+                  ) : (
+                    <>
+                      <i className="fas fa-save me-2"></i>
+                      {editingGrupo ? 'Actualizar' : 'Crear'}
+                    </>
+                  )}
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
