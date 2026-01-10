@@ -89,6 +89,17 @@ export class PermisosService {
       return false;
     }
 
+    // Verificar si el menú existe
+    const menu = await this.prisma.menu.findUnique({
+      where: { codigo: menuCodigo },
+    });
+
+    // Si el menú no existe, permitir acceso (endpoints sin control de permisos)
+    if (!menu) {
+      console.log(`[PermisosService] Menú '${menuCodigo}' no existe, permitiendo acceso`);
+      return true;
+    }
+
     const permiso = await this.prisma.grupoMenu.findFirst({
       where: {
         grupoId: usuario.grupoId,
