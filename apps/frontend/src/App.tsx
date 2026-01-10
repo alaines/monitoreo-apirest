@@ -1,4 +1,4 @@
-import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
+import { BrowserRouter, Routes, Route, Navigate, Outlet } from 'react-router-dom';
 import { useEffect, useState, lazy, Suspense } from 'react';
 import { Toaster } from 'react-hot-toast';
 import { useAuthStore } from './features/auth/authStore';
@@ -32,6 +32,17 @@ const ProyectosManagement = lazy(() => import('./features/mantenimientos/proyect
 const IncidenciasManagement = lazy(() => import('./features/mantenimientos/incidencias/IncidenciasManagement'));
 const MiPerfil = lazy(() => import('./features/perfil/MiPerfil').then(m => ({ default: m.MiPerfil })));
 const Configuracion = lazy(() => import('./features/configuracion/Configuracion').then(m => ({ default: m.Configuracion })));
+
+// Componente que combina ProtectedRoute y Layout para evitar re-renders
+function ProtectedLayout() {
+  return (
+    <ProtectedRoute>
+      <Layout>
+        <Outlet />
+      </Layout>
+    </ProtectedRoute>
+  );
+}
 
 function App() {
   const { initialize, isAuthenticated } = useAuthStore();
@@ -86,288 +97,41 @@ function App() {
             path="/login"
             element={isAuthenticated ? <Navigate to="/" replace /> : <LoginPage />}
           />
-          <Route
-            path="/"
-            element={
-              <ProtectedRoute>
-                <Layout>
-                  <Inicio />
-                </Layout>
-              </ProtectedRoute>
-            }
-          />
-        <Route
-          path="/incidents"
-          element={
-            <ProtectedRoute>
-              <Layout>
-                <IncidentsList />
-              </Layout>
-            </ProtectedRoute>
-          }
-        />
-        <Route
-          path="/incidents/new"
-          element={
-            <ProtectedRoute>
-              <Layout>
-                <IncidentForm incidentId={null} onClose={() => {}} onSave={() => {}} />
-              </Layout>
-            </ProtectedRoute>
-          }
-        />
-        <Route
-          path="/incidents/:id/edit"
-          element={
-            <ProtectedRoute>
-              <Layout>
-                <IncidentForm incidentId={null} onClose={() => {}} onSave={() => {}} />
-              </Layout>
-            </ProtectedRoute>
-          }
-        />
-        <Route
-          path="/incidents/:id"
-          element={
-            <ProtectedRoute>
-              <Layout>
-                <IncidentDetail />
-              </Layout>
-            </ProtectedRoute>
-          }
-        />
-        <Route
-          path="/cruces"
-          element={
-            <ProtectedRoute>
-              <Layout>
-                <CrucesList />
-              </Layout>
-            </ProtectedRoute>
-          }
-        />
-        <Route
-          path="/cruces/mapa"
-          element={
-            <ProtectedRoute>
-              <Layout>
-                <CrucesMap />
-              </Layout>
-            </ProtectedRoute>
-          }
-        />
-        <Route
-          path="/cruces/new"
-          element={
-            <ProtectedRoute>
-              <Layout>
-                <CruceForm />
-              </Layout>
-            </ProtectedRoute>
-          }
-        />
-        <Route
-          path="/cruces/:id/edit"
-          element={
-            <ProtectedRoute>
-              <Layout>
-                <CruceForm />
-              </Layout>
-            </ProtectedRoute>
-          }
-        />
-        <Route
-          path="/cruces/:id"
-          element={
-            <ProtectedRoute>
-              <Layout>
-                <CruceDetail />
-              </Layout>
-            </ProtectedRoute>
-          }
-        />
-        <Route
-          path="/reportes/incidencias"
-          element={
-            <ProtectedRoute>
-              <Layout>
-                <ReporteIncidencias />
-              </Layout>
-            </ProtectedRoute>
-          }
-        />
-        <Route
-          path="/reportes/grafico"
-          element={
-            <ProtectedRoute>
-              <Layout>
-                <ReporteGrafico />
-              </Layout>
-            </ProtectedRoute>
-          }
-        />
-        <Route
-          path="/reportes/mapa"
-          element={
-            <ProtectedRoute>
-              <Layout>
-                <MapaCalor />
-              </Layout>
-            </ProtectedRoute>
-          }
-        />
-        <Route
-          path="/admin/users"
-          element={
-            <ProtectedRoute>
-              <Layout>
-                <UsersManagement />
-              </Layout>
-            </ProtectedRoute>
-          }
-        />
-        <Route
-          path="/admin/grupos"
-          element={
-            <ProtectedRoute>
-              <Layout>
-                <GruposPermisosManagement />
-              </Layout>
-            </ProtectedRoute>
-          }
-        />
-        <Route
-          path="/admin/menus"
-          element={
-            <ProtectedRoute>
-              <Layout>
-                <MenusManagement />
-              </Layout>
-            </ProtectedRoute>
-          }
-        />
-        <Route
-          path="/admin/catalogos"
-          element={
-            <ProtectedRoute>
-              <Layout>
-                <CatalogosManagement />
-              </Layout>
-            </ProtectedRoute>
-          }
-        />
-        <Route
-          path="/mantenimientos/tipos"
-          element={
-            <ProtectedRoute>
-              <Layout>
-                <CatalogosManagement />
-              </Layout>
-            </ProtectedRoute>
-          }
-        />
-        <Route
-          path="/mantenimientos/areas"
-          element={
-            <ProtectedRoute>
-              <Layout>
-                <AreasManagement />
-              </Layout>
-            </ProtectedRoute>
-          }
-        />
-        <Route
-          path="/mantenimientos/equipos"
-          element={
-            <ProtectedRoute>
-              <Layout>
-                <EquiposManagement />
-              </Layout>
-            </ProtectedRoute>
-          }
-        />
-        <Route
-          path="/mantenimientos/reportadores"
-          element={
-            <ProtectedRoute>
-              <Layout>
-                <ReportadoresManagement />
-              </Layout>
-            </ProtectedRoute>
-          }
-        />
-        <Route
-          path="/mantenimientos/responsables"
-          element={
-            <ProtectedRoute>
-              <Layout>
-                <ResponsablesManagement />
-              </Layout>
-            </ProtectedRoute>
-          }
-        />
-        <Route
-          path="/mantenimientos/administradores"
-          element={
-            <ProtectedRoute>
-              <Layout>
-                <AdministradoresManagement />
-              </Layout>
-            </ProtectedRoute>
-          }
-        />
-        <Route
-          path="/mantenimientos/ejes"
-          element={
-            <ProtectedRoute>
-              <Layout>
-                <EjesManagement />
-              </Layout>
-            </ProtectedRoute>
-          }
-        />
-        <Route
-          path="/mantenimientos/proyectos"
-          element={
-            <ProtectedRoute>
-              <Layout>
-                <ProyectosManagement />
-              </Layout>
-            </ProtectedRoute>
-          }
-        />
-        <Route
-          path="/mantenimientos/incidencias"
-          element={
-            <ProtectedRoute>
-              <Layout>
-                <IncidenciasManagement />
-              </Layout>
-            </ProtectedRoute>
-          }
-        />
-        <Route
-          path="/perfil"
-          element={
-            <ProtectedRoute>
-              <Layout>
-                <MiPerfil />
-              </Layout>
-            </ProtectedRoute>
-          }
-        />
-        <Route
-          path="/configuracion"
-          element={
-            <ProtectedRoute>
-              <Layout>
-                <Configuracion />
-              </Layout>
-            </ProtectedRoute>
-          }
-        />
-        <Route path="*" element={<Navigate to="/" replace />} />
-      </Routes>
+          
+          {/* Rutas protegidas con Layout compartido */}
+          <Route element={<ProtectedLayout />}>
+            <Route path="/" element={<Inicio />} />
+            <Route path="/incidents" element={<IncidentsList />} />
+            <Route path="/incidents/new" element={<IncidentForm incidentId={null} onClose={() => {}} onSave={() => {}} />} />
+            <Route path="/incidents/:id/edit" element={<IncidentForm incidentId={null} onClose={() => {}} onSave={() => {}} />} />
+            <Route path="/incidents/:id" element={<IncidentDetail />} />
+            <Route path="/cruces" element={<CrucesList />} />
+            <Route path="/cruces/mapa" element={<CrucesMap />} />
+            <Route path="/cruces/new" element={<CruceForm />} />
+            <Route path="/cruces/:id/edit" element={<CruceForm />} />
+            <Route path="/cruces/:id" element={<CruceDetail />} />
+            <Route path="/reportes/incidencias" element={<ReporteIncidencias />} />
+            <Route path="/reportes/grafico" element={<ReporteGrafico />} />
+            <Route path="/reportes/mapa" element={<MapaCalor />} />
+            <Route path="/admin/users" element={<UsersManagement />} />
+            <Route path="/admin/grupos" element={<GruposPermisosManagement />} />
+            <Route path="/admin/menus" element={<MenusManagement />} />
+            <Route path="/admin/catalogos" element={<CatalogosManagement />} />
+            <Route path="/mantenimientos/tipos" element={<CatalogosManagement />} />
+            <Route path="/mantenimientos/areas" element={<AreasManagement />} />
+            <Route path="/mantenimientos/equipos" element={<EquiposManagement />} />
+            <Route path="/mantenimientos/reportadores" element={<ReportadoresManagement />} />
+            <Route path="/mantenimientos/responsables" element={<ResponsablesManagement />} />
+            <Route path="/mantenimientos/administradores" element={<AdministradoresManagement />} />
+            <Route path="/mantenimientos/ejes" element={<EjesManagement />} />
+            <Route path="/mantenimientos/proyectos" element={<ProyectosManagement />} />
+            <Route path="/mantenimientos/incidencias" element={<IncidenciasManagement />} />
+            <Route path="/perfil" element={<MiPerfil />} />
+            <Route path="/configuracion" element={<Configuracion />} />
+          </Route>
+
+          <Route path="*" element={<Navigate to="/" replace />} />
+        </Routes>
       </Suspense>
     </BrowserRouter>
   );
