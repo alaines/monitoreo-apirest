@@ -114,7 +114,7 @@ export function NotificationBell() {
               left: 0,
               right: 0,
               bottom: 0,
-              zIndex: 1000,
+              zIndex: 1055,
             }}
             onClick={() => setShowDropdown(false)}
           />
@@ -126,7 +126,7 @@ export function NotificationBell() {
               right: 0,
               width: '400px',
               maxHeight: '600px',
-              zIndex: 1001,
+              zIndex: 1060,
               display: 'flex',
               flexDirection: 'column',
             }}

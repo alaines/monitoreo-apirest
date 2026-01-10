@@ -29,7 +29,8 @@ export function Layout({ children }: { children: React.ReactNode }) {
         padding: '12px 20px',
         height: '60px',
         flexShrink: 0,
-        zIndex: 999
+        zIndex: 1050,
+        position: 'relative'
       }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: '15px' }}>
           <button
@@ -102,7 +103,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
                 right: '0',
                 marginTop: '8px',
                 minWidth: '200px',
-                zIndex: 1001
+                zIndex: 1060
               }}
             >
               <a
