@@ -165,8 +165,8 @@ export function MenusManagement() {
   const getRootMenus = () => menus.filter(m => !m.menuPadreId);
 
   return (
-    <div className="container-fluid">
-      <div className="d-flex justify-content-between align-items-center mb-3">
+    <div className="container-fluid p-4">
+      <div className="d-flex justify-content-between align-items-center mb-4">
         <h2 className="mb-0">
           <i className="fas fa-bars me-2"></i>
           Gestión de Menús
@@ -184,10 +184,10 @@ export function MenusManagement() {
           </div>
         </div>
       ) : (
-        <div className="card">
+        <div className="card border-0 shadow-sm">
           <div className="card-body">
             <div className="table-responsive">
-              <table className="table table-hover">
+              <table className="table table-hover mb-0">
                 <thead>
                   <tr>
                     <th>Nombre</th>
