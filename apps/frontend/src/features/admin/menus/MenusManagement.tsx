@@ -1,5 +1,7 @@
 import { useState, useEffect } from 'react';
+import Select from 'react-select';
 import { adminService } from '../../../services/admin.service';
+import { customSelectStylesSmall } from '../../../styles/react-select-custom';
 
 interface Menu {
   id: number;
@@ -9,6 +11,7 @@ interface Menu {
   orden: number;
   menuPadreId: number | null;
   activo: boolean;
+  createdAt?: string;
   menuPadre?: {
     nombre: string;
   };
@@ -244,71 +247,105 @@ export function MenusManagement() {
           <i className="fas fa-bars me-2"></i>
           Gestión de Menús
         </h2>
-        <div className="d-flex gap-2">
+        <button
+          className="btn btn-primary"
+          onClick={() => setShowModal(true)}
+        >
+          <i className="fas fa-plus me-2"></i>
+          Nuevo Menú
+        </button>
+      </div>
+
+      {/* Filtros */}
+      <div className="card border-0 shadow-sm mb-3">
+        <div className="card-header bg-white border-bottom">
           <button
-            className="btn btn-outline-secondary"
+            className="btn btn-sm btn-outline-secondary"
             onClick={() => setShowFilters(!showFilters)}
           >
             <i className="fas fa-filter me-2"></i>
             {showFilters ? 'Ocultar Filtros' : 'Mostrar Filtros'}
           </button>
-          <button
-            className="btn btn-primary"
-            onClick={() => setShowModal(true)}
-          >
-            <i className="fas fa-plus me-2"></i>
-            Nuevo Menú
-          </button>
         </div>
-      </div>
-
-      {/* Filtros */}
-      {showFilters && (
-        <div className="card mb-4">
+        {showFilters && (
           <div className="card-body">
-            <div className="row g-3">
+            <div className="row g-2">
               <div className="col-md-4">
-                <label className="form-label">Buscar</label>
+                <label className="form-label small">Buscar</label>
                 <input
                   type="text"
-                  className="form-control form-control-custom"
+                  className="form-control custom-input-sm"
                   placeholder="Nombre, ruta..."
                   value={filters.search}
                   onChange={(e) => handleFilterChange('search', e.target.value)}
                 />
               </div>
 
-              <div className="col-md-4">
-                <label className="form-label">Menú Padre</label>
-                <select
-                  className="form-select form-select-custom"
-                  value={filters.menuPadreId}
-                  onChange={(e) => handleFilterChange('menuPadreId', e.target.value)}
-                >
-                  <option value="">Todos</option>
-                  <option value="0">Sin menú padre</option>
-                  {allMenus.filter(m => m.menuPadreId === null).map(menu => (
-                    <option key={menu.id} value={menu.id}>{menu.nombre}</option>
-                  ))}
-                </select>
+              <div className="col-md-3">
+                <label className="form-label small">Menú Padre</label>
+                <Select
+                  options={[
+                    { value: '', label: 'Todos' },
+                    { value: '0', label: 'Sin menú padre' },
+                    ...allMenus.filter(m => m.menuPadreId === null).map(menu => ({ 
+                      value: String(menu.id), 
+                      label: menu.nombre 
+                    }))
+                  ]}
+                  value={
+                    filters.menuPadreId === '0' 
+                      ? { value: '0', label: 'Sin menú padre' }
+                      : filters.menuPadreId 
+                        ? { 
+                            value: filters.menuPadreId, 
+                            label: allMenus.find(m => m.id === parseInt(filters.menuPadreId))?.nombre || filters.menuPadreId 
+                          }
+                        : { value: '', label: 'Todos' }
+                  }
+                  onChange={(option) => handleFilterChange('menuPadreId', option?.value || '')}
+                  isClearable
+                  styles={customSelectStylesSmall}
+                />
               </div>
 
-              <div className="col-md-4">
-                <label className="form-label">Estado</label>
-                <select
-                  className="form-select form-select-custom"
-                  value={filters.activo}
-                  onChange={(e) => handleFilterChange('activo', e.target.value)}
+              <div className="col-md-3">
+                <label className="form-label small">Estado</label>
+                <Select
+                  options={[
+                    { value: '', label: 'Todos' },
+                    { value: 'true', label: 'Activos' },
+                    { value: 'false', label: 'Inactivos' }
+                  ]}
+                  value={
+                    filters.activo === 'true' 
+                      ? { value: 'true', label: 'Activos' } 
+                      : filters.activo === 'false' 
+                        ? { value: 'false', label: 'Inactivos' } 
+                        : { value: '', label: 'Todos' }
+                  }
+                  onChange={(option) => handleFilterChange('activo', option?.value || '')}
+                  isClearable
+                  styles={customSelectStylesSmall}
+                />
+              </div>
+
+              <div className="col-md-2 d-flex align-items-end">
+                <button
+                  className="btn btn-outline-secondary btn-sm w-100"
+                  onClick={() => {
+                    setFilters({ search: '', menuPadreId: '', activo: '' });
+                    setPage(1);
+                  }}
+                  title="Limpiar filtros"
                 >
-                  <option value="">Todos</option>
-                  <option value="true">Activo</option>
-                  <option value="false">Inactivo</option>
-                </select>
+                  <i className="fas fa-eraser me-1"></i>
+                  Limpiar
+                </button>
               </div>
             </div>
           </div>
-        </div>
-      )}
+        )}
+      </div>
 
       <div className="card">
         <div className="card-body">
@@ -316,47 +353,47 @@ export function MenusManagement() {
             <table className="table table-hover">
               <thead className="table-light">
                 <tr>
-                  <th>ID</th>
-                  <th onClick={() => handleSort('nombre')} style={{ cursor: 'pointer', userSelect: 'none' }}>
-                    Nombre {getSortIcon('nombre')}
-                  </th>
-                  <th>Icono</th>
-                  <th onClick={() => handleSort('ruta')} style={{ cursor: 'pointer', userSelect: 'none' }}>
-                    Ruta {getSortIcon('ruta')}
-                  </th>
-                  <th onClick={() => handleSort('orden')} style={{ cursor: 'pointer', userSelect: 'none' }}>
-                    Orden {getSortIcon('orden')}
-                  </th>
+                  <th style={{ width: '80px' }}>ID</th>
                   <th onClick={() => handleSort('menuPadre')} style={{ cursor: 'pointer', userSelect: 'none' }}>
                     Menú Padre {getSortIcon('menuPadre')}
                   </th>
-                  <th onClick={() => handleSort('activo')} style={{ cursor: 'pointer', userSelect: 'none' }}>
+                  <th onClick={() => handleSort('ruta')} style={{ cursor: 'pointer', userSelect: 'none' }}>
+                    Ruta {getSortIcon('ruta')}
+                  </th>
+                  <th style={{ width: '180px' }}>Fecha Creación</th>
+                  <th onClick={() => handleSort('activo')} style={{ cursor: 'pointer', userSelect: 'none', width: '120px' }}>
                     Estado {getSortIcon('activo')}
                   </th>
-                  <th>Acciones</th>
+                  <th style={{ width: '120px' }}>Acciones</th>
                 </tr>
               </thead>
               <tbody>
                 {sortedMenus.map(menu => (
                   <tr key={menu.id}>
                     <td>{menu.id}</td>
-                    <td>{menu.nombre}</td>
                     <td>
-                      <i className={menu.icono} style={{ fontSize: '18px' }}></i>
-                    </td>
-                    <td>
-                      <code>{menu.ruta}</code>
-                    </td>
-                    <td>{menu.orden}</td>
-                    <td>
-                      {menu.menuPadre ? (
-                        <span className="badge bg-secondary">{menu.menuPadre.nombre}</span>
+                      {menu.menuPadreId ? (
+                        <span className="badge bg-secondary">
+                          {allMenus.find(m => m.id === menu.menuPadreId)?.nombre || `ID: ${menu.menuPadreId}`}
+                        </span>
                       ) : (
                         <span className="text-muted">-</span>
                       )}
                     </td>
                     <td>
-                      {menu.activo ? (
+                      <code className="text-primary">{menu.ruta}</code>
+                    </td>
+                    <td>
+                      {menu.createdAt ? new Date(menu.createdAt).toLocaleDateString('es-ES', {
+                        year: 'numeric',
+                        month: '2-digit',
+                        day: '2-digit',
+                        hour: '2-digit',
+                        minute: '2-digit'
+                      }) : '-'}
+                    </td>
+                    <td>
+                      {menu.activo === true ? (
                         <span className="badge bg-success">Activo</span>
                       ) : (
                         <span className="badge bg-danger">Inactivo</span>
