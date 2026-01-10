@@ -70,6 +70,40 @@ export const tiposService = {
   async hardDelete(id: number) {
     const { data } = await api.delete(`/tipos/${id}/hard`);
     return data;
+  },
+
+  async getTree() {
+    const { data } = await api.get(`/tipos`);
+    // Calcular nivel basado en parent_id
+    const calcularNivel = (tipo: Tipo, lista: Tipo[]): number => {
+      if (!tipo.parent_id) return 0;
+      const padre = lista.find(t => t.id === tipo.parent_id);
+      return padre ? calcularNivel(padre, lista) + 1 : 0;
+    };
+    
+    // Ordenar jerarquicamente
+    const ordenar = (lista: Tipo[]): (Tipo & { nivel: number })[] => {
+      const resultado: (Tipo & { nivel: number })[] = [];
+      const procesados = new Set<number>();
+      
+      const agregarConHijos = (parentId: number | null, nivel: number) => {
+        lista
+          .filter(t => t.parent_id === parentId)
+          .sort((a, b) => a.id - b.id)
+          .forEach(item => {
+            if (!procesados.has(item.id)) {
+              procesados.add(item.id);
+              resultado.push({ ...item, nivel });
+              agregarConHijos(item.id, nivel + 1);
+            }
+          });
+      };
+      
+      agregarConHijos(null, 0);
+      return resultado;
+    }; 
+    
+    return ordenar(data);
   }
 };
 
@@ -594,12 +628,49 @@ export interface TipoIncidencia {
   prioridadId: number | null;
   caracteristica: string | null;
   estado: boolean;
+  prioridad?: { id: number; nombre: string } | null;
 }
+
+// Alias para compatibilidad
+export type Incidencia = TipoIncidencia;
 
 export const incidenciasService = {
   async getAll() {
     const { data } = await api.get(`/incidencias`);
     return data;
+  },
+  async getTree() {
+    const { data } = await api.get(`/incidencias`);
+    // Calcular nivel basado en parentId
+    const calcularNivel = (incidencia: TipoIncidencia, lista: TipoIncidencia[]): number => {
+      if (!incidencia.parentId) return 0;
+      const padre = lista.find(i => i.id === incidencia.parentId);
+      return padre ? calcularNivel(padre, lista) + 1 : 0;
+    };
+    
+    // Ordenar jerárquicamente
+    const ordenar = (lista: TipoIncidencia[]): (TipoIncidencia & { nivel: number })[] => {
+      const resultado: (TipoIncidencia & { nivel: number })[] = [];
+      const procesados = new Set<number>();
+      
+      const agregarConHijos = (parentId: number | null, nivel: number) => {
+        lista
+          .filter(i => i.parentId === parentId)
+          .sort((a, b) => a.id - b.id)
+          .forEach(item => {
+            if (!procesados.has(item.id)) {
+              procesados.add(item.id);
+              resultado.push({ ...item, nivel });
+              agregarConHijos(item.id, nivel + 1);
+            }
+          });
+      };
+      
+      agregarConHijos(null, 0);
+      return resultado;
+    };
+    
+    return ordenar(data);
   },
   async getById(id: number) {
     const { data } = await api.get(`/incidencias/${id}`);

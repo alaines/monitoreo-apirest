@@ -1,10 +1,15 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import Select from 'react-select';
 import { incidenciasService, Incidencia } from '../../../services/admin.service';
 import { customSelectStyles } from '../../../styles/react-select-custom';
 
-const IncidenciasManagement: React.FC = () => {
-  const [incidencias, setIncidencias] = useState<Incidencia[]>([]);
+interface IncidenciaConNivel extends Incidencia {
+  nivel: number;
+}
+
+const IncidenciasManagement = () => {
+  const [incidencias, setIncidencias] = useState<IncidenciaConNivel[]>([]);
+  const [incidenciasPlanas, setIncidenciasPlanas] = useState<Incidencia[]>([]);
   const [loading, setLoading] = useState(false);
   const [showModal, setShowModal] = useState(false);
   const [editingIncidencia, setEditingIncidencia] = useState<Incidencia | null>(null);
@@ -23,8 +28,12 @@ const IncidenciasManagement: React.FC = () => {
   const loadData = async () => {
     try {
       setLoading(true);
-      const data = await incidenciasService.getAll();
-      setIncidencias(data);
+      const [tree, flat] = await Promise.all([
+        incidenciasService.getTree(),
+        incidenciasService.getAll()
+      ]);
+      setIncidencias(tree);
+      setIncidenciasPlanas(flat);
     } catch (error) {
       console.error('Error al cargar incidencias:', error);
       alert('Error al cargar incidencias');
@@ -65,7 +74,7 @@ const IncidenciasManagement: React.FC = () => {
   };
 
   const handleDelete = async (id: number) => {
-    if (!confirm('¿Está seguro de desactivar este tipo de incidencia?')) return;
+    if (!confirm('Esta seguro de desactivar este tipo de incidencia?')) return;
     
     try {
       await incidenciasService.delete(id);
@@ -86,15 +95,15 @@ const IncidenciasManagement: React.FC = () => {
     resetForm();
   };
 
-  // Filtrar solo incidencias activas para el selector de padre
-  const incidenciasActivas = incidencias.filter(i => i.estado && i.id !== editingIncidencia?.id);
+  // Filtrar solo incidencias raiz activas para el selector de padre
+  const incidenciasRaiz = incidenciasPlanas.filter(i => i.estado && !i.parentId && i.id !== editingIncidencia?.id);
 
   return (
-    <div className="container-fluid py-4">
+    <div className="container-fluid p-4">
       <div className="d-flex justify-content-between align-items-center mb-4">
-        <h2>
+        <h2 className="mb-0">
           <i className="fas fa-exclamation-triangle me-2"></i>
-          Gestión de Tipos de Incidencias
+          Gestion de Tipos de Incidencias
         </h2>
         <button 
           className="btn btn-primary"
@@ -107,52 +116,73 @@ const IncidenciasManagement: React.FC = () => {
 
       {loading ? (
         <div className="text-center py-5">
-          <div className="spinner-border" role="status">
+          <div className="spinner-border text-primary" role="status">
             <span className="visually-hidden">Cargando...</span>
           </div>
         </div>
       ) : (
-        <div className="card">
+        <div className="card border-0 shadow-sm">
           <div className="card-body">
             <div className="table-responsive">
-              <table className="table table-hover">
+              <table className="table table-hover mb-0">
                 <thead>
                   <tr>
-                    <th>ID</th>
                     <th>Tipo</th>
-                    <th>Característica</th>
-                    <th>Prioridad</th>
-                    <th>Estado</th>
-                    <th>Acciones</th>
+                    <th className="text-center">Caracteristica</th>
+                    <th>Padre</th>
+                    <th className="text-center">Estado</th>
+                    <th className="text-center">Acciones</th>
                   </tr>
                 </thead>
                 <tbody>
                   {incidencias.map(incidencia => (
                     <tr key={incidencia.id}>
-                      <td>{incidencia.id}</td>
-                      <td>{incidencia.tipo || '-'}</td>
-                      <td>{incidencia.caracteristica || '-'}</td>
-                      <td>{incidencia.prioridad?.nombre || '-'}</td>
                       <td>
+                        <span style={{ marginLeft: `${(incidencia.nivel || 0) * 20}px` }}>
+                          {incidencia.nivel && incidencia.nivel > 0 ? '|-- ' : ''}
+                          <strong>{incidencia.tipo || '-'}</strong>
+                        </span>
+                      </td>
+                      <td className="text-center">
+                        {incidencia.caracteristica ? (
+                          <code className="small">{incidencia.caracteristica}</code>
+                        ) : (
+                          <span className="text-muted">-</span>
+                        )}
+                      </td>
+                      <td>
+                        {incidencia.parentId ? (
+                          <small className="text-muted">
+                            {incidenciasPlanas.find(i => i.id === incidencia.parentId)?.tipo || '-'}
+                          </small>
+                        ) : (
+                          <span className="text-muted">-</span>
+                        )}
+                      </td>
+                      <td className="text-center">
                         <span className={`badge ${incidencia.estado ? 'bg-success' : 'bg-secondary'}`}>
                           {incidencia.estado ? 'Activo' : 'Inactivo'}
                         </span>
                       </td>
-                      <td>
-                        <button
-                          className="btn btn-sm btn-outline-primary me-2"
-                          onClick={() => handleEdit(incidencia)}
-                        >
-                          <i className="fas fa-edit"></i>
-                        </button>
-                        {incidencia.estado && (
+                      <td className="text-center">
+                        <div className="btn-group btn-group-sm" role="group">
                           <button
-                            className="btn btn-sm btn-outline-danger"
-                            onClick={() => handleDelete(incidencia.id)}
+                            className="btn btn-outline-warning"
+                            onClick={() => handleEdit(incidencia)}
+                            title="Editar"
                           >
-                            <i className="fas fa-trash"></i>
+                            <i className="fas fa-edit"></i>
                           </button>
-                        )}
+                          {incidencia.estado && (
+                            <button
+                              className="btn btn-outline-danger"
+                              onClick={() => handleDelete(incidencia.id)}
+                              title="Eliminar"
+                            >
+                              <i className="fas fa-trash"></i>
+                            </button>
+                          )}
+                        </div>
                       </td>
                     </tr>
                   ))}
@@ -188,7 +218,7 @@ const IncidenciasManagement: React.FC = () => {
                   </div>
 
                   <div className="mb-3">
-                    <label className="form-label">Característica</label>
+                    <label className="form-label">Caracteristica</label>
                     <input
                       type="text"
                       className="form-control custom-input"
@@ -196,17 +226,17 @@ const IncidenciasManagement: React.FC = () => {
                       onChange={(e) => setFormData({ ...formData, caracteristica: e.target.value })}
                       maxLength={2}
                     />
-                    <small className="form-text text-muted">Máximo 2 caracteres</small>
+                    <small className="form-text text-muted">Maximo 2 caracteres</small>
                   </div>
 
                   <div className="mb-3">
                     <label className="form-label">Tipo Padre</label>
                     <Select
                       options={[
-                        { value: null, label: 'Sin padre (tipo raíz)' },
-                        ...incidenciasActivas.map(inc => ({ value: inc.id, label: inc.tipo }))
+                        { value: null, label: 'Sin padre (tipo raiz)' },
+                        ...incidenciasRaiz.map(inc => ({ value: inc.id, label: inc.tipo || '' }))
                       ]}
-                      value={formData.parentId ? { value: formData.parentId, label: incidenciasActivas.find(i => i.id === formData.parentId)?.tipo || '' } : { value: null, label: 'Sin padre (tipo raíz)' }}
+                      value={formData.parentId ? { value: formData.parentId, label: incidenciasPlanas.find(i => i.id === formData.parentId)?.tipo || '' } : { value: null, label: 'Sin padre (tipo raiz)' }}
                       onChange={(option) => setFormData({ ...formData, parentId: option?.value || null })}
                       isClearable
                       styles={customSelectStyles}

@@ -3,13 +3,16 @@ import Select from 'react-select';
 import { tiposService, type Tipo, type CreateTipoDto } from '../../../services/admin.service';
 import { customSelectStyles } from '../../../styles/react-select-custom';
 
+interface TipoConNivel extends Tipo {
+  nivel: number;
+}
+
 export function CatalogosManagement() {
-  const [tipos, setTipos] = useState<Tipo[]>([]);
-  const [tiposRaiz, setTiposRaiz] = useState<Tipo[]>([]);
+  const [tipos, setTipos] = useState<TipoConNivel[]>([]);
+  const [tiposPlanos, setTiposPlanos] = useState<Tipo[]>([]);
   const [loading, setLoading] = useState(true);
   const [showModal, setShowModal] = useState(false);
   const [editingTipo, setEditingTipo] = useState<Tipo | null>(null);
-  const [expandedNodes, setExpandedNodes] = useState<Set<number>>(new Set());
   const [errors, setErrors] = useState<string>('');
   const [success, setSuccess] = useState<string>('');
 
@@ -27,14 +30,14 @@ export function CatalogosManagement() {
   const loadData = async () => {
     try {
       setLoading(true);
-      const [allTipos, roots] = await Promise.all([
-        tiposService.getAll(),
-        tiposService.getRoots()
+      const [tree, flat] = await Promise.all([
+        tiposService.getTree(),
+        tiposService.getAll()
       ]);
-      setTipos(allTipos);
-      setTiposRaiz(roots);
+      setTipos(tree);
+      setTiposPlanos(flat);
     } catch (error: any) {
-      setErrors(error.response?.data?.message || 'Error al cargar catálogos');
+      setErrors(error.response?.data?.message || 'Error al cargar catalogos');
     } finally {
       setLoading(false);
     }
@@ -88,7 +91,7 @@ export function CatalogosManagement() {
   };
 
   const handleDelete = async (id: number) => {
-    if (!confirm('¿Está seguro de eliminar este tipo? Se marcará como inactivo.')) {
+    if (!confirm('Esta seguro de eliminar este tipo? Se marcara como inactivo.')) {
       return;
     }
 
@@ -102,84 +105,16 @@ export function CatalogosManagement() {
     }
   };
 
-  const toggleNode = (id: number) => {
-    const newExpanded = new Set(expandedNodes);
-    if (newExpanded.has(id)) {
-      newExpanded.delete(id);
-    } else {
-      newExpanded.add(id);
-    }
-    setExpandedNodes(newExpanded);
-  };
-
-  const renderTipoTree = (tipo: Tipo, level: number = 0) => {
-    const hasChildren = tipos.some(t => t.parent_id === tipo.id);
-    const isExpanded = expandedNodes.has(tipo.id);
-    const children = tipos.filter(t => t.parent_id === tipo.id);
-
-    return (
-      <div key={tipo.id}>
-        <div
-          className="d-flex align-items-center justify-content-between p-2 border-bottom"
-          style={{
-            paddingLeft: `${level * 30 + 10}px`,
-            backgroundColor: level % 2 === 0 ? '#f8f9fa' : '#ffffff',
-          }}
-        >
-          <div className="d-flex align-items-center flex-grow-1">
-            {hasChildren && (
-              <button
-                onClick={() => toggleNode(tipo.id)}
-                className="btn btn-sm btn-link text-secondary p-0 me-2"
-                style={{ width: '20px' }}
-              >
-                <i className={`fas fa-chevron-${isExpanded ? 'down' : 'right'}`}></i>
-              </button>
-            )}
-            {!hasChildren && <span style={{ width: '32px', display: 'inline-block' }}></span>}
-            
-            <strong>{tipo.name}</strong>
-            
-            {tipo.estado ? (
-              <span className="badge bg-success ms-2">Activo</span>
-            ) : (
-              <span className="badge bg-secondary ms-2">Inactivo</span>
-            )}
-          </div>
-
-          <div className="btn-group btn-group-sm">
-            <button
-              onClick={() => handleOpenModal(tipo)}
-              className="btn btn-outline-primary"
-              title="Editar"
-            >
-              <i className="fas fa-edit"></i>
-            </button>
-            <button
-              onClick={() => handleDelete(tipo.id)}
-              className="btn btn-outline-danger"
-              title="Eliminar"
-              disabled={hasChildren}
-            >
-              <i className="fas fa-trash"></i>
-            </button>
-          </div>
-        </div>
-
-        {isExpanded && hasChildren && (
-          <div>
-            {children.map(child => renderTipoTree(child, level + 1))}
-          </div>
-        )}
-      </div>
-    );
-  };
+  // Filtrar solo tipos raiz activos para el selector de padre
+  const tiposRaiz = tiposPlanos.filter(t => t.estado && !t.parent_id && t.id !== editingTipo?.id);
 
   if (loading) {
     return (
-      <div className="text-center p-5">
-        <div className="spinner-border text-primary" role="status">
-          <span className="visually-hidden">Cargando...</span>
+      <div className="container-fluid p-4">
+        <div className="text-center py-5">
+          <div className="spinner-border text-primary" role="status">
+            <span className="visually-hidden">Cargando...</span>
+          </div>
         </div>
       </div>
     );
@@ -190,7 +125,7 @@ export function CatalogosManagement() {
       <div className="d-flex justify-content-between align-items-center mb-4">
         <h2 className="mb-0">
           <i className="fas fa-folder-tree me-2"></i>
-          Gestión de Catálogos (Tipos)
+          Gestion de Catalogos (Tipos)
         </h2>
         <button
           onClick={() => handleOpenModal()}
@@ -215,19 +150,73 @@ export function CatalogosManagement() {
         </div>
       )}
 
-      <div className="card">
-        <div className="card-header bg-light">
-          <h5 className="mb-0">Estructura Jerárquica de Tipos</h5>
-        </div>
-        <div className="card-body p-0">
-          {tiposRaiz.length === 0 ? (
-            <div className="text-center p-4 text-muted">
-              <i className="fas fa-folder-open fa-3x mb-3"></i>
-              <p>No hay tipos registrados</p>
-            </div>
-          ) : (
-            tiposRaiz.map(tipo => renderTipoTree(tipo))
-          )}
+      <div className="card border-0 shadow-sm">
+        <div className="card-body">
+          <div className="table-responsive">
+            <table className="table table-hover mb-0">
+              <thead>
+                <tr>
+                  <th>Nombre</th>
+                  <th>Padre</th>
+                  <th className="text-center">Estado</th>
+                  <th className="text-center">Acciones</th>
+                </tr>
+              </thead>
+              <tbody>
+                {tipos.length === 0 ? (
+                  <tr>
+                    <td colSpan={4} className="text-center py-4 text-muted">
+                      <i className="fas fa-folder-open fa-2x mb-2 d-block"></i>
+                      No hay tipos registrados
+                    </td>
+                  </tr>
+                ) : (
+                  tipos.map(tipo => (
+                    <tr key={tipo.id}>
+                      <td>
+                        <span style={{ marginLeft: `${(tipo.nivel || 0) * 20}px` }}>
+                          {tipo.nivel && tipo.nivel > 0 ? '|-- ' : ''}
+                          <strong>{tipo.name}</strong>
+                        </span>
+                      </td>
+                      <td>
+                        {tipo.parent_id ? (
+                          <small className="text-muted">
+                            {tiposPlanos.find(t => t.id === tipo.parent_id)?.name || '-'}
+                          </small>
+                        ) : (
+                          <span className="text-muted">-</span>
+                        )}
+                      </td>
+                      <td className="text-center">
+                        <span className={`badge ${tipo.estado ? 'bg-success' : 'bg-secondary'}`}>
+                          {tipo.estado ? 'Activo' : 'Inactivo'}
+                        </span>
+                      </td>
+                      <td className="text-center">
+                        <div className="btn-group btn-group-sm" role="group">
+                          <button
+                            onClick={() => handleOpenModal(tipo)}
+                            className="btn btn-outline-warning"
+                            title="Editar"
+                          >
+                            <i className="fas fa-edit"></i>
+                          </button>
+                          <button
+                            onClick={() => handleDelete(tipo.id)}
+                            className="btn btn-outline-danger"
+                            title="Eliminar"
+                          >
+                            <i className="fas fa-trash"></i>
+                          </button>
+                        </div>
+                      </td>
+                    </tr>
+                  ))
+                )}
+              </tbody>
+            </table>
+          </div>
         </div>
       </div>
 
@@ -260,18 +249,16 @@ export function CatalogosManagement() {
                     <label className="form-label">Tipo Padre</label>
                     <Select
                       options={[
-                        { value: null, label: 'Sin padre (tipo raíz)' },
-                        ...tiposRaiz
-                          .filter(t => t.id !== editingTipo?.id)
-                          .map(tipo => ({ value: tipo.id, label: tipo.name }))
+                        { value: null, label: 'Sin padre (tipo raiz)' },
+                        ...tiposRaiz.map(tipo => ({ value: tipo.id, label: tipo.name }))
                       ]}
-                      value={formData.parent_id ? { value: formData.parent_id, label: tiposRaiz.find(t => t.id === formData.parent_id)?.name || 'Sin padre (tipo raíz)' } : { value: null, label: 'Sin padre (tipo raíz)' }}
+                      value={formData.parent_id ? { value: formData.parent_id, label: tiposPlanos.find(t => t.id === formData.parent_id)?.name || 'Sin padre (tipo raiz)' } : { value: null, label: 'Sin padre (tipo raiz)' }}
                       onChange={(option) => setFormData({ ...formData, parent_id: option?.value || null })}
                       isClearable
                       styles={customSelectStyles}
                     />
                     <small className="text-muted">
-                      Seleccione un tipo padre si este es un subtipo. Solo se muestran tipos raíz.
+                      Seleccione un tipo padre si este es un subtipo.
                     </small>
                   </div>
 
