@@ -35,10 +35,20 @@ const Configuracion = lazy(() => import('./features/configuracion/Configuracion'
 
 // Componente que combina ProtectedRoute y Layout para evitar re-renders
 function ProtectedLayout() {
+  const LoadingContent = () => (
+    <div className="d-flex justify-content-center align-items-center" style={{ minHeight: '400px' }}>
+      <div className="spinner-border text-primary" role="status">
+        <span className="visually-hidden">Cargando...</span>
+      </div>
+    </div>
+  );
+
   return (
     <ProtectedRoute>
       <Layout>
-        <Outlet />
+        <Suspense fallback={<LoadingContent />}>
+          <Outlet />
+        </Suspense>
       </Layout>
     </ProtectedRoute>
   );
@@ -91,15 +101,14 @@ function App() {
           },
         }}
       />
-      <Suspense fallback={<LoadingFallback />}>
-        <Routes>
-          <Route
-            path="/login"
-            element={isAuthenticated ? <Navigate to="/" replace /> : <LoginPage />}
-          />
-          
-          {/* Rutas protegidas con Layout compartido */}
-          <Route element={<ProtectedLayout />}>
+      <Routes>
+        <Route
+          path="/login"
+          element={isAuthenticated ? <Navigate to="/" replace /> : <LoginPage />}
+        />
+        
+        {/* Rutas protegidas con Layout compartido */}
+        <Route element={<ProtectedLayout />}>
             <Route path="/" element={<Inicio />} />
             <Route path="/incidents" element={<IncidentsList />} />
             <Route path="/incidents/new" element={<IncidentForm incidentId={null} onClose={() => {}} onSave={() => {}} />} />
@@ -132,7 +141,6 @@ function App() {
 
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
-      </Suspense>
     </BrowserRouter>
   );
 }
