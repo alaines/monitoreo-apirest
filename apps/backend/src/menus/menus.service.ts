@@ -1,4 +1,4 @@
-import { Injectable, NotFoundException, BadRequestException } from '@nestjs/common';
+import { Injectable, NotFoundException, BadRequestException, ConflictException } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 
 @Injectable()
@@ -103,6 +103,17 @@ export class MenusService {
    * Crea un nuevo menú
    */
   async create(createMenuDto: any) {
+    // Verificar si el código ya existe
+    if (createMenuDto.codigo) {
+      const existingMenu = await this.prisma.menu.findUnique({
+        where: { codigo: createMenuDto.codigo },
+      });
+      
+      if (existingMenu) {
+        throw new ConflictException(`Ya existe un menú con el código "${createMenuDto.codigo}"`);
+      }
+    }
+
     // Obtener el siguiente orden dentro del padre
     const siblings = await this.prisma.menu.findMany({
       where: { parentId: createMenuDto.menuPadreId || null },
@@ -182,6 +193,17 @@ export class MenusService {
     const menu = await this.prisma.menu.findUnique({ where: { id } });
     if (!menu) {
       throw new NotFoundException(`Menú con ID ${id} no encontrado`);
+    }
+
+    // Verificar si el código ya existe (en otro menú)
+    if (updateMenuDto.codigo && updateMenuDto.codigo !== menu.codigo) {
+      const existingMenu = await this.prisma.menu.findUnique({
+        where: { codigo: updateMenuDto.codigo },
+      });
+      
+      if (existingMenu && existingMenu.id !== id) {
+        throw new ConflictException(`Ya existe un menú con el código "${updateMenuDto.codigo}"`);
+      }
     }
 
     const updated = await this.prisma.menu.update({
