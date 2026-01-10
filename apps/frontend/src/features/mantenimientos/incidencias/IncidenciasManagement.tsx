@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import Select from 'react-select';
 import { incidenciasService, Incidencia } from '../../../services/admin.service';
+import { incidentsService, PrioridadCatalog } from '../../../services/incidents.service';
 import { customSelectStyles } from '../../../styles/react-select-custom';
 
 interface IncidenciaConNivel extends Incidencia {
@@ -10,6 +11,7 @@ interface IncidenciaConNivel extends Incidencia {
 const IncidenciasManagement = () => {
   const [incidencias, setIncidencias] = useState<IncidenciaConNivel[]>([]);
   const [incidenciasPlanas, setIncidenciasPlanas] = useState<Incidencia[]>([]);
+  const [prioridades, setPrioridades] = useState<PrioridadCatalog[]>([]);
   const [loading, setLoading] = useState(false);
   const [showModal, setShowModal] = useState(false);
   const [editingIncidencia, setEditingIncidencia] = useState<Incidencia | null>(null);
@@ -28,12 +30,14 @@ const IncidenciasManagement = () => {
   const loadData = async () => {
     try {
       setLoading(true);
-      const [tree, flat] = await Promise.all([
+      const [tree, flat, prioridadesList] = await Promise.all([
         incidenciasService.getTree(),
-        incidenciasService.getAll()
+        incidenciasService.getAll(),
+        incidentsService.getPrioridadesCatalog()
       ]);
       setIncidencias(tree);
       setIncidenciasPlanas(flat);
+      setPrioridades(prioridadesList);
     } catch (error) {
       console.error('Error al cargar incidencias:', error);
       alert('Error al cargar incidencias');
@@ -244,14 +248,18 @@ const IncidenciasManagement = () => {
                   </div>
 
                   <div className="mb-3">
-                    <label className="form-label">ID Prioridad</label>
-                    <input
-                      type="number"
-                      className="form-control custom-input"
-                      value={formData.prioridadId || ''}
-                      onChange={(e) => setFormData({ ...formData, prioridadId: e.target.value ? Number(e.target.value) : null })}
+                    <label className="form-label">Prioridad</label>
+                    <Select
+                      options={[
+                        { value: null, label: 'Sin prioridad' },
+                        ...prioridades.map(p => ({ value: p.id, label: p.nombre }))
+                      ]}
+                      value={formData.prioridadId ? { value: formData.prioridadId, label: prioridades.find(p => p.id === formData.prioridadId)?.nombre || '' } : { value: null, label: 'Sin prioridad' }}
+                      onChange={(option) => setFormData({ ...formData, prioridadId: option?.value || null })}
+                      isClearable
+                      styles={customSelectStyles}
+                      placeholder="Seleccionar prioridad..."
                     />
-                    <small className="form-text text-muted">Debe existir en la tabla de prioridades</small>
                   </div>
 
                   <div className="mb-3 form-check">
