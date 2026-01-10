@@ -202,9 +202,10 @@ export function Inicio() {
         incidentsService.getCrucesApagadosCount()
       ]);
       
-      // Calcular fecha de hoy
+      // Calcular fecha de hoy (inicio y fin del día)
       const today = new Date();
-      today.setHours(0, 0, 0, 0);
+      const startOfToday = new Date(today.getFullYear(), today.getMonth(), today.getDate(), 0, 0, 0, 0);
+      const endOfToday = new Date(today.getFullYear(), today.getMonth(), today.getDate(), 23, 59, 59, 999);
       
       // Incidencias de hoy para las estadísticas diarias
       const todayIncidentsData = await incidentsService.getIncidents({ 
@@ -214,11 +215,10 @@ export function Inicio() {
 
       const allIncidents = todayIncidentsData.data;
       
-      // Filtrar incidencias de hoy
+      // Filtrar incidencias de hoy - comparar rangos de fecha
       const todayIncidents = allIncidents.filter((i: Incident) => {
         const createdDate = new Date(i.createdAt);
-        createdDate.setHours(0, 0, 0, 0);
-        return createdDate.getTime() === today.getTime();
+        return createdDate >= startOfToday && createdDate <= endOfToday;
       });
 
       // Estadísticas de hoy
