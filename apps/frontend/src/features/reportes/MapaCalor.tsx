@@ -353,7 +353,7 @@ export function MapaCalor() {
                 <i className="fas fa-calendar text-success"></i>
                 <div>
                   <h5 className="mb-0" style={{ fontSize: '14px' }}>
-                    {filters.month ? months.find(m => m.value === filters.month)?.label : 'Todo el año'}
+                    {filters.month ? months.find(m => m.value === filters.month)?.label : 'Todos'} / {filters.year}
                   </h5>
                   <small className="text-muted">Período</small>
                 </div>
