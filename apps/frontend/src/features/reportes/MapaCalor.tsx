@@ -66,25 +66,32 @@ export function MapaCalor() {
 
   const mapCenter: [number, number] = [-12.0464, -77.0428]; // Lima, Perú
 
+  // Cargar datos cuando cambian los filtros
   useEffect(() => {
     loadData();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
-
-  useEffect(() => {
-    applyFilters();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [filters, incidents]);
+  }, [filters]);
 
   const loadData = async () => {
+    setLoadingData(true);
     try {
+      // Construir query params con filtros actuales
+      const queryParams: any = {
+        year: parseInt(filters.year),
+        month: filters.month ? parseInt(filters.month) : undefined,
+      };
+      
+      if (filters.tipoIncidencia) {
+        queryParams.incidenciaId = parseInt(filters.tipoIncidencia);
+      }
+      
       const [incidentsResponse, tipos] = await Promise.all([
-        incidentsService.getIncidents({ limit: 10000 }),
+        incidentsService.getMapMarkers(queryParams),
         incidentsService.getIncidenciasCatalog()
       ]);
       
       const incidentsData = incidentsResponse.data || [];
-      // Filtrar y mapear solo los datos necesarios
+      // Mapear solo los datos necesarios (ya vienen filtrados del backend)
       const mappedIncidents: IncidentMapData[] = incidentsData
         .filter((i: any) => i.latitude && i.longitude)
         .map((i: any) => ({
@@ -96,6 +103,7 @@ export function MapaCalor() {
         }));
       
       setIncidents(mappedIncidents);
+      setFilteredIncidents(mappedIncidents); // Ya vienen filtrados del backend
       setTiposIncidencia(tipos);
     } catch (error: any) {
       setErrors(error.response?.data?.message || 'Error al cargar incidencias');
@@ -105,38 +113,9 @@ export function MapaCalor() {
     }
   };
 
-  const applyFilters = () => {
-    let filtered = [...incidents];
-
-    // Filtro por año - usar string para evitar problemas de zona horaria
-    // Las fechas vienen como "2026-01-10T00:27:08.474Z", extraemos YYYY-MM
-    if (filters.year) {
-      filtered = filtered.filter(incident => {
-        const year = incident.createdAt.substring(0, 4); // "2026"
-        return year === filters.year;
-      });
-    }
-
-    // Filtro por mes - usar string para evitar problemas de zona horaria
-    if (filters.month) {
-      filtered = filtered.filter(incident => {
-        const month = parseInt(incident.createdAt.substring(5, 7), 10).toString(); // "01" -> "1"
-        return month === filters.month;
-      });
-    }
-
-    // Filtro por tipo de incidencia
-    if (filters.tipoIncidencia) {
-      filtered = filtered.filter(incident => 
-        incident.incidenciaId === parseInt(filters.tipoIncidencia)
-      );
-    }
-
-    setFilteredIncidents(filtered);
-  };
-
   const handleFilterChange = (key: string, value: string) => {
     setFilters(prev => ({ ...prev, [key]: value }));
+    // Los datos se recargarán automáticamente por el useEffect que escucha filters
   };
 
   const clearFilters = () => {
@@ -146,6 +125,7 @@ export function MapaCalor() {
       month: (currentDate.getMonth() + 1).toString(), // Restablecer a mes actual
       tipoIncidencia: '',
     });
+    // Los datos se recargarán automáticamente por el useEffect
   };
 
   // Convertir incidencias a puntos para heatmap

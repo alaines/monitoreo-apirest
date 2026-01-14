@@ -69,6 +69,8 @@ export interface QueryIncidentsDto {
   equipoId?: number;
   administradorId?: number;
   anho?: number;
+  year?: number;
+  month?: number;
   search?: string;
 }
 

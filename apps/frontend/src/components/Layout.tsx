@@ -195,7 +195,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
           <div className="row align-items-center">
             <div className="col-md-6">
               <p className="mb-0 text-muted" style={{ fontSize: '14px' }}>
-                © {new Date().getFullYear()} Sistema de Monitoreo <span className="ms-2 badge bg-secondary">v1.1.5</span>
+                © {new Date().getFullYear()} Sistema de Monitoreo <span className="ms-2 badge bg-secondary">v1.1.6</span>
               </p>
             </div>
             <div className="col-md-6 text-md-end">

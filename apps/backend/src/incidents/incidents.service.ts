@@ -334,7 +334,7 @@ export class IncidentsService {
   }
 
   async getMapMarkers(query: QueryIncidentsDto) {
-    const { page = 1, limit = 10000, estadoId, administradorId, anho } = query;
+    const { page = 1, limit = 10000, estadoId, administradorId, anho, year, month, incidenciaId } = query;
     const skip = (page - 1) * limit;
 
     const where: any = {};
@@ -347,6 +347,25 @@ export class IncidentsService {
     }
 
     if (anho) where.anho = anho;
+    
+    // Filtros para mapa de calor: year y month usando created_at
+    if (year || month) {
+      const yearValue = year || new Date().getFullYear();
+      const monthValue = month || new Date().getMonth() + 1;
+      
+      // Filtrar usando SQL raw para EXTRACT de created_at
+      // Formato: YYYY-MM (ej: "2026-01")
+      const yearMonth = `${yearValue}-${String(monthValue).padStart(2, '0')}`;
+      where.createdAt = {
+        gte: new Date(`${yearMonth}-01T00:00:00.000Z`),
+        lt: new Date(`${yearValue}-${String(monthValue + 1).padStart(2, '0')}-01T00:00:00.000Z`),
+      };
+    }
+    
+    // Filtro por tipo de incidencia para mapa de calor
+    if (incidenciaId) {
+      where.incidenciaId = incidenciaId;
+    }
     
     // Filtro por administrador a través de la relación con cruce
     if (administradorId) {

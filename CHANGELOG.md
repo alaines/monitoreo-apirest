@@ -5,6 +5,21 @@ Todos los cambios notables de este proyecto serán documentados en este archivo.
 El formato está basado en [Keep a Changelog](https://keepachangelog.com/es-ES/1.0.0/),
 y este proyecto adhiere a [Semantic Versioning](https://semver.org/lang/es/).
 
+## [1.1.6] - 2026-01-13
+
+### Mejorado (Changed)
+- **Optimización Crítica del Mapa de Calor**: Los datos ahora se filtran en el backend (SQL) en lugar del frontend, reduciendo drásticamente la transferencia de datos
+- **Filtrado Dinámico**: Cada cambio de filtro (año, mes, tipo) recarga datos filtrados desde el backend, eliminando la carga inicial de 10,000 registros (17.5MB)
+- **Performance Mejorada**: El endpoint `/incidents/map-markers` ahora acepta parámetros `year`, `month` e `incidenciaId` para filtrar en SQL
+- **Carga Automática por Filtros**: useEffect recarga datos automáticamente cuando cambian los filtros (year, month, tipo)
+
+### Técnico (Technical)
+- Backend: Agregados parámetros `year` y `month` a `QueryIncidentsDto`
+- Backend: Método `getMapMarkers` ahora filtra por rango de fechas usando `createdAt` y por `incidenciaId`
+- Frontend: `loadData()` envía filtros actuales como query params al backend
+- Frontend: Eliminado `applyFilters()` - datos vienen prefiltrados del backend
+- Frontend: `QueryIncidentsDto` actualizado con campos `year` y `month`
+
 ## [1.1.5] - 2026-01-13
 
 ### Mejorado (Changed)

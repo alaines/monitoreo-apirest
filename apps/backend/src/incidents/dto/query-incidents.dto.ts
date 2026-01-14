@@ -53,6 +53,18 @@ export class QueryIncidentsDto {
   @IsOptional()
   anho?: number;
 
+  @ApiPropertyOptional({ description: 'Año (filtro para mapa de calor)' })
+  @Type(() => Number)
+  @IsInt()
+  @IsOptional()
+  year?: number;
+
+  @ApiPropertyOptional({ description: 'Mes (1-12, filtro para mapa de calor)' })
+  @Type(() => Number)
+  @IsInt()
+  @IsOptional()
+  month?: number;
+
   @ApiPropertyOptional({ description: 'Búsqueda en descripción' })
   @IsString()
   @IsOptional()
