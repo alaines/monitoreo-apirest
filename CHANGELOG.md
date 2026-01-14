@@ -13,6 +13,7 @@ y este proyecto adhiere a [Semantic Versioning](https://semver.org/lang/es/).
 - **Mejor UX en Permisos**: Menus padre destacados con color azul y fondo diferenciado, submenús con indentación y símbolo └─
 - **Información Completa de Menús**: Se muestra icono, nombre, módulo y ruta de cada menú en la matriz de permisos
 - **Filtrado de Menús Activos**: Solo se muestran menús activos en la asignación de permisos
+- **Acceso a Catálogos sin Permisos Específicos**: Los endpoints GET de tipos, grupos, acciones, áreas, equipos y reportadores ya no requieren permisos específicos, permitiendo su uso en filtros de otros módulos
 
 ### Agregado (Added)
 - **Método getTree() en menusService**: Nuevo endpoint en frontend para obtener menús con jerarquía
@@ -20,9 +21,14 @@ y este proyecto adhiere a [Semantic Versioning](https://semver.org/lang/es/).
 - **Logs de depuración**: Consola muestra cantidad de menús cargados para facilitar diagnóstico
 - **Mensaje informativo**: Indicador visual cuando no hay menús disponibles
 
+### Corregido (Fixed)
+- **Permisos de catálogos**: Los endpoints de tipos, grupos, acciones, áreas, equipos y reportadores ahora solo requieren autenticación (JwtAuthGuard) para consultas GET, permitiendo su uso en filtros
+- **Permisos de escritura**: POST, PATCH y DELETE de catálogos ahora requieren permisos específicos del módulo correspondiente
+
 ### Técnico
 - Archivo `.copilot-context.md` creado con información de entornos y credenciales
 - Documentación de uso de PM2 para gestión de procesos en local
+- Controladores actualizados: tipos, grupos, acciones, áreas, equipos, reportadores
 
 ## [1.1.3] - 2026-01-10
 

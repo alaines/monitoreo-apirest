@@ -8,22 +8,25 @@ import {
   Delete,
   ParseIntPipe,
   UseInterceptors,
+  UseGuards,
 } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth } from '@nestjs/swagger';
 import { TiposService } from './tipos.service';
 import { CreateTipoDto, UpdateTipoDto, TipoResponseDto } from './tipos.dto';
-import { RequirePermission } from '../common/decorators/permissions.decorator';
+import { RequirePermission, Public } from '../common/decorators/permissions.decorator';
 import { AuditInterceptor } from '../common/interceptors/audit.interceptor';
+import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 
 @ApiTags('tipos')
 @ApiBearerAuth()
 @Controller('tipos')
+@UseGuards(JwtAuthGuard) // Solo requiere autenticación
 @UseInterceptors(AuditInterceptor)
 export class TiposController {
   constructor(private readonly tiposService: TiposService) {}
 
   @Get('hierarchical')
-  @RequirePermission('catalogos', 'view')
+  // No requiere permiso específico - usado en filtros
   @ApiOperation({ summary: 'Obtener tipos organizados jerárquicamente' })
   @ApiResponse({
     status: 200,
@@ -35,7 +38,7 @@ export class TiposController {
   }
 
   @Get('roots')
-  @RequirePermission('catalogos', 'view')
+  // No requiere permiso específico - usado en filtros
   @ApiOperation({ summary: 'Obtener solo tipos raíz (sin padre)' })
   @ApiResponse({
     status: 200,
@@ -47,7 +50,7 @@ export class TiposController {
   }
 
   @Get()
-  @RequirePermission('catalogos', 'view')
+  // No requiere permiso específico - usado en filtros
   @ApiOperation({ summary: 'Obtener todos los tipos (lista plana)' })
   @ApiResponse({
     status: 200,

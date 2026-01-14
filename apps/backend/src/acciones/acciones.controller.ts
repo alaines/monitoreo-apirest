@@ -9,17 +9,23 @@ import {
   ParseIntPipe,
   HttpCode,
   HttpStatus,
+  UseGuards,
 } from '@nestjs/common';
-import { ApiTags, ApiOperation, ApiResponse } from '@nestjs/swagger';
+import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth } from '@nestjs/swagger';
 import { AccionesService } from './acciones.service';
 import { CreateAccionDto, UpdateAccionDto } from './acciones.dto';
+import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
+import { RequirePermission } from '../common/decorators/permissions.decorator';
 
 @ApiTags('acciones')
+@ApiBearerAuth()
 @Controller('acciones')
+@UseGuards(JwtAuthGuard)
 export class AccionesController {
   constructor(private readonly accionesService: AccionesService) {}
 
   @Get()
+  // No requiere permiso específico - usado en gestión de permisos
   @ApiOperation({ summary: 'Obtener todas las acciones activas' })
   @ApiResponse({ status: 200, description: 'Lista de acciones' })
   findAll() {
@@ -43,6 +49,7 @@ export class AccionesController {
   }
 
   @Post()
+  @RequirePermission('grupos', 'create')
   @ApiOperation({ summary: 'Crear una nueva acción' })
   @ApiResponse({ status: 201, description: 'Acción creada exitosamente' })
   @ApiResponse({ status: 409, description: 'El código ya existe' })
