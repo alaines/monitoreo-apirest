@@ -19,7 +19,7 @@ export class IncidentsService {
 
   async create(createIncidentDto: CreateIncidentDto, usuario: string) {
     // Las incidencias siempre heredan coordenadas del cruce, no necesitan geom propio
-    const result = await this.prisma.$queryRawUnsafe<Array<{ id: number }>>(
+    const result = await this.prisma.$queryRawUnsafe(
       `INSERT INTO tickets (
         incidencia_id, prioridade_id, cruce_id, descripcion,
         reportadore_nombres, reportadore_dato_contacto, reportadore_id,
@@ -37,7 +37,7 @@ export class IncidentsService {
     );
 
     // Obtener el ticket recién creado
-    const ticketId = result[0].id;
+    const ticketId = (result as Array<{ id: number }>)[0].id;
     const ticket = await this.findOne(ticketId);
 
     // Broadcast to all connected clients that a new incident was created
@@ -158,8 +158,8 @@ export class IncidentsService {
     
     // Asignar coordenadas a cada ticket (del ticket o del cruce)
     const ticketsWithCoords = tickets.map((ticket) => {
-      let latitude = null;
-      let longitude = null;
+      let latitude: number | null = null;
+      let longitude: number | null = null;
       
       // Si tiene coordenadas propias, usarlas
       if (coordsMap.has(ticket.id)) {

@@ -5,6 +5,25 @@ Todos los cambios notables de este proyecto serán documentados en este archivo.
 El formato está basado en [Keep a Changelog](https://keepachangelog.com/es-ES/1.0.0/),
 y este proyecto adhiere a [Semantic Versioning](https://semver.org/lang/es/).
 
+## [1.1.4] - 2026-01-13
+
+### Mejorado (Changed)
+- **Visualización Jerárquica de Menús en Permisos**: Los menús en la gestión de grupos y permisos ahora se muestran de forma jerárquica con indentación, similar a la gestión de menús
+- **Carga Dinámica de Menús**: Los menús se cargan dinámicamente desde la base de datos usando el endpoint `/menus/tree` con niveles calculados
+- **Mejor UX en Permisos**: Menus padre destacados con color azul y fondo diferenciado, submenús con indentación y símbolo └─
+- **Información Completa de Menús**: Se muestra icono, nombre, módulo y ruta de cada menú en la matriz de permisos
+- **Filtrado de Menús Activos**: Solo se muestran menús activos en la asignación de permisos
+
+### Agregado (Added)
+- **Método getTree() en menusService**: Nuevo endpoint en frontend para obtener menús con jerarquía
+- **Campos adicionales en interfaz Menu**: Agregados campos `nivel` y `menuPadreId` para soporte jerárquico
+- **Logs de depuración**: Consola muestra cantidad de menús cargados para facilitar diagnóstico
+- **Mensaje informativo**: Indicador visual cuando no hay menús disponibles
+
+### Técnico
+- Archivo `.copilot-context.md` creado con información de entornos y credenciales
+- Documentación de uso de PM2 para gestión de procesos en local
+
 ## [1.1.3] - 2026-01-10
 
 ### Agregado (Added)

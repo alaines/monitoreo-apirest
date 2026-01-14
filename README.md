@@ -483,6 +483,191 @@ Cada incidencia mantiene un historial completo de seguimientos con:
 - Sistema de mostrar/ocultar passwords
 - Exclusion del campo IP (tipo CIDR PostgreSQL no soportado en formularios)
 
+# Despliegue en Producción
+
+## Guía completa de despliegue
+
+### 1. Preparación del código
+```bash
+# En el servidor, clonar o actualizar el repositorio
+cd ~
+git clone https://github.com/alaines/monitoreo-apirest.git
+# o para actualizar:
+cd ~/monitoreo-apirest && git pull origin main
+
+# Instalar dependencias
+cd ~/monitoreo-apirest
+npm install
+```
+
+### 2. Configuración del Backend
+
+**Crear archivo `.env` en `apps/backend/.env`:**
+```bash
+DATABASE_URL="postgresql://transito:transito@dbsrv.movingenia.com:5432/monitoreo?schema=public"
+JWT_SECRET="monitoreo-jwt-secret-2024"
+NODE_ENV="production"
+PORT=3000
+```
+
+**Generar Prisma Client y compilar:**
+```bash
+cd ~/monitoreo-apirest/apps/backend
+npx prisma generate
+npm run build
+```
+
+### 3. Configuración del Frontend
+
+**Crear archivo `.env.production` en `apps/frontend/.env.production`:**
+```bash
+VITE_API_URL=https://apps.movingenia.com/api
+```
+
+**Compilar el frontend:**
+```bash
+cd ~/monitoreo-apirest/apps/frontend
+npm run build
+```
+
+### 4. Configuración de PM2
+
+**Iniciar servicios:**
+```bash
+# Backend
+cd ~/monitoreo-apirest/apps/backend
+pm2 start dist/main.js --name monitoreo-backend
+
+# Frontend (servir archivos estáticos)
+cd ~/monitoreo-apirest/apps/frontend
+pm2 start npx --name monitoreo-frontend -- serve dist -l 5173 --single
+
+# Guardar configuración PM2
+pm2 save
+pm2 startup
+```
+
+### 5. Configuración de Nginx
+
+**Archivo `/etc/nginx/sites-available/monitoreo`:**
+```nginx
+server {
+    listen 80;
+    server_name apps.movingenia.com;
+
+    # Servir frontend estático
+    root /home/daddyplayerperu/monitoreo-apirest/apps/frontend/dist;
+    index index.html;
+
+    # Assets y recursos estáticos
+    location /assets/ {
+        alias /home/daddyplayerperu/monitoreo-apirest/apps/frontend/dist/assets/;
+        expires 1y;
+        add_header Cache-Control "public, immutable";
+    }
+
+    location /images/ {
+        alias /home/daddyplayerperu/monitoreo-apirest/apps/frontend/dist/images/;
+        expires 1y;
+        add_header Cache-Control "public, immutable";
+    }
+
+    # Proxy para API backend
+    location /api/ {
+        proxy_pass http://localhost:3000/api/;
+        proxy_http_version 1.1;
+        proxy_set_header Upgrade $http_upgrade;
+        proxy_set_header Connection 'upgrade';
+        proxy_set_header Host $host;
+        proxy_cache_bypass $http_upgrade;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+    }
+
+    # SPA fallback - enviar todo a index.html
+    location / {
+        try_files $uri $uri/ /index.html;
+    }
+}
+```
+
+**Activar y recargar Nginx:**
+```bash
+sudo ln -s /etc/nginx/sites-available/monitoreo /etc/nginx/sites-enabled/
+sudo nginx -t
+sudo systemctl reload nginx
+```
+
+### 6. Verificación
+
+```bash
+# Verificar servicios PM2
+pm2 status
+
+# Verificar logs
+pm2 logs monitoreo-backend --lines 50
+pm2 logs monitoreo-frontend --lines 50
+
+# Probar backend
+curl http://localhost:3000/api
+
+# Probar frontend
+curl http://localhost
+```
+
+## Recomendaciones para TypeScript y compilación
+
+- **Sincroniza el código fuente antes de compilar** (usa git pull o scp para actualizar archivos).
+- **Evita genéricos en funciones como `$queryRawUnsafe<T>()`**. Tipa el resultado después de la llamada:
+  ```typescript
+  const result = await this.prisma.$queryRawUnsafe(...);
+  const ticketId = (result as Array<{ id: number }>)[0].id;
+  ```
+- **Verifica que el `tsconfig.json` y las dependencias sean iguales** en todos los entornos.
+- **Si el build falla por tipado en producción pero no en local**, revisa diferencias en dependencias, configuración y versiones de Prisma/NestJS.
+- **Para máxima compatibilidad**, tipa el resultado después de la llamada, no en la llamada.
+- **Si usas `noImplicitAny: true`**, deberás tipar todos los parámetros y objetos en el código.
+
+## Errores comunes y soluciones
+
+### Error: `@prisma/client did not initialize yet`
+**Solución:** Ejecutar `npx prisma generate` en el directorio del backend antes de compilar.
+
+### Error: `Environment variable not found: DATABASE_URL`
+**Solución:** Verificar que el archivo `.env` existe en `apps/backend/` y contiene todas las variables necesarias.
+
+### Error: `Authentication failed against database server`
+**Solución:** Verificar las credenciales de la base de datos en el archivo `.env`.
+
+### Error 502 Bad Gateway en Nginx
+**Solución:** Verificar que PM2 tenga los servicios corriendo con `pm2 status` y revisar logs con `pm2 logs`.
+
+## Mantenimiento
+
+### Actualizar código en producción
+```bash
+cd ~/monitoreo-apirest
+git pull origin main
+cd apps/backend && npm install && npx prisma generate && npm run build
+cd ../frontend && npm install && npm run build
+pm2 restart monitoreo-backend
+pm2 restart monitoreo-frontend
+```
+
+### Revisar logs
+```bash
+pm2 logs monitoreo-backend --lines 100
+pm2 logs monitoreo-frontend --lines 100
+sudo tail -f /var/log/nginx/error.log
+```
+
+### Backup de base de datos
+```bash
+# Desde el servidor de base de datos
+pg_dump -h dbsrv.movingenia.com -U transito -d monitoreo > backup_$(date +%Y%m%d_%H%M%S).sql
+```
+
 ## Tecnologias y Librerias
 
 ### Backend

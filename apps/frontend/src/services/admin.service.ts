@@ -284,6 +284,9 @@ export interface Menu {
   url?: string;
   icono?: string;
   orden?: number;
+  activo?: boolean;
+  nivel?: number;
+  menuPadreId?: number | null;
 }
 
 export interface Permiso {
@@ -370,6 +373,11 @@ export const accionesService = {
 export const menusService = {
   async getAll() {
     const { data } = await api.get(`/menus`);
+    return data;
+  },
+  
+  async getTree() {
+    const { data } = await api.get(`/menus/tree`);
     return data;
   }
 };

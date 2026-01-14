@@ -43,16 +43,24 @@ export function GruposPermisosManagement() {
       const [gruposData, accionesData, menusData] = await Promise.all([
         gruposService.getAll(),
         accionesService.getAll(),
-        menusService.getAll()
+        menusService.getTree() // Usar getTree para obtener menús con jerarquía
       ]);
+      
+      console.log('📋 Menús cargados desde la BD:', menusData);
+      console.log('📋 Total de menús:', menusData.length);
+      
       setGrupos(gruposData);
       setAcciones(accionesData.filter((a: Accion) => a.estado));
-      setMenus(menusData);
+      // Filtrar solo menús activos
+      const menusActivos = menusData.filter((m: any) => m.activo !== false);
+      console.log('📋 Menús activos:', menusActivos.length);
+      setMenus(menusActivos);
       
       if (gruposData.length > 0) {
         setSelectedGrupo(gruposData[0].id);
       }
     } catch (error: any) {
+      console.error('❌ Error al cargar datos:', error);
       setErrors(error.response?.data?.message || 'Error al cargar datos');
     } finally {
       setLoading(false);
@@ -268,6 +276,31 @@ export function GruposPermisosManagement() {
           background-color: var(--primary-light) !important;
           border-color: var(--primary-light) !important;
         }
+        
+        /* Estilos para la tabla de permisos */
+        .table-bordered thead th {
+          background-color: #f8f9fa;
+          font-weight: 600;
+          vertical-align: middle;
+        }
+        
+        .table-active {
+          background-color: rgba(13, 110, 253, 0.05) !important;
+        }
+        
+        .table tbody tr:hover {
+          background-color: rgba(0, 0, 0, 0.02);
+        }
+        
+        .table-bordered td {
+          vertical-align: middle;
+        }
+        
+        .sticky-top {
+          position: sticky;
+          top: 0;
+          z-index: 10;
+        }
       `}</style>
       
       <div className="d-flex justify-content-between align-items-center mb-4">
@@ -413,14 +446,19 @@ export function GruposPermisosManagement() {
                   <table className="table table-bordered table-hover mb-0">
                     <thead className="table-light sticky-top">
                       <tr>
-                        <th style={{ minWidth: '200px' }}>Menú / Módulo</th>
+                        <th style={{ minWidth: '250px' }}>
+                          <div className="d-flex align-items-center">
+                            <i className="fas fa-sitemap me-2"></i>
+                            Menú / Módulo
+                          </div>
+                        </th>
                         {acciones.map((accion) => (
-                          <th key={accion.id} className="text-center" style={{ minWidth: '80px' }}>
+                          <th key={accion.id} className="text-center" style={{ minWidth: '100px' }}>
                             <div>
                               {accion.icono && <i className={`${accion.icono} me-1`}></i>}
-                              {accion.nombre}
+                              <div className="fw-bold">{accion.nombre}</div>
                             </div>
-                            <div className="mt-1">
+                            <div className="mt-2">
                               <input
                                 type="checkbox"
                                 className="form-check-input"
@@ -428,43 +466,91 @@ export function GruposPermisosManagement() {
                                 onChange={() => handleToggleAllAccion(accion.id)}
                                 title="Seleccionar todo"
                               />
+                              <small className="ms-1 text-muted">Todo</small>
                             </div>
                           </th>
                         ))}
-                        <th className="text-center">Todo</th>
+                        <th className="text-center" style={{ minWidth: '80px' }}>
+                          <i className="fas fa-check-double me-1"></i>
+                          Todas
+                        </th>
                       </tr>
                     </thead>
                     <tbody>
-                      {menus.map((menu) => (
-                        <tr key={menu.id}>
-                          <td>
-                            <strong>{menu.nombre}</strong>
-                            <br />
-                            <small className="text-muted">{menu.modulo}</small>
+                      {menus.length === 0 ? (
+                        <tr>
+                          <td colSpan={acciones.length + 2} className="text-center py-5">
+                            <i className="fas fa-inbox fa-3x text-muted mb-3 d-block"></i>
+                            <p className="text-muted mb-0">No hay menús disponibles</p>
+                            <small className="text-muted">Verifique la configuración del sistema</small>
                           </td>
-                          {acciones.map((accion) => {
-                            const key = `${menu.id}-${accion.id}`;
-                            return (
-                              <td key={accion.id} className="text-center">
+                        </tr>
+                      ) : (
+                        menus.map((menu) => {
+                          const nivel = menu.nivel || 0;
+                          const esMenuPadre = !menu.menuPadreId;
+                          
+                          return (
+                            <tr key={menu.id} className={esMenuPadre ? 'table-active' : ''}>
+                              <td>
+                                <div style={{ marginLeft: `${nivel * 20}px` }} className="d-flex align-items-center">
+                                  {nivel > 0 && (
+                                    <span className="text-muted me-2">└─</span>
+                                  )}
+                                  {menu.icono && (
+                                    <i className={`${menu.icono} me-2 ${esMenuPadre ? 'text-primary' : 'text-muted'}`}></i>
+                                  )}
+                                  <div>
+                                    <strong className={esMenuPadre ? 'text-primary' : ''}>
+                                      {menu.nombre}
+                                    </strong>
+                                    {menu.modulo && (
+                                      <>
+                                        <br />
+                                        <small className="text-muted">
+                                          <i className="fas fa-folder me-1"></i>
+                                          {menu.modulo}
+                                        </small>
+                                      </>
+                                    )}
+                                    {menu.ruta && menu.ruta !== '#' && (
+                                      <>
+                                        <br />
+                                        <small className="text-muted">
+                                          <i className="fas fa-link me-1"></i>
+                                          {menu.ruta}
+                                        </small>
+                                      </>
+                                    )}
+                                  </div>
+                                </div>
+                              </td>
+                              {acciones.map((accion) => {
+                                const key = `${menu.id}-${accion.id}`;
+                                return (
+                                  <td key={accion.id} className="text-center align-middle">
+                                    <input
+                                      type="checkbox"
+                                      className="form-check-input"
+                                      checked={permisosMatrix[key] || false}
+                                      onChange={() => handleTogglePermiso(menu.id, accion.id)}
+                                    />
+                                  </td>
+                                );
+                              })}
+                              <td className="text-center align-middle">
                                 <input
                                   type="checkbox"
                                   className="form-check-input"
-                                  checked={permisosMatrix[key] || false}
-                                  onChange={() => handleTogglePermiso(menu.id, accion.id)}
+                                  checked={acciones.every(a => permisosMatrix[`${menu.id}-${a.id}`])}
+                                  onChange={() => handleToggleAllMenu(menu.id)}
+                                  title="Seleccionar todas las acciones para este menú"
                                 />
                               </td>
-                            );
-                          })}
-                          <td className="text-center">
-                            <input
-                              type="checkbox"
-                              className="form-check-input"
-                              checked={acciones.every(a => permisosMatrix[`${menu.id}-${a.id}`])}
-                              onChange={() => handleToggleAllMenu(menu.id)}
-                            />
-                          </td>
-                        </tr>
-                      ))}
+                            </tr>
+                          );
+                        })
+                      )}
                     </tbody>
                   </table>
                 </div>
