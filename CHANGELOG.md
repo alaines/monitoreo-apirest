@@ -5,6 +5,15 @@ Todos los cambios notables de este proyecto serán documentados en este archivo.
 El formato está basado en [Keep a Changelog](https://keepachangelog.com/es-ES/1.0.0/),
 y este proyecto adhiere a [Semantic Versioning](https://semver.org/lang/es/).
 
+## [1.1.5] - 2026-01-13
+
+### Mejorado (Changed)
+- **Optimización Mapa de Calor**: El mapa de calor ahora carga por defecto datos filtrados del mes y año actual, evitando cargar 10,000 registros al inicio
+- **Filtros por Defecto**: Los filtros de año y mes se inicializan automáticamente con la fecha actual para mejor rendimiento
+
+### Agregado (Added)
+- **Versión en Footer**: La versión del sistema ahora se muestra en el footer junto al copyright (© 2026 Sistema de Monitoreo v1.1.5)
+
 ## [1.1.4] - 2026-01-13
 
 ### Mejorado (Changed)

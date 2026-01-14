@@ -35,11 +35,12 @@ export function MapaCalor() {
   const [loadingData, setLoadingData] = useState(true);
   const [errors, setErrors] = useState<string>('');
 
-  // Filtros
+  // Filtros - Inicializar con mes y año actual
   const [showFilters, setShowFilters] = useState(false);
+  const currentDate = new Date();
   const [filters, setFilters] = useState({
-    year: new Date().getFullYear().toString(),
-    month: '',
+    year: currentDate.getFullYear().toString(),
+    month: (currentDate.getMonth() + 1).toString(), // Mes actual (1-12)
     tipoIncidencia: '',
   });
 
@@ -139,9 +140,10 @@ export function MapaCalor() {
   };
 
   const clearFilters = () => {
+    const currentDate = new Date();
     setFilters({
-      year: new Date().getFullYear().toString(),
-      month: '',
+      year: currentDate.getFullYear().toString(),
+      month: (currentDate.getMonth() + 1).toString(), // Restablecer a mes actual
       tipoIncidencia: '',
     });
   };
