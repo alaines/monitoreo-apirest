@@ -353,12 +353,17 @@ export class IncidentsService {
       const yearValue = year || new Date().getFullYear();
       const monthValue = month || new Date().getMonth() + 1;
       
-      // Filtrar usando SQL raw para EXTRACT de created_at
+      // Calcular el primer día del siguiente mes (manejando diciembre -> enero)
+      const nextMonth = monthValue === 12 ? 1 : monthValue + 1;
+      const nextYear = monthValue === 12 ? yearValue + 1 : yearValue;
+      
       // Formato: YYYY-MM (ej: "2026-01")
       const yearMonth = `${yearValue}-${String(monthValue).padStart(2, '0')}`;
+      const nextYearMonth = `${nextYear}-${String(nextMonth).padStart(2, '0')}`;
+      
       where.createdAt = {
         gte: new Date(`${yearMonth}-01T00:00:00.000Z`),
-        lt: new Date(`${yearValue}-${String(monthValue + 1).padStart(2, '0')}-01T00:00:00.000Z`),
+        lt: new Date(`${nextYearMonth}-01T00:00:00.000Z`),
       };
     }
     
