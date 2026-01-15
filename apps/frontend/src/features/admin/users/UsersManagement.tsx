@@ -55,6 +55,25 @@ export function UsersManagement() {
     grupoId: '' as string,
     estado: '' as '' | 'true' | 'false',
   });
+  
+  // Debounce para el campo de búsqueda
+  const [searchInput, setSearchInput] = useState('');
+  const [debouncedSearch, setDebouncedSearch] = useState('');
+
+  // Efecto para debouncing del campo de búsqueda
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setDebouncedSearch(searchInput);
+    }, 500); // Esperar 500ms después de que el usuario deje de escribir
+
+    return () => clearTimeout(timer);
+  }, [searchInput]);
+
+  // Actualizar filters.search cuando cambie debouncedSearch
+  useEffect(() => {
+    setFilters(prev => ({ ...prev, search: debouncedSearch }));
+    setPage(1);
+  }, [debouncedSearch]);
 
   useEffect(() => {
     loadGrupos();
@@ -376,8 +395,8 @@ export function UsersManagement() {
                   type="text"
                   className="form-control custom-input-sm"
                   placeholder="Usuario, nombre o email..."
-                  value={filters.search}
-                  onChange={(e) => handleFilterChange('search', e.target.value)}
+                  value={searchInput}
+                  onChange={(e) => setSearchInput(e.target.value)}
                 />
               </div>
               <div className="col-md-3">
@@ -411,6 +430,7 @@ export function UsersManagement() {
                 <button
                   className="btn btn-outline-secondary btn-sm w-100"
                   onClick={() => {
+                    setSearchInput('');
                     setFilters({ search: '', grupoId: '', estado: '' });
                     setPage(1);
                   }}
