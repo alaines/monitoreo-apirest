@@ -33,7 +33,10 @@
     "version:patch": "./scripts/version-bump.sh patch",
     "version:minor": "./scripts/version-bump.sh minor",
     "version:major": "./scripts/version-bump.sh major",
-    "release": "./scripts/release.sh"
+    "release": "./scripts/release.sh",
+    "reload-ip": "./restart-with-new-ip.sh",
+    "reload-ip:build-frontend": "./restart-with-new-ip.sh --build-frontend",
+    "reload-ip:restart-only": "./restart-with-new-ip.sh --restart-only"
   },
   "keywords": [
     "monitoreo",
