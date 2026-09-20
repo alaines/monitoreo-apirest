@@ -42,6 +42,10 @@ class ReportesService {
     return response.data;
   }
 
+  async getReporte(filtros: FiltrosReporte): Promise<EstadisticasReporte> {
+    return this.getEstadisticas(filtros);
+  }
+
   async exportarExcel(filtros: FiltrosReporte) {
     const response = await api.get('/reportes/incidencias/excel', {
       params: filtros,

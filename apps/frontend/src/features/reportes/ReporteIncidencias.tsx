@@ -1,11 +1,13 @@
 import { useState, useEffect } from 'react';
 import Select from 'react-select';
 import { customSelectStylesSmall } from '../../styles/react-select-custom';
+import toast from 'react-hot-toast';
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
 import { reportesService, PeriodoReporte, FiltrosReporte, EstadisticasReporte } from '../../services/reportes.service';
 import { incidentsService } from '../../services/incidents.service';
 import { administradoresService, Administrador } from '../../services/administradores.service';
+import { PageHeader } from '../../components/ui/PageHeader';
 
 export function ReporteIncidencias() {
   const [loading, setLoading] = useState(false);
@@ -24,50 +26,50 @@ export function ReporteIncidencias() {
   const [anio, setAnio] = useState<number>(new Date().getFullYear());
   const [fechaInicio, setFechaInicio] = useState<string>('');
   const [fechaFin, setFechaFin] = useState<string>('');
-  const [tipoIncidencia, setTipoIncidencia] = useState<number | undefined>();
-  const [estadoId, setEstadoId] = useState<number | undefined>();
-  const [administradorId, setAdministradorId] = useState<number | undefined>();
+  const [tipoIncidencia, setTipoIncidencia] = useState<number | undefined>(undefined);
+  const [estadoId, setEstadoId] = useState<number | undefined>(undefined);
+  const [administradorId, setAdministradorId] = useState<number | undefined>(undefined);
 
   useEffect(() => {
-    loadCatalogos();
+    cargarCatalogos();
   }, []);
 
   useEffect(() => {
-    if (tiposIncidencia.length > 0) {
-      loadEstadisticas();
-    }
-  }, [periodo, mes, anio, fechaInicio, fechaFin, tipoIncidencia, estadoId, administradorId, tiposIncidencia]);
+    cargarReporte();
+  }, [periodo, mes, anio, fechaInicio, fechaFin, tipoIncidencia, estadoId, administradorId]);
 
-  const loadCatalogos = async () => {
+  const cargarCatalogos = async () => {
     try {
-      const [incidenciasData, estadosData, adminsData] = await Promise.all([
-        incidentsService.getIncidenciasCatalog(),
-        incidentsService.getEstadosCatalog(),
-        administradoresService.getAdministradores()
+      const [tiposIncRes, estadosRes, adminRes] = await Promise.all([
+        incidentsService.getTiposIncidencias(),
+        incidentsService.getEstadosIncidencia(),
+        administradoresService.getAll(),
       ]);
-      setTiposIncidencia(incidenciasData);
-      setTiposEstado(estadosData);
-      setAdministradores(adminsData);
+      setTiposIncidencia(tiposIncRes || []);
+      setTiposEstado(estadosRes || []);
+      setAdministradores(adminRes || []);
     } catch (error) {
-      console.error('Error loading catalogos:', error);
+      console.error('Error loading catalogs:', error);
     }
   };
 
-  const loadEstadisticas = async () => {
+  const cargarReporte = async () => {
     try {
       setLoading(true);
       const filtros = buildFiltros();
-      const dataEstadisticas = await reportesService.getEstadisticas(filtros);
-      setEstadisticas(dataEstadisticas);
+      const data = await reportesService.getEstadisticas(filtros);
+      setEstadisticas(data);
     } catch (error) {
-      console.error('Error loading estadisticas:', error);
+      console.error('Error loading report:', error);
     } finally {
       setLoading(false);
     }
   };
 
   const buildFiltros = (): FiltrosReporte => {
-    const filtros: FiltrosReporte = { periodo };
+    const filtros: FiltrosReporte = {
+      periodo,
+    };
 
     if (periodo === PeriodoReporte.PERSONALIZADO) {
       if (fechaInicio) filtros.fechaInicio = fechaInicio;
@@ -77,6 +79,10 @@ export function ReporteIncidencias() {
       filtros.anio = anio;
     } else if (periodo === PeriodoReporte.ANIO) {
       filtros.anio = anio;
+    } else if (periodo === PeriodoReporte.DIA) {
+      filtros.dia = new Date().getDate();
+      filtros.mes = new Date().getMonth() + 1;
+      filtros.anio = new Date().getFullYear();
     }
 
     if (tipoIncidencia) filtros.tipoIncidencia = tipoIncidencia;
@@ -91,10 +97,10 @@ export function ReporteIncidencias() {
       setExporting(true);
       const filtros = buildFiltros();
       await reportesService.exportarExcel(filtros);
-      alert('Excel descargado exitosamente');
+      toast.success('Excel descargado exitosamente');
     } catch (error: any) {
       console.error('Error exporting to Excel:', error);
-      alert(`Error al exportar a Excel: ${error.response?.data?.message || error.message}`);
+      toast.error(`Error al exportar a Excel: ${error.response?.data?.message || error.message}`);
     } finally {
       setExporting(false);
     }
@@ -105,7 +111,7 @@ export function ReporteIncidencias() {
       setExporting(true);
       
       if (!estadisticas) {
-        alert('No hay datos para exportar');
+        toast.error('No hay datos para exportar');
         return;
       }
 
@@ -246,10 +252,10 @@ export function ReporteIncidencias() {
       }
       
       doc.save(`reporte_incidencias_${new Date().toISOString().split('T')[0]}.pdf`);
-      alert('PDF descargado exitosamente');
+      toast.success('PDF descargado exitosamente');
     } catch (error: any) {
       console.error('Error exporting to PDF:', error);
-      alert(`Error al exportar a PDF: ${error.message}`);
+      toast.error(`Error al exportar a PDF: ${error.message}`);
     } finally {
       setExporting(false);
     }
@@ -284,82 +290,96 @@ export function ReporteIncidencias() {
   const anios = Array.from({ length: 5 }, (_, i) => new Date().getFullYear() - i);
 
   return (
-    <div className="container-fluid p-4">
+    <div className="container-fluid p-3">
       {/* Header */}
-      <div className="row mb-4">
-        <div className="col">
-          <h2>
-            <i className="fas fa-chart-bar me-2"></i>
-            Reporte de Incidencias
-          </h2>
-          <p className="text-muted">Análisis y exportación de datos de incidencias</p>
-        </div>
-        <div className="col-auto">
-          <button
-            className="btn btn-success me-2"
-            onClick={handleExportarExcel}
-            disabled={exporting || loading}
-          >
-            <i className="fas fa-file-excel me-2"></i>
-            {exporting ? 'Exportando...' : 'Exportar Excel'}
-          </button>
-          <button
-            className="btn btn-danger"
-            onClick={handleExportarPDF}
-            disabled={exporting || loading}
-          >
-            <i className="fas fa-file-pdf me-2"></i>
-            {exporting ? 'Exportando...' : 'Exportar PDF'}
-          </button>
-        </div>
-      </div>
+      <PageHeader
+        icon="fa-solid fa-chart-column"
+        title="Reporte de Incidencias"
+        subtitle="Análisis estadístico, métricas consolidadas y exportación de datos técnicos"
+        actions={
+          <div className="d-flex gap-2">
+            <button 
+              className={`btn btn-sm ${showFilters ? 'btn-secondary' : 'btn-outline-secondary'}`}
+              onClick={() => setShowFilters(!showFilters)}
+            >
+              <i className="fa-solid fa-filter me-1"></i>
+              {showFilters ? 'Ocultar Filtros' : 'Filtros'}
+            </button>
+            <button
+              className="btn btn-sm btn-success"
+              onClick={handleExportarExcel}
+              disabled={exporting || loading}
+            >
+              <i className="fa-solid fa-file-excel me-1"></i>
+              {exporting ? 'Exportando...' : 'Excel'}
+            </button>
+            <button
+              className="btn btn-sm btn-danger"
+              onClick={handleExportarPDF}
+              disabled={exporting || loading}
+            >
+              <i className="fa-solid fa-file-pdf me-1"></i>
+              {exporting ? 'Exportando...' : 'PDF'}
+            </button>
+          </div>
+        }
+      />
 
       {/* Panel de Filtros */}
-      <div className="card border-0 shadow-sm mb-4">
-        <div className="card-header bg-white border-bottom">
-          <button 
-            className="btn btn-sm btn-outline-secondary"
-            onClick={() => setShowFilters(!showFilters)}
-          >
-            <i className="fas fa-filter me-2"></i>
-            {showFilters ? 'Ocultar Filtros' : 'Mostrar Filtros'}
-          </button>
-        </div>
-        {showFilters && (
-        <div className="card-body">
-          {/* Primera fila: Periodo */}
-          <div className="row g-2 mb-3">
-            <div className="col-md-3">
-              <label className="form-label small">
-                <i className="fas fa-calendar me-2"></i>
-                Periodo
-              </label>
-              <Select
-                options={[
-                  { value: PeriodoReporte.DIA, label: 'Hoy' },
-                  { value: PeriodoReporte.MES, label: 'Mes' },
-                  { value: PeriodoReporte.ANIO, label: 'Año' },
-                  { value: PeriodoReporte.PERSONALIZADO, label: 'Personalizado' }
-                ]}
-                value={{ value: periodo, label: periodo === PeriodoReporte.DIA ? 'Hoy' : periodo === PeriodoReporte.MES ? 'Mes' : periodo === PeriodoReporte.ANIO ? 'Año' : 'Personalizado' }}
-                onChange={(option) => setPeriodo(option?.value as PeriodoReporte || PeriodoReporte.MES)}
-                styles={customSelectStylesSmall}
-              />
-            </div>
+      {showFilters && (
+        <div className="card border shadow-sm mb-3">
+          <div className="card-header bg-white border-bottom py-2">
+            <h6 className="card-title mb-0 fw-semibold text-dark" style={{ fontSize: '14px' }}>
+              <i className="fa-solid fa-sliders me-2 text-primary"></i>
+              Filtros del Reporte
+            </h6>
+          </div>
+          <div className="card-body py-3">
+            {/* Primera fila: Periodo */}
+            <div className="row g-2 mb-2">
+              <div className="col-md-3">
+                <label className="form-label small fw-bold text-muted mb-1">
+                  <i className="fa-solid fa-calendar me-1"></i> Periodo
+                </label>
+                <Select
+                  options={[
+                    { value: PeriodoReporte.DIA, label: 'Hoy' },
+                    { value: PeriodoReporte.MES, label: 'Mes' },
+                    { value: PeriodoReporte.ANIO, label: 'Año' },
+                    { value: PeriodoReporte.PERSONALIZADO, label: 'Personalizado' }
+                  ]}
+                  value={{ value: periodo, label: periodo === PeriodoReporte.DIA ? 'Hoy' : periodo === PeriodoReporte.MES ? 'Mes' : periodo === PeriodoReporte.ANIO ? 'Año' : 'Personalizado' }}
+                  onChange={(option) => setPeriodo(option?.value as PeriodoReporte || PeriodoReporte.MES)}
+                  styles={customSelectStylesSmall}
+                />
+              </div>
 
-            {periodo === PeriodoReporte.MES && (
-              <>
+              {periodo === PeriodoReporte.MES && (
+                <>
+                  <div className="col-md-3">
+                    <label className="form-label small fw-bold text-muted mb-1">Mes</label>
+                    <Select
+                      options={meses.map(m => ({ value: m.value, label: m.label }))}
+                      value={meses.find(m => m.value === mes)}
+                      onChange={(option) => setMes(option?.value || new Date().getMonth() + 1)}
+                      styles={customSelectStylesSmall}
+                    />
+                  </div>
+                  <div className="col-md-3">
+                    <label className="form-label small fw-bold text-muted mb-1">Año</label>
+                    <Select
+                      options={anios.map(a => ({ value: a, label: a.toString() }))}
+                      value={{ value: anio, label: anio.toString() }}
+                      onChange={(option) => setAnio(option?.value || new Date().getFullYear())}
+                      styles={customSelectStylesSmall}
+                    />
+                  </div>
+                </>
+              )}
+
+              {periodo === PeriodoReporte.ANIO && (
                 <div className="col-md-3">
-                  <label className="form-label small">Mes</label>
-                  <Select
-                    options={meses.map(m => ({ value: m.value, label: m.label }))}
-                    value={meses.find(m => m.value === mes)}
-                    onChange={(option) => setMes(option?.value || new Date().getMonth() + 1)}
-                    styles={customSelectStylesSmall}
-                  />
-                </div>
-                <div className="col-md-3">
-                  <label className="form-label small">Año</label>
+                  <label className="form-label small fw-bold text-muted mb-1">Año</label>
                   <Select
                     options={anios.map(a => ({ value: a, label: a.toString() }))}
                     value={{ value: anio, label: anio.toString() }}
@@ -367,111 +387,89 @@ export function ReporteIncidencias() {
                     styles={customSelectStylesSmall}
                   />
                 </div>
-              </>
-            )}
+              )}
 
-            {periodo === PeriodoReporte.ANIO && (
+              {periodo === PeriodoReporte.PERSONALIZADO && (
+                <>
+                  <div className="col-md-3">
+                    <label className="form-label small fw-bold text-muted mb-1">Fecha Inicio</label>
+                    <input
+                      type="date"
+                      className="form-control form-control-sm"
+                      value={fechaInicio}
+                      onChange={(e) => setFechaInicio(e.target.value)}
+                    />
+                  </div>
+                  <div className="col-md-3">
+                    <label className="form-label small fw-bold text-muted mb-1">Fecha Fin</label>
+                    <input
+                      type="date"
+                      className="form-control form-control-sm"
+                      value={fechaFin}
+                      onChange={(e) => setFechaFin(e.target.value)}
+                    />
+                  </div>
+                </>
+              )}
+            </div>
+
+            {/* Segunda fila: Filtros adicionales */}
+            <div className="row g-2">
               <div className="col-md-3">
-                <label className="form-label small">Año</label>
+                <label className="form-label small fw-bold text-muted mb-1">Tipo de Incidencia</label>
                 <Select
-                  options={anios.map(a => ({ value: a, label: a.toString() }))}
-                  value={{ value: anio, label: anio.toString() }}
-                  onChange={(option) => setAnio(option?.value || new Date().getFullYear())}
+                  options={[
+                    { value: undefined, label: 'Todos' },
+                    ...tiposIncidencia.map(tipo => ({ value: tipo.id, label: tipo.tipo }))
+                  ]}
+                  value={tipoIncidencia ? tiposIncidencia.find(t => t.id === tipoIncidencia) ? { value: tipoIncidencia, label: tiposIncidencia.find(t => t.id === tipoIncidencia)?.tipo || '' } : { value: undefined, label: 'Todos' } : { value: undefined, label: 'Todos' }}
+                  onChange={(option) => setTipoIncidencia(option?.value)}
+                  isClearable
                   styles={customSelectStylesSmall}
                 />
               </div>
-            )}
 
-            {periodo === PeriodoReporte.PERSONALIZADO && (
-              <>
-                <div className="col-md-3">
-                  <label className="form-label small">Fecha Inicio</label>
-                  <input
-                    type="date"
-                    className="form-control custom-date-input-sm"
-                    value={fechaInicio}
-                    onChange={(e) => setFechaInicio(e.target.value)}
-                  />
-                </div>
-                <div className="col-md-3">
-                  <label className="form-label small">Fecha Fin</label>
-                  <input
-                    type="date"
-                    className="form-control custom-date-input-sm"
-                    value={fechaFin}
-                    onChange={(e) => setFechaFin(e.target.value)}
-                  />
-                </div>
-              </>
-            )}
-          </div>
+              <div className="col-md-3">
+                <label className="form-label small fw-bold text-muted mb-1">Estado</label>
+                <Select
+                  options={[
+                    { value: undefined, label: 'Todos' },
+                    ...tiposEstado.map(estado => ({ value: estado.id, label: estado.nombre }))
+                  ]}
+                  value={estadoId ? tiposEstado.find(e => e.id === estadoId) ? { value: estadoId, label: tiposEstado.find(e => e.id === estadoId)?.nombre || '' } : { value: undefined, label: 'Todos' } : { value: undefined, label: 'Todos' }}
+                  onChange={(option) => setEstadoId(option?.value)}
+                  isClearable
+                  styles={customSelectStylesSmall}
+                />
+              </div>
 
-          {/* Segunda fila: Filtros adicionales */}
-          <div className="row g-2">
-            <div className="col-md-3">
-              <label className="form-label small">
-                <i className="fas fa-exclamation-triangle me-2"></i>
-                Tipo de Incidencia
-              </label>
-              <Select
-                options={[
-                  { value: undefined, label: 'Todos' },
-                  ...tiposIncidencia.map(tipo => ({ value: tipo.id, label: tipo.tipo }))
-                ]}
-                value={tipoIncidencia ? tiposIncidencia.find(t => t.id === tipoIncidencia) ? { value: tipoIncidencia, label: tiposIncidencia.find(t => t.id === tipoIncidencia)?.tipo || '' } : { value: undefined, label: 'Todos' } : { value: undefined, label: 'Todos' }}
-                onChange={(option) => setTipoIncidencia(option?.value)}
-                isClearable
-                styles={customSelectStylesSmall}
-              />
-            </div>
+              <div className="col-md-3">
+                <label className="form-label small fw-bold text-muted mb-1">Administrador</label>
+                <Select
+                  options={[
+                    { value: undefined, label: 'Todos' },
+                    ...administradores.map(admin => ({ value: admin.id, label: admin.nombre }))
+                  ]}
+                  value={administradorId ? administradores.find(a => a.id === administradorId) ? { value: administradorId, label: administradores.find(a => a.id === administradorId)?.nombre || '' } : { value: undefined, label: 'Todos' } : { value: undefined, label: 'Todos' }}
+                  onChange={(option) => setAdministradorId(option?.value)}
+                  isClearable
+                  styles={customSelectStylesSmall}
+                />
+              </div>
 
-            <div className="col-md-3">
-              <label className="form-label small">
-                <i className="fas fa-info-circle me-2"></i>
-                Estado
-              </label>
-              <Select
-                options={[
-                  { value: undefined, label: 'Todos' },
-                  ...tiposEstado.map(estado => ({ value: estado.id, label: estado.nombre }))
-                ]}
-                value={estadoId ? tiposEstado.find(e => e.id === estadoId) ? { value: estadoId, label: tiposEstado.find(e => e.id === estadoId)?.nombre || '' } : { value: undefined, label: 'Todos' } : { value: undefined, label: 'Todos' }}
-                onChange={(option) => setEstadoId(option?.value)}
-                isClearable
-                styles={customSelectStylesSmall}
-              />
-            </div>
-
-            <div className="col-md-3">
-              <label className="form-label small">
-                <i className="fas fa-user-tie me-2"></i>
-                Administrador
-              </label>
-              <Select
-                options={[
-                  { value: undefined, label: 'Todos' },
-                  ...administradores.map(admin => ({ value: admin.id, label: admin.nombre }))
-                ]}
-                value={administradorId ? administradores.find(a => a.id === administradorId) ? { value: administradorId, label: administradores.find(a => a.id === administradorId)?.nombre || '' } : { value: undefined, label: 'Todos' } : { value: undefined, label: 'Todos' }}
-                onChange={(option) => setAdministradorId(option?.value)}
-                isClearable
-                styles={customSelectStylesSmall}
-              />
-            </div>
-
-            <div className="col-md-2 d-flex align-items-end">
-              <button
-                className="btn btn-sm btn-outline-secondary w-100"
-                onClick={clearFilters}
-                title="Limpiar filtros"
-              >
-                <i className="fas fa-eraser"></i>
-              </button>
+              <div className="col-md-3 d-flex align-items-end">
+                <button
+                  className="btn btn-sm btn-outline-secondary w-100"
+                  onClick={clearFilters}
+                  title="Limpiar filtros"
+                >
+                  <i className="fa-solid fa-eraser me-1"></i> Limpiar Filtros
+                </button>
+              </div>
             </div>
           </div>
         </div>
-        )}
-      </div>
+      )}
 
       {/* Estadísticas */}
       {loading ? (
@@ -481,188 +479,226 @@ export function ReporteIncidencias() {
           </div>
         </div>
       ) : estadisticas ? (
-        <>
-          {/* Tarjeta de totales */}
-          <div className="row g-3 mb-4">
-            <div className="col-md-3">
-              <div className="card shadow-sm border-0 bg-primary text-white">
-                <div className="card-body">
-                  <h6 className="card-subtitle mb-2 opacity-75">Total de Incidencias</h6>
-                  <h2 className="card-title mb-0">{estadisticas.total}</h2>
-                </div>
-              </div>
-            </div>
-            <div className="col-md-3">
-              <div className="card shadow-sm border-0 bg-success text-white">
-                <div className="card-body">
-                  <h6 className="card-subtitle mb-2 opacity-75">Tipos Diferentes</h6>
-                  <h2 className="card-title mb-0">{estadisticas.porTipo.length}</h2>
-                </div>
-              </div>
-            </div>
-            <div className="col-md-3">
-              <div className="card shadow-sm border-0 bg-warning text-white">
-                <div className="card-body">
-                  <h6 className="card-subtitle mb-2 opacity-75">Estados Diferentes</h6>
-                  <h2 className="card-title mb-0">{estadisticas.porEstado.length}</h2>
-                </div>
-              </div>
-            </div>
-            <div className="col-md-3">
-              <div className="card shadow-sm border-0 bg-info text-white">
-                <div className="card-body">
-                  <h6 className="card-subtitle mb-2 opacity-75">Administradores</h6>
-                  <h2 className="card-title mb-0">{estadisticas.porAdministrador.length}</h2>
-                </div>
-              </div>
-            </div>
+        estadisticas.total === 0 ? (
+          <div className="card border shadow-sm p-5 text-center text-muted">
+            <i className="fa-solid fa-chart-pie fa-3x mb-3 text-secondary"></i>
+            <h6 className="fw-semibold">No se encontraron incidencias</h6>
+            <p className="small mb-0">No hay registros que coincidan con los filtros seleccionados en este período.</p>
           </div>
-
-          {/* Tablas de resumen */}
-          <div className="row g-3">
-            {/* Por Tipo */}
-            <div className="col-md-6">
-              <div className="card shadow-sm">
-                <div className="card-header bg-light">
-                  <h5 className="mb-0">
-                    <i className="fas fa-chart-pie me-2"></i>
-                    Por Tipo de Incidencia
-                  </h5>
+        ) : (
+          <>
+            {/* Tarjetas de Métricas / KPIs */}
+            <div className="row g-3 mb-3">
+              <div className="col-xl-3 col-md-6">
+                <div className="card card-widget mb-0 h-100 border shadow-sm">
+                  <div className="card-body p-3">
+                    <div className="d-flex justify-content-between align-items-center mb-1">
+                      <div className="widget-subheading text-uppercase text-muted fw-bold">TOTAL INCIDENCIAS</div>
+                      <div className="widget-icon-box text-primary" style={{ width: '36px', height: '36px' }}>
+                        <i className="fa-solid fa-triangle-exclamation"></i>
+                      </div>
+                    </div>
+                    <div className="widget-numbers text-primary mb-1">
+                      {estadisticas.total}
+                    </div>
+                    <small className="text-muted d-block" style={{ fontSize: '11px' }}>Registros totales del periodo</small>
+                  </div>
                 </div>
-                <div className="card-body">
-                  <div className="table-responsive">
-                    <table className="table table-sm table-hover">
-                      <thead>
-                        <tr>
-                          <th>Tipo</th>
-                          <th className="text-end">Cantidad</th>
-                          <th className="text-end">Porcentaje</th>
-                        </tr>
-                      </thead>
-                      <tbody>
-                        {estadisticas.porTipo.map((item, idx) => (
-                          <tr key={idx}>
-                            <td>{item.tipo}</td>
-                            <td className="text-end">{item.cantidad}</td>
-                            <td className="text-end">
-                              <span className="badge bg-primary">{item.porcentaje}%</span>
-                            </td>
-                          </tr>
-                        ))}
-                      </tbody>
-                    </table>
+              </div>
+              <div className="col-xl-3 col-md-6">
+                <div className="card card-widget mb-0 h-100 border shadow-sm">
+                  <div className="card-body p-3">
+                    <div className="d-flex justify-content-between align-items-center mb-1">
+                      <div className="widget-subheading text-uppercase text-muted fw-bold">TIPOS REGISTRADOS</div>
+                      <div className="widget-icon-box text-success" style={{ width: '36px', height: '36px' }}>
+                        <i className="fa-solid fa-tags"></i>
+                      </div>
+                    </div>
+                    <div className="widget-numbers text-success mb-1">
+                      {estadisticas.porTipo.length}
+                    </div>
+                    <small className="text-muted d-block" style={{ fontSize: '11px' }}>Categorías registradas</small>
+                  </div>
+                </div>
+              </div>
+              <div className="col-xl-3 col-md-6">
+                <div className="card card-widget mb-0 h-100 border shadow-sm">
+                  <div className="card-body p-3">
+                    <div className="d-flex justify-content-between align-items-center mb-1">
+                      <div className="widget-subheading text-uppercase text-muted fw-bold">ESTADOS ACTIVOS</div>
+                      <div className="widget-icon-box text-warning" style={{ width: '36px', height: '36px' }}>
+                        <i className="fa-solid fa-list-check"></i>
+                      </div>
+                    </div>
+                    <div className="widget-numbers text-warning mb-1">
+                      {estadisticas.porEstado.length}
+                    </div>
+                    <small className="text-muted d-block" style={{ fontSize: '11px' }}>Estados en el periodo</small>
+                  </div>
+                </div>
+              </div>
+              <div className="col-xl-3 col-md-6">
+                <div className="card card-widget mb-0 h-100 border shadow-sm">
+                  <div className="card-body p-3">
+                    <div className="d-flex justify-content-between align-items-center mb-1">
+                      <div className="widget-subheading text-uppercase text-muted fw-bold">ADMINISTRADORES</div>
+                      <div className="widget-icon-box text-info" style={{ width: '36px', height: '36px' }}>
+                        <i className="fa-solid fa-user-shield"></i>
+                      </div>
+                    </div>
+                    <div className="widget-numbers text-info mb-1">
+                      {estadisticas.porAdministrador.length}
+                    </div>
+                    <small className="text-muted d-block" style={{ fontSize: '11px' }}>Contratistas / Administradores</small>
                   </div>
                 </div>
               </div>
             </div>
 
-            {/* Por Estado */}
-            <div className="col-md-6">
-              <div className="card shadow-sm">
-                <div className="card-header bg-light">
-                  <h5 className="mb-0">
-                    <i className="fas fa-chart-bar me-2"></i>
-                    Por Estado
-                  </h5>
-                </div>
-                <div className="card-body">
-                  <div className="table-responsive">
-                    <table className="table table-sm table-hover">
-                      <thead>
-                        <tr>
-                          <th>Estado</th>
-                          <th className="text-end">Cantidad</th>
-                          <th className="text-end">Porcentaje</th>
-                        </tr>
-                      </thead>
-                      <tbody>
-                        {estadisticas.porEstado.map((item, idx) => (
-                          <tr key={idx}>
-                            <td>{item.estado}</td>
-                            <td className="text-end">{item.cantidad}</td>
-                            <td className="text-end">
-                              <span className="badge bg-success">{item.porcentaje}%</span>
-                            </td>
+            {/* Tablas de resumen */}
+            <div className="row g-3">
+              {/* Por Tipo */}
+              <div className="col-md-6">
+                <div className="card border shadow-sm mb-3">
+                  <div className="card-header bg-white border-bottom py-2">
+                    <h6 className="card-title mb-0 fw-semibold text-dark" style={{ fontSize: '14px' }}>
+                      <i className="fa-solid fa-chart-pie me-2 text-primary"></i>
+                      Por Tipo de Incidencia
+                    </h6>
+                  </div>
+                  <div className="card-body p-0">
+                    <div className="table-responsive">
+                      <table className="table table-hover table-striped align-middle mb-0" style={{ fontSize: '13px' }}>
+                        <thead className="table-light text-uppercase" style={{ fontSize: '12px' }}>
+                          <tr>
+                            <th className="px-3 py-2">Tipo</th>
+                            <th className="py-2 text-end">Cantidad</th>
+                            <th className="py-2 text-end px-3">Porcentaje</th>
                           </tr>
-                        ))}
-                      </tbody>
-                    </table>
+                        </thead>
+                        <tbody>
+                          {estadisticas.porTipo.map((item, idx) => (
+                            <tr key={idx}>
+                              <td className="px-3 fw-semibold">{item.tipo}</td>
+                              <td className="text-end">{item.cantidad}</td>
+                              <td className="text-end px-3">
+                                <span className="badge bg-primary">{item.porcentaje}%</span>
+                              </td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Por Estado */}
+              <div className="col-md-6">
+                <div className="card border shadow-sm mb-3">
+                  <div className="card-header bg-white border-bottom py-2">
+                    <h6 className="card-title mb-0 fw-semibold text-dark" style={{ fontSize: '14px' }}>
+                      <i className="fa-solid fa-list-check me-2 text-success"></i>
+                      Por Estado
+                    </h6>
+                  </div>
+                  <div className="card-body p-0">
+                    <div className="table-responsive">
+                      <table className="table table-hover table-striped align-middle mb-0" style={{ fontSize: '13px' }}>
+                        <thead className="table-light text-uppercase" style={{ fontSize: '12px' }}>
+                          <tr>
+                            <th className="px-3 py-2">Estado</th>
+                            <th className="py-2 text-end">Cantidad</th>
+                            <th className="py-2 text-end px-3">Porcentaje</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {estadisticas.porEstado.map((item, idx) => (
+                            <tr key={idx}>
+                              <td className="px-3 fw-semibold">{item.estado}</td>
+                              <td className="text-end">{item.cantidad}</td>
+                              <td className="text-end px-3">
+                                <span className="badge bg-success">{item.porcentaje}%</span>
+                              </td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Por Administrador */}
+              <div className="col-md-6">
+                <div className="card border shadow-sm mb-3">
+                  <div className="card-header bg-white border-bottom py-2">
+                    <h6 className="card-title mb-0 fw-semibold text-dark" style={{ fontSize: '14px' }}>
+                      <i className="fa-solid fa-users me-2 text-info"></i>
+                      Por Administrador
+                    </h6>
+                  </div>
+                  <div className="card-body p-0">
+                    <div className="table-responsive">
+                      <table className="table table-hover table-striped align-middle mb-0" style={{ fontSize: '13px' }}>
+                        <thead className="table-light text-uppercase" style={{ fontSize: '12px' }}>
+                          <tr>
+                            <th className="px-3 py-2">Administrador</th>
+                            <th className="py-2 text-end px-3">Cantidad</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {estadisticas.porAdministrador.map((item, idx) => (
+                            <tr key={idx}>
+                              <td className="px-3 fw-semibold">{item.administrador}</td>
+                              <td className="text-end px-3">
+                                <span className="badge bg-info text-dark">{item.cantidad}</span>
+                              </td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Por Mes */}
+              <div className="col-md-6">
+                <div className="card border shadow-sm mb-3">
+                  <div className="card-header bg-white border-bottom py-2">
+                    <h6 className="card-title mb-0 fw-semibold text-dark" style={{ fontSize: '14px' }}>
+                      <i className="fa-solid fa-calendar-days me-2 text-warning"></i>
+                      Por Mes
+                    </h6>
+                  </div>
+                  <div className="card-body p-0">
+                    <div className="table-responsive">
+                      <table className="table table-hover table-striped align-middle mb-0" style={{ fontSize: '13px' }}>
+                        <thead className="table-light text-uppercase" style={{ fontSize: '12px' }}>
+                          <tr>
+                            <th className="px-3 py-2">Mes</th>
+                            <th className="py-2 text-end px-3">Cantidad</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {estadisticas.porMes.map((item, idx) => (
+                            <tr key={idx}>
+                              <td className="px-3 fw-semibold">{item.mes}</td>
+                              <td className="text-end px-3">
+                                <span className="badge bg-warning text-dark">{item.cantidad}</span>
+                              </td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
                   </div>
                 </div>
               </div>
             </div>
-
-            {/* Por Administrador */}
-            <div className="col-md-6">
-              <div className="card shadow-sm">
-                <div className="card-header bg-light">
-                  <h5 className="mb-0">
-                    <i className="fas fa-users me-2"></i>
-                    Por Administrador
-                  </h5>
-                </div>
-                <div className="card-body">
-                  <div className="table-responsive">
-                    <table className="table table-sm table-hover">
-                      <thead>
-                        <tr>
-                          <th>Administrador</th>
-                          <th className="text-end">Cantidad</th>
-                        </tr>
-                      </thead>
-                      <tbody>
-                        {estadisticas.porAdministrador.map((item, idx) => (
-                          <tr key={idx}>
-                            <td>{item.administrador}</td>
-                            <td className="text-end">
-                              <span className="badge bg-info">{item.cantidad}</span>
-                            </td>
-                          </tr>
-                        ))}
-                      </tbody>
-                    </table>
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            {/* Por Mes */}
-            <div className="col-md-6">
-              <div className="card shadow-sm">
-                <div className="card-header bg-light">
-                  <h5 className="mb-0">
-                    <i className="fas fa-calendar-alt me-2"></i>
-                    Por Mes
-                  </h5>
-                </div>
-                <div className="card-body">
-                  <div className="table-responsive">
-                    <table className="table table-sm table-hover">
-                      <thead>
-                        <tr>
-                          <th>Mes</th>
-                          <th className="text-end">Cantidad</th>
-                        </tr>
-                      </thead>
-                      <tbody>
-                        {estadisticas.porMes.map((item, idx) => (
-                          <tr key={idx}>
-                            <td>{item.mes}</td>
-                            <td className="text-end">
-                              <span className="badge bg-warning">{item.cantidad}</span>
-                            </td>
-                          </tr>
-                        ))}
-                      </tbody>
-                    </table>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-
-
-        </>
+          </>
+        )
       ) : null}
     </div>
   );

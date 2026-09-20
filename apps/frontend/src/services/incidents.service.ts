@@ -16,9 +16,14 @@ export interface Incident {
   updatedAt?: string;
   latitude?: number;
   longitude?: number;
+  estado?: {
+    id: number;
+    nombre: string;
+  };
   incidencia?: {
     id: number;
     tipo: string;
+    caracteristica?: string;
     prioridad?: {
       id: number;
       nombre: string;
@@ -32,6 +37,9 @@ export interface Incident {
     longitud?: number;
     electricoEmpresa?: string;
     electricoSuministro?: string;
+    ubigeo?: {
+      distrito?: string;
+    };
     administrador?: {
       id: number;
       nombre: string;
@@ -64,14 +72,20 @@ export interface UpdateIncidentDto extends Partial<CreateIncidentDto> {
 export interface QueryIncidentsDto {
   page?: number;
   limit?: number;
-  estadoId?: number;
+  estadoId?: number | string;
   incidenciaId?: number;
   equipoId?: number;
   administradorId?: number;
+  prioridadId?: number;
+  caracteristica?: string;
+  allStates?: boolean;
   anho?: number;
+  mes?: number;
   year?: number;
   month?: number;
   search?: string;
+  fechaDesde?: string;
+  fechaHasta?: string;
 }
 
 export interface IncidentsResponse {
@@ -97,6 +111,7 @@ export interface IncidenciaCatalog {
   tipo: string;
   caracteristica?: string;
   prioridadeId?: number;
+  prioridadId?: number;
 }
 
 export interface PrioridadCatalog {
@@ -208,6 +223,10 @@ class IncidentsService {
   async getIncidenciasCatalog(): Promise<IncidenciaCatalog[]> {
     const response = await api.get('/incidents/catalogs/incidencias');
     return response.data;
+  }
+
+  async getTiposIncidenciaCatalog(): Promise<IncidenciaCatalog[]> {
+    return this.getIncidenciasCatalog();
   }
 
   async getPrioridadesCatalog(): Promise<PrioridadCatalog[]> {

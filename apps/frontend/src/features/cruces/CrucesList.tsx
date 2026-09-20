@@ -1,9 +1,11 @@
 import { useState, useEffect } from 'react';
 import Select from 'react-select';
+import { toast } from 'react-hot-toast';
 import { customSelectStylesSmall } from '../../styles/react-select-custom';
 import { crucesService, Cruce } from '../../services/cruces.service';
 import { CruceDetail } from './CruceDetail';
 import { CruceForm } from './CruceForm';
+import { PageHeader } from '../../components/ui/PageHeader';
 
 type SortField = 'codigo' | 'nombre' | 'distrito' | 'estado';
 type SortOrder = 'asc' | 'desc';
@@ -23,24 +25,33 @@ export function CrucesList() {
   const [selectedCruceId, setSelectedCruceId] = useState<number | null>(null);
   const [formMode, setFormMode] = useState<'create' | 'edit'>('create');
   const [planoModalOpen, setPlanoModalOpen] = useState(false);
-  const [selectedPlano, setSelectedPlano] = useState<{ url: string; type: 'pdf' | 'dwg'; nombre: string } | null>(null);
+  const [selectedPlano, setSelectedPlano] = useState<{ url: string; nombre: string; type: 'pdf' | 'dwg' } | null>(null);
+
+  // Filtros
   const [filters, setFilters] = useState({
     search: '',
     codigo: '',
-    estado: '' as '' | 'true' | 'false',
+    distrito: '',
+    estado: '',
   });
 
   useEffect(() => {
     loadCruces();
-  }, [page, limit, filters]);
+  }, [page, limit, sortField, sortOrder, filters]);
 
   const loadCruces = async () => {
     try {
       setLoading(true);
-      const params: any = { page, limit };
+      const params: any = {
+        page,
+        limit,
+        sortBy: sortField,
+        sortOrder,
+      };
       
       if (filters.search) params.search = filters.search;
       if (filters.codigo) params.codigo = filters.codigo;
+      if (filters.distrito) params.ubigeoId = filters.distrito;
       if (filters.estado !== '') params.estado = filters.estado === 'true';
 
       const response = await crucesService.getCruces(params);
@@ -49,7 +60,7 @@ export function CrucesList() {
       setTotalPages(response.meta.totalPages);
     } catch (error) {
       console.error('Error loading cruces:', error);
-      alert('Error al cargar los cruces');
+      toast.error('Error al cargar las intersecciones');
     } finally {
       setLoading(false);
     }
@@ -70,10 +81,10 @@ export function CrucesList() {
   };
 
   const getSortIcon = (field: SortField) => {
-    if (sortField !== field) return <i className="fas fa-sort text-muted ms-1"></i>;
+    if (sortField !== field) return <i className="fa-solid fa-sort text-muted ms-1"></i>;
     return sortOrder === 'asc' 
-      ? <i className="fas fa-sort-up ms-1"></i>
-      : <i className="fas fa-sort-down ms-1"></i>;
+      ? <i className="fa-solid fa-sort-up ms-1"></i>
+      : <i className="fa-solid fa-sort-down ms-1"></i>;
   };
 
   const sortedCruces = [...cruces].sort((a, b) => {
@@ -126,61 +137,68 @@ export function CrucesList() {
   };
 
   return (
-    <div className="container-fluid p-4">
-      <div className="d-flex justify-content-between align-items-center mb-4">
-        <h2>
-          <i className="fas fa-traffic-light me-2"></i>
-          Gestión de Cruces
-        </h2>
-        <button 
-          className="btn btn-primary"
-          onClick={() => {
-            setSelectedCruceId(null);
-            setFormMode('create');
-            setFormModalOpen(true);
-          }}
-        >
-          <i className="fas fa-plus me-2"></i>
-          Nuevo Cruce
-        </button>
-      </div>
+    <div className="container-fluid p-3">
+      <PageHeader
+        icon="fa-solid fa-traffic-light"
+        title="Gestión de Intersecciones"
+        subtitle="Administración de intersecciones semafóricas, planos técnicos y periféricos"
+        actions={
+          <div className="d-flex gap-2">
+            <button 
+              className={`btn btn-sm ${showFilters ? 'btn-secondary' : 'btn-outline-secondary'}`}
+              onClick={() => setShowFilters(!showFilters)}
+            >
+              <i className="fa-solid fa-filter me-1"></i>
+              {showFilters ? 'Ocultar Filtros' : 'Filtros'}
+            </button>
+            <button 
+              className="btn btn-sm btn-primary"
+              onClick={() => {
+                setSelectedCruceId(null);
+                setFormMode('create');
+                setFormModalOpen(true);
+              }}
+            >
+              <i className="fa-solid fa-plus me-1"></i>
+              Nueva Intersección
+            </button>
+          </div>
+        }
+      />
 
       {/* Filtros */}
-      <div className="card border-0 shadow-sm mb-3">
-        <div className="card-header bg-white border-bottom">
-          <button 
-            className="btn btn-sm btn-outline-secondary"
-            onClick={() => setShowFilters(!showFilters)}
-          >
-            <i className="fas fa-filter me-2"></i>
-            {showFilters ? 'Ocultar Filtros' : 'Mostrar Filtros'}
-          </button>
-        </div>
-        {showFilters && (
-          <div className="card-body">
+      {showFilters && (
+        <div className="card mb-3 border shadow-sm">
+          <div className="card-header bg-white border-bottom py-2">
+            <h6 className="card-title mb-0 fw-semibold text-dark" style={{ fontSize: '14px' }}>
+              <i className="fa-solid fa-sliders me-2 text-primary"></i>
+              Filtros de Búsqueda
+            </h6>
+          </div>
+          <div className="card-body py-3">
             <div className="row g-2">
               <div className="col-md-4">
-                <label className="form-label small">Buscar por nombre</label>
+                <label className="form-label small fw-bold text-muted mb-1">Buscar por nombre</label>
                 <input
                   type="text"
-                  className="form-control custom-input-sm"
-                  placeholder="Buscar..."
+                  className="form-control form-control-sm"
+                  placeholder="Nombre de la vía o intersección..."
                   value={filters.search}
                   onChange={(e) => handleFilterChange('search', e.target.value)}
                 />
               </div>
               <div className="col-md-3">
-                <label className="form-label small">Código</label>
+                <label className="form-label small fw-bold text-muted mb-1">Código</label>
                 <input
                   type="text"
-                  className="form-control custom-input-sm"
-                  placeholder="Código..."
+                  className="form-control form-control-sm"
+                  placeholder="Código de intersección..."
                   value={filters.codigo}
                   onChange={(e) => handleFilterChange('codigo', e.target.value)}
                 />
               </div>
               <div className="col-md-3">
-                <label className="form-label small">Estado</label>
+                <label className="form-label small fw-bold text-muted mb-1">Estado</label>
                 <Select
                   options={[
                     { value: '', label: 'Todos' },
@@ -195,30 +213,31 @@ export function CrucesList() {
               </div>
               <div className="col-md-2 d-flex align-items-end">
                 <button 
-                  className="btn btn-outline-secondary w-100"
+                  className="btn btn-sm btn-outline-secondary w-100"
                   onClick={() => {
-                    setFilters({ search: '', codigo: '', estado: '' });
+                    setFilters({ search: '', codigo: '', estado: '', distrito: '' });
                     setPage(1);
                   }}
                   title="Limpiar filtros"
                 >
-                  <i className="fas fa-eraser"></i>
+                  <i className="fa-solid fa-eraser me-1"></i> Limpiar
                 </button>
               </div>
             </div>
           </div>
-        )}
-      </div>
+        </div>
+      )}
 
       {/* Tabla */}
-      <div className="card border-0 shadow-sm">
-        <div className="card-header bg-white border-bottom">
+      <div className="card border shadow-sm">
+        <div className="card-header bg-white border-bottom py-2">
           <div className="d-flex justify-content-between align-items-center">
-            <div className="text-muted small">
-              Mostrando {cruces.length} de {total} cruces
-            </div>
+            <h6 className="card-title mb-0 fw-semibold text-dark" style={{ fontSize: '14px' }}>
+              <i className="fa-solid fa-list me-2 text-primary"></i>
+              Listado de Intersecciones ({total} registros)
+            </h6>
             <div className="d-flex align-items-center">
-              <label className="me-2 small mb-0">Filas por página:</label>
+              <label className="me-2 small fw-bold text-muted mb-0">Filas:</label>
               <div style={{ width: '80px' }}>
                 <Select
                   options={[
@@ -250,44 +269,44 @@ export function CrucesList() {
             </div>
           ) : cruces.length === 0 ? (
             <div className="text-center py-5 text-muted">
-              <i className="fas fa-inbox fa-3x mb-3"></i>
-              <p>No se encontraron cruces</p>
+              <i className="fa-solid fa-inbox fa-3x mb-3 text-secondary opacity-50"></i>
+              <p className="mb-0">No se encontraron intersecciones con los filtros seleccionados</p>
             </div>
           ) : (
             <>
               <div className="table-responsive">
-                <table className="table table-hover mb-0">
-                  <thead className="bg-light">
+                <table className="table table-hover table-striped align-middle mb-0" style={{ fontSize: '13px' }}>
+                  <thead className="table-light text-uppercase" style={{ fontSize: '12px' }}>
                     <tr>
-                      <th className="px-4 py-3" style={{ cursor: 'pointer' }} onClick={() => handleSort('codigo')}>
+                      <th className="px-3 py-2" style={{ cursor: 'pointer' }} onClick={() => handleSort('codigo')}>
                         Código {getSortIcon('codigo')}
                       </th>
-                      <th className="py-3" style={{ cursor: 'pointer' }} onClick={() => handleSort('nombre')}>
+                      <th className="py-2" style={{ cursor: 'pointer' }} onClick={() => handleSort('nombre')}>
                         Nombre {getSortIcon('nombre')}
                       </th>
-                      <th className="py-3" style={{ cursor: 'pointer' }} onClick={() => handleSort('distrito')}>
+                      <th className="py-2" style={{ cursor: 'pointer' }} onClick={() => handleSort('distrito')}>
                         Distrito {getSortIcon('distrito')}
                       </th>
-                      <th className="py-3" style={{ cursor: 'pointer' }} onClick={() => handleSort('estado')}>
+                      <th className="py-2" style={{ cursor: 'pointer' }} onClick={() => handleSort('estado')}>
                         Estado {getSortIcon('estado')}
                       </th>
-                      <th className="py-3">Planos</th>
-                      <th className="py-3">Periféricos</th>
-                      <th className="py-3 text-center">Acciones</th>
+                      <th className="py-2">Planos</th>
+                      <th className="py-2">Periféricos</th>
+                      <th className="py-2 text-center">Acciones</th>
                     </tr>
                   </thead>
                   <tbody>
                     {sortedCruces.map((cruce) => (
                       <tr key={cruce.id}>
-                        <td className="px-4">
-                          <span className="badge bg-secondary">{cruce.codigo || 'N/A'}</span>
+                        <td className="px-3">
+                          <span className="badge bg-secondary font-monospace">{cruce.codigo || 'N/A'}</span>
                         </td>
-                        <td>
+                        <td className="fw-semibold text-dark">
                           {cruce.nombre}
                         </td>
                         <td>
                           <small className="text-muted">
-                            <i className="fas fa-map-pin me-1"></i>
+                            <i className="fa-solid fa-location-dot me-1 text-danger"></i>
                             {cruce.ubigeo?.distrito || 'N/A'}
                           </small>
                         </td>
@@ -297,48 +316,49 @@ export function CrucesList() {
                           </span>
                         </td>
                         <td>
-                          <div className="d-flex gap-2">
+                          <div className="d-flex gap-1">
                             {cruce.planoPdf && (
                               <button
-                                className="btn btn-sm btn-outline-danger"
+                                className="btn btn-sm btn-outline-danger py-0 px-2"
                                 onClick={() => handleOpenPlano(cruce.planoPdf!, 'pdf', cruce.codigo || '')}
                                 title="Visualizar PDF"
                               >
-                                <i className="fas fa-file-pdf"></i>
+                                <i className="fa-solid fa-file-pdf"></i>
                               </button>
                             )}
                             {cruce.planoDwg && (
                               <button
-                                className="btn btn-sm btn-outline-primary"
+                                className="btn btn-sm btn-outline-primary py-0 px-2"
                                 onClick={() => handleOpenPlano(cruce.planoDwg!, 'dwg', cruce.codigo || '')}
                                 title="Descargar DWG"
                               >
-                                <i className="fas fa-file-image"></i>
+                                <i className="fa-solid fa-file-lines"></i>
                               </button>
                             )}
                             {!cruce.planoPdf && !cruce.planoDwg && (
-                              <span className="text-muted small">Sin planos</span>
+                              <span className="text-muted small">—</span>
                             )}
                           </div>
                         </td>
                         <td>
-                          <span className="badge bg-info">
-                            {cruce.crucesPerifericos?.length || 0} dispositivos
+                          <span className="badge bg-info text-dark">
+                            <i className="fa-solid fa-microchip me-1"></i>
+                            {cruce.crucesPerifericos?.length || 0}
                           </span>
                         </td>
                         <td className="text-center">
                           <button
-                            className="btn btn-sm btn-outline-primary me-2"
+                            className="btn btn-sm btn-outline-primary me-1 py-0 px-2"
                             onClick={() => {
                               setSelectedCruceId(cruce.id);
                               setDetailModalOpen(true);
                             }}
                             title="Ver detalle"
                           >
-                            <i className="fas fa-eye"></i>
+                            <i className="fa-solid fa-eye"></i>
                           </button>
                           <button
-                            className="btn btn-sm btn-outline-warning"
+                            className="btn btn-sm btn-outline-warning py-0 px-2"
                             onClick={() => {
                               setSelectedCruceId(cruce.id);
                               setFormMode('edit');
@@ -346,7 +366,7 @@ export function CrucesList() {
                             }}
                             title="Editar"
                           >
-                            <i className="fas fa-edit"></i>
+                            <i className="fa-solid fa-pen-to-square"></i>
                           </button>
                         </td>
                       </tr>
@@ -369,7 +389,7 @@ export function CrucesList() {
                           onClick={() => setPage(1)}
                           disabled={page === 1}
                         >
-                          <i className="fas fa-angle-double-left"></i>
+                          <i className="fa-solid fa-angles-left"></i>
                         </button>
                       </li>
                       <li className={`page-item ${page === 1 ? 'disabled' : ''}`}>
@@ -378,7 +398,7 @@ export function CrucesList() {
                           onClick={() => setPage(page - 1)}
                           disabled={page === 1}
                         >
-                          <i className="fas fa-angle-left"></i>
+                          <i className="fa-solid fa-angle-left"></i>
                         </button>
                       </li>
                       <li className="page-item active">
@@ -390,7 +410,7 @@ export function CrucesList() {
                           onClick={() => setPage(page + 1)}
                           disabled={page === totalPages}
                         >
-                          <i className="fas fa-angle-right"></i>
+                          <i className="fa-solid fa-angle-right"></i>
                         </button>
                       </li>
                       <li className={`page-item ${page === totalPages ? 'disabled' : ''}`}>
@@ -399,7 +419,7 @@ export function CrucesList() {
                           onClick={() => setPage(totalPages)}
                           disabled={page === totalPages}
                         >
-                          <i className="fas fa-angle-double-right"></i>
+                          <i className="fa-solid fa-angles-right"></i>
                         </button>
                       </li>
                     </ul>
@@ -418,8 +438,8 @@ export function CrucesList() {
             <div className="modal-content">
               <div className="modal-header bg-primary text-white">
                 <h5 className="modal-title">
-                  <i className="fas fa-eye me-2"></i>
-                  Ver Cruce
+                  <i className="fa-solid fa-eye me-2"></i>
+                  Ver Intersección
                 </h5>
                 <button type="button" className="btn-close btn-close-white" onClick={() => setDetailModalOpen(false)}></button>
               </div>
@@ -441,8 +461,8 @@ export function CrucesList() {
             <div className="modal-content">
               <div className="modal-header bg-primary text-white">
                 <h5 className="modal-title">
-                  <i className={`fas ${formMode === 'create' ? 'fa-plus-circle' : 'fa-edit'} me-2`}></i>
-                  {formMode === 'create' ? 'Nuevo Cruce' : 'Editar Cruce'}
+                  <i className={`fa-solid ${formMode === 'create' ? 'fa-circle-plus' : 'fa-pen-to-square'} me-2`}></i>
+                  {formMode === 'create' ? 'Nueva Intersección' : 'Editar Intersección'}
                 </h5>
                 <button type="button" className="btn-close btn-close-white" onClick={() => setFormModalOpen(false)}></button>
               </div>
@@ -468,7 +488,7 @@ export function CrucesList() {
             <div className="modal-content">
               <div className="modal-header bg-dark text-white">
                 <h5 className="modal-title">
-                  <i className={`fas ${selectedPlano.type === 'pdf' ? 'fa-file-pdf' : 'fa-file-image'} me-2`}></i>
+                  <i className={`fa-solid ${selectedPlano.type === 'pdf' ? 'fa-file-pdf' : 'fa-file-lines'} me-2`}></i>
                   {selectedPlano.nombre}
                 </h5>
                 <button 
@@ -489,13 +509,13 @@ export function CrucesList() {
                   />
                 ) : (
                   <div className="d-flex flex-column align-items-center justify-content-center h-100 p-4">
-                    <i className="fas fa-file-image fa-5x text-primary mb-4"></i>
+                    <i className="fa-solid fa-file-lines fa-5x text-primary mb-4"></i>
                     <h5 className="mb-3">Archivo DWG</h5>
                     <p className="text-muted mb-3 text-center">
                       Los archivos DWG requieren software especializado como AutoCAD para visualizarse.
                     </p>
                     <div className="alert alert-info mb-4">
-                      <strong><i className="fas fa-info-circle me-2"></i>Opciones disponibles:</strong>
+                      <strong><i className="fa-solid fa-circle-info me-2"></i>Opciones disponibles:</strong>
                       <ul className="mb-0 mt-2">
                         <li>Descargar el archivo y abrirlo con AutoCAD/DraftSight</li>
                         <li>Usar visores en línea como ShareCAD.org o Autodesk Viewer</li>
@@ -507,7 +527,7 @@ export function CrucesList() {
                       download 
                       className="btn btn-primary btn-lg"
                     >
-                      <i className="fas fa-download me-2"></i>
+                      <i className="fa-solid fa-download me-2"></i>
                       Descargar Archivo DWG
                     </a>
                   </div>

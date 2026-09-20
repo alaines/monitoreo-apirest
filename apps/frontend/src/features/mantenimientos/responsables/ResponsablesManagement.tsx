@@ -1,7 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import Select from 'react-select';
+import { toast } from 'react-hot-toast';
 import { responsablesService, equiposService, Responsable, Equipo } from '../../../services/admin.service';
 import { customSelectStylesSmall } from '../../../styles/react-select-custom';
+import { PageHeader } from '../../../components/ui/PageHeader';
 
 type SortField = 'id' | 'nombre' | 'equipo' | 'estado';
 type SortOrder = 'asc' | 'desc';
@@ -46,7 +48,7 @@ const ResponsablesManagement: React.FC = () => {
       setEquipos(equiposData.filter((e: Equipo) => e.estado));
     } catch (error) {
       console.error('Error al cargar datos:', error);
-      alert('Error al cargar datos');
+      toast.error('Error al cargar datos');
     } finally {
       setLoading(false);
     }
@@ -102,8 +104,8 @@ const ResponsablesManagement: React.FC = () => {
   };
 
   const getSortIcon = (field: SortField) => {
-    if (sortField !== field) return <i className="fas fa-sort text-muted ms-1"></i>;
-    return sortOrder === 'asc' ? <i className="fas fa-sort-up ms-1"></i> : <i className="fas fa-sort-down ms-1"></i>;
+    if (sortField !== field) return <i className="fa-solid fa-sort text-muted ms-1"></i>;
+    return sortOrder === 'asc' ? <i className="fa-solid fa-sort-up text-primary ms-1"></i> : <i className="fa-solid fa-sort-down text-primary ms-1"></i>;
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -112,16 +114,18 @@ const ResponsablesManagement: React.FC = () => {
     try {
       if (editingResponsable) {
         await responsablesService.update(editingResponsable.id, formData);
+        toast.success('Responsable actualizado exitosamente');
       } else {
         await responsablesService.create(formData);
+        toast.success('Responsable registrado exitosamente');
       }
       
       setShowModal(false);
       resetForm();
       loadData();
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error al guardar responsable:', error);
-      alert('Error al guardar responsable');
+      toast.error(error.response?.data?.message || 'Error al guardar responsable');
     }
   };
 
@@ -136,14 +140,15 @@ const ResponsablesManagement: React.FC = () => {
   };
 
   const handleDelete = async (id: number) => {
-    if (!confirm('¿Está seguro de desactivar este responsable?')) return;
+    if (!window.confirm('¿Está seguro de desactivar este responsable?')) return;
     
     try {
       await responsablesService.delete(id);
+      toast.success('Responsable desactivado exitosamente');
       loadData();
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error al eliminar responsable:', error);
-      alert('Error al eliminar responsable');
+      toast.error(error.response?.data?.message || 'Error al eliminar responsable');
     }
   };
 
@@ -158,88 +163,111 @@ const ResponsablesManagement: React.FC = () => {
   };
 
   return (
-    <div className="container-fluid py-4">
-      <div className="d-flex justify-content-between align-items-center mb-4">
-        <h2>
-          <i className="fas fa-user-check me-2"></i>
-          Gestión de Responsables
-        </h2>
-        <button 
-          className="btn btn-primary"
-          onClick={() => setShowModal(true)}
-        >
-          <i className="fas fa-plus me-2"></i>
-          Nuevo Responsable
-        </button>
-      </div>
+    <div className="container-fluid p-3">
+      <PageHeader
+        icon="fa-solid fa-user-check"
+        title="Gestión de Responsables"
+        subtitle="Administración de personal responsable y asignación a equipos de trabajo"
+        actions={
+          <div className="d-flex gap-2">
+            <button
+              className={`btn btn-sm ${showFilters ? 'btn-secondary' : 'btn-outline-secondary'}`}
+              onClick={() => setShowFilters(!showFilters)}
+            >
+              <i className="fa-solid fa-filter me-1"></i>
+              {showFilters ? 'Ocultar Filtros' : 'Filtros'}
+            </button>
+            <button 
+              className="btn btn-sm btn-primary"
+              onClick={() => setShowModal(true)}
+            >
+              <i className="fa-solid fa-plus me-1"></i>
+              Nuevo Responsable
+            </button>
+          </div>
+        }
+      />
 
       {loading ? (
-        <div className="text-center py-5">
-          <div className="spinner-border" role="status">
+        <div className="card border shadow-sm p-5 text-center">
+          <div className="spinner-border text-primary mx-auto mb-2" role="status">
             <span className="visually-hidden">Cargando...</span>
           </div>
+          <small className="text-muted">Cargando responsables...</small>
         </div>
       ) : (
         <>
-          <div className="card border-0 shadow-sm mb-3">
-            <div className="card-header bg-white border-bottom">
-              <button className="btn btn-sm btn-outline-secondary" onClick={() => setShowFilters(!showFilters)}>
-                <i className="fas fa-filter me-2"></i>
-                {showFilters ? 'Ocultar Filtros' : 'Mostrar Filtros'}
-              </button>
-            </div>
-            {showFilters && (
-              <div className="card-body">
+          {showFilters && (
+            <div className="card border shadow-sm mb-3">
+              <div className="card-header bg-white border-bottom py-2">
+                <h6 className="card-title mb-0 fw-semibold text-dark" style={{ fontSize: '14px' }}>
+                  <i className="fa-solid fa-sliders me-2 text-primary"></i>
+                  Filtros de Responsables
+                </h6>
+              </div>
+              <div className="card-body py-3">
                 <div className="row g-2">
                   <div className="col-md-4">
-                    <label className="form-label small">Buscar</label>
-                    <input type="text" className="form-control custom-input-sm" placeholder="Nombre..." value={filters.search} onChange={(e) => handleFilterChange('search', e.target.value)} />
+                    <label className="form-label small fw-bold text-muted mb-1">Buscar por Nombre</label>
+                    <input 
+                      type="text" 
+                      className="form-control form-control-sm" 
+                      placeholder="Escriba un nombre..." 
+                      value={filters.search} 
+                      onChange={(e) => handleFilterChange('search', e.target.value)} 
+                    />
                   </div>
                   <div className="col-md-3">
-                    <label className="form-label small">Equipo</label>
+                    <label className="form-label small fw-bold text-muted mb-1">Equipo</label>
                     <Select
                       options={[
-                        { value: '', label: 'Todos' },
+                        { value: '', label: 'Todos los equipos' },
                         ...equipos.map(equipo => ({ value: String(equipo.id), label: equipo.nombre }))
                       ]}
-                      value={filters.equipoId ? { value: filters.equipoId, label: equipos.find(e => e.id === Number(filters.equipoId))?.nombre || filters.equipoId } : { value: '', label: 'Todos' }}
+                      value={filters.equipoId ? { value: filters.equipoId, label: equipos.find(e => e.id === Number(filters.equipoId))?.nombre || filters.equipoId } : { value: '', label: 'Todos los equipos' }}
                       onChange={(option) => handleFilterChange('equipoId', option?.value || '')}
                       isClearable
                       styles={customSelectStylesSmall}
+                      placeholder="Seleccione..."
                     />
                   </div>
-                  <div className="col-md-2">
-                    <label className="form-label small">Estado</label>
+                  <div className="col-md-3">
+                    <label className="form-label small fw-bold text-muted mb-1">Estado</label>
                     <Select
                       options={[
-                        { value: '', label: 'Todos' },
+                        { value: '', label: 'Todos los estados' },
                         { value: 'true', label: 'Activos' },
                         { value: 'false', label: 'Inactivos' }
                       ]}
-                      value={filters.estado === 'true' ? { value: 'true', label: 'Activos' } : filters.estado === 'false' ? { value: 'false', label: 'Inactivos' } : { value: '', label: 'Todos' }}
+                      value={filters.estado === 'true' ? { value: 'true', label: 'Activos' } : filters.estado === 'false' ? { value: 'false', label: 'Inactivos' } : { value: '', label: 'Todos los estados' }}
                       onChange={(option) => handleFilterChange('estado', option?.value || '')}
                       isClearable
                       styles={customSelectStylesSmall}
+                      placeholder="Seleccione..."
                     />
                   </div>
-                  <div className="col-md-3 d-flex align-items-end">
-                    <button className="btn btn-outline-secondary btn-sm w-100" onClick={() => { setFilters({ search: '', equipoId: '', estado: '' }); setPage(1); }}>
-                      <i className="fas fa-eraser me-1"></i> Limpiar
+                  <div className="col-md-2 d-flex align-items-end">
+                    <button 
+                      className="btn btn-outline-secondary btn-sm w-100" 
+                      onClick={() => { setFilters({ search: '', equipoId: '', estado: '' }); setPage(1); }}
+                    >
+                      <i className="fa-solid fa-eraser me-1"></i> Limpiar
                     </button>
                   </div>
                 </div>
               </div>
-            )}
-          </div>
+            </div>
+          )}
 
-          <div className="card">
-            <div className="card-body">
-              <div className="d-flex justify-content-between align-items-center mb-3">
-                <div>
-                  Mostrando {responsables.length} de {total} registros
-                </div>
-                <div>
-                  <label className="me-2">Mostrar:</label>
+          <div className="card border shadow-sm">
+            <div className="card-header bg-white border-bottom py-2 d-flex justify-content-between align-items-center">
+              <h6 className="card-title mb-0 fw-semibold text-dark" style={{ fontSize: '14px' }}>
+                <i className="fa-solid fa-list me-2 text-primary"></i>
+                Listado de Responsables ({total} registros)
+              </h6>
+              <div className="d-flex align-items-center gap-2">
+                <span className="small text-muted">Mostrar:</span>
+                <div style={{ width: '80px' }}>
                   <Select
                     options={[
                       { value: 10, label: '10' },
@@ -250,14 +278,18 @@ const ResponsablesManagement: React.FC = () => {
                     value={{ value: limit, label: String(limit) }}
                     onChange={(option) => { setLimit(Number(option?.value || 10)); setPage(1); }}
                     styles={customSelectStylesSmall}
+                    isSearchable={false}
                   />
                 </div>
               </div>
+            </div>
+
+            <div className="card-body p-0">
               <div className="table-responsive">
-                <table className="table table-hover">
-                  <thead>
+                <table className="table table-hover table-striped align-middle mb-0">
+                  <thead className="table-light text-uppercase" style={{ fontSize: '12px' }}>
                     <tr>
-                      <th style={{ cursor: 'pointer' }} onClick={() => handleSort('id')}>
+                      <th style={{ width: '80px', cursor: 'pointer' }} onClick={() => handleSort('id')}>
                         ID {getSortIcon('id')}
                       </th>
                       <th style={{ cursor: 'pointer' }} onClick={() => handleSort('nombre')}>
@@ -266,50 +298,78 @@ const ResponsablesManagement: React.FC = () => {
                       <th style={{ cursor: 'pointer' }} onClick={() => handleSort('equipo')}>
                         Equipo {getSortIcon('equipo')}
                       </th>
-                      <th style={{ cursor: 'pointer' }} onClick={() => handleSort('estado')}>
+                      <th style={{ width: '120px', cursor: 'pointer' }} className="text-center" onClick={() => handleSort('estado')}>
                         Estado {getSortIcon('estado')}
                       </th>
-                      <th>Acciones</th>
+                      <th style={{ width: '100px' }} className="text-center">Acciones</th>
                     </tr>
                   </thead>
-                  <tbody>
-                    {responsables.map(responsable => (
-                      <tr key={responsable.id}>
-                        <td>{responsable.id}</td>
-                        <td>{responsable.nombre}</td>
-                        <td>{responsable.equipo?.nombre || '-'}</td>
-                        <td>
-                          <span className={`badge ${responsable.estado ? 'bg-success' : 'bg-secondary'}`}>
-                            {responsable.estado ? 'Activo' : 'Inactivo'}
-                          </span>
-                        </td>
-                        <td>
-                          <button
-                            className="btn btn-sm btn-outline-primary me-2"
-                            onClick={() => handleEdit(responsable)}
-                          >
-                            <i className="fas fa-edit"></i>
-                          </button>
-                          {responsable.estado && (
-                            <button
-                              className="btn btn-sm btn-outline-danger"
-                              onClick={() => handleDelete(responsable.id)}
-                            >
-                              <i className="fas fa-trash"></i>
-                            </button>
-                          )}
+                  <tbody style={{ fontSize: '13px' }}>
+                    {responsables.length === 0 ? (
+                      <tr>
+                        <td colSpan={5} className="text-center py-4 text-muted">
+                          <i className="fa-solid fa-inbox fa-2x mb-2 d-block text-secondary"></i>
+                          No se encontraron registros
                         </td>
                       </tr>
-                    ))}
+                    ) : (
+                      responsables.map(responsable => (
+                        <tr key={responsable.id}>
+                          <td className="fw-semibold text-secondary">#{responsable.id}</td>
+                          <td className="fw-medium text-dark">{responsable.nombre}</td>
+                          <td>
+                            {responsable.equipo?.nombre ? (
+                              <span className="badge bg-light text-dark border">
+                                <i className="fa-solid fa-users me-1 text-primary"></i>
+                                {responsable.equipo.nombre}
+                              </span>
+                            ) : (
+                              <span className="text-muted small">Sin equipo</span>
+                            )}
+                          </td>
+                          <td className="text-center">
+                            <span className={`badge ${responsable.estado ? 'bg-success' : 'bg-secondary'}`}>
+                              {responsable.estado ? 'Activo' : 'Inactivo'}
+                            </span>
+                          </td>
+                          <td className="text-center">
+                            <div className="btn-group btn-group-sm">
+                              <button
+                                className="btn btn-outline-primary btn-sm py-1 px-2"
+                                onClick={() => handleEdit(responsable)}
+                                title="Editar"
+                              >
+                                <i className="fa-solid fa-pen-to-square"></i>
+                              </button>
+                              {responsable.estado && (
+                                <button
+                                  className="btn btn-outline-danger btn-sm py-1 px-2"
+                                  onClick={() => handleDelete(responsable.id)}
+                                  title="Desactivar"
+                                >
+                                  <i className="fa-solid fa-trash-can"></i>
+                                </button>
+                              )}
+                            </div>
+                          </td>
+                        </tr>
+                      ))
+                    )}
                   </tbody>
                 </table>
               </div>
-              {totalPages > 1 && (
+            </div>
+
+            {totalPages > 1 && (
+              <div className="card-footer bg-white border-top py-2 d-flex justify-content-between align-items-center">
+                <span className="small text-muted">
+                  Página {page} de {totalPages} ({total} registros totales)
+                </span>
                 <nav>
-                  <ul className="pagination justify-content-center mb-0">
+                  <ul className="pagination pagination-sm mb-0">
                     <li className={`page-item ${page === 1 ? 'disabled' : ''}`}>
                       <button className="page-link" onClick={() => setPage(page - 1)}>
-                        <i className="fas fa-chevron-left"></i>
+                        <i className="fa-solid fa-chevron-left"></i>
                       </button>
                     </li>
                     {[...Array(totalPages)].map((_, i) => {
@@ -333,45 +393,47 @@ const ResponsablesManagement: React.FC = () => {
                     })}
                     <li className={`page-item ${page === totalPages ? 'disabled' : ''}`}>
                       <button className="page-link" onClick={() => setPage(page + 1)}>
-                        <i className="fas fa-chevron-right"></i>
+                        <i className="fa-solid fa-chevron-right"></i>
                       </button>
                     </li>
                   </ul>
                 </nav>
-              )}
-            </div>
+              </div>
+            )}
           </div>
         </>
       )}
 
       {showModal && (
         <div className="modal show d-block" tabIndex={-1} style={{ backgroundColor: 'rgba(0,0,0,0.5)' }}>
-          <div className="modal-dialog">
-            <div className="modal-content">
-              <div className="modal-header">
-                <h5 className="modal-title">
+          <div className="modal-dialog modal-dialog-centered">
+            <div className="modal-content border-0 shadow">
+              <div className="modal-header bg-light border-bottom py-2">
+                <h5 className="modal-title fs-6 fw-bold text-dark">
+                  <i className="fa-solid fa-user-check me-2 text-primary"></i>
                   {editingResponsable ? 'Editar Responsable' : 'Nuevo Responsable'}
                 </h5>
                 <button type="button" className="btn-close" onClick={handleCloseModal}></button>
               </div>
               <form onSubmit={handleSubmit}>
-                <div className="modal-body">
+                <div className="modal-body p-3">
                   <div className="mb-3">
-                    <label className="form-label">Nombre *</label>
+                    <label className="form-label small fw-bold text-secondary">Nombre Completo *</label>
                     <input
                       type="text"
-                      className="form-control custom-input"
+                      className="form-control form-control-sm"
                       value={formData.nombre}
                       onChange={(e) => setFormData({ ...formData, nombre: e.target.value })}
                       required
                       maxLength={30}
+                      placeholder="Ej: Juan Pérez"
                     />
                   </div>
 
                   <div className="mb-3">
-                    <label className="form-label">Equipo</label>
+                    <label className="form-label small fw-bold text-secondary">Equipo de Trabajo</label>
                     <select
-                      className="form-select"
+                      className="form-select form-select-sm"
                       value={formData.equipoId || ''}
                       onChange={(e) => setFormData({ ...formData, equipoId: e.target.value ? Number(e.target.value) : null })}
                     >
@@ -384,7 +446,7 @@ const ResponsablesManagement: React.FC = () => {
                     </select>
                   </div>
 
-                  <div className="mb-3 form-check">
+                  <div className="form-check form-switch mb-2">
                     <input
                       type="checkbox"
                       className="form-check-input"
@@ -392,17 +454,18 @@ const ResponsablesManagement: React.FC = () => {
                       checked={formData.estado}
                       onChange={(e) => setFormData({ ...formData, estado: e.target.checked })}
                     />
-                    <label className="form-check-label" htmlFor="estadoCheck">
-                      Activo
+                    <label className="form-check-label small fw-bold text-secondary" htmlFor="estadoCheck">
+                      Estado Activo
                     </label>
                   </div>
                 </div>
-                <div className="modal-footer">
-                  <button type="button" className="btn btn-secondary" onClick={handleCloseModal}>
-                    Cancelar
+                <div className="modal-footer bg-light border-top py-2">
+                  <button type="button" className="btn btn-sm btn-secondary" onClick={handleCloseModal}>
+                    <i className="fa-solid fa-xmark me-1"></i> Cancelar
                   </button>
-                  <button type="submit" className="btn btn-primary">
-                    {editingResponsable ? 'Actualizar' : 'Crear'}
+                  <button type="submit" className="btn btn-sm btn-primary">
+                    <i className="fa-solid fa-floppy-disk me-1"></i>
+                    {editingResponsable ? 'Actualizar' : 'Guardar'}
                   </button>
                 </div>
               </form>
@@ -415,3 +478,4 @@ const ResponsablesManagement: React.FC = () => {
 };
 
 export default ResponsablesManagement;
+

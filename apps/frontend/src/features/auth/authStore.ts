@@ -1,4 +1,5 @@
 import { create } from 'zustand';
+import { api } from '../../lib/api';
 import { authService } from './authService';
 import type { User, LoginCredentials } from './types';
 
@@ -77,6 +78,8 @@ export const useAuthStore = create<AuthState>((set) => ({
         token,
         isAuthenticated: true,
       });
+      // Sincronizar automáticamente los menús actualizados desde el backend
+      useAuthStore.getState().refreshUserMenus();
     }
   },
 
@@ -89,19 +92,12 @@ export const useAuthStore = create<AuthState>((set) => ({
     }
 
     try {
-      // Re-autenticar para obtener los menús actualizados
-      const response = await fetch(`${import.meta.env.VITE_API_URL}/auth/me`, {
-        headers: {
-          'Authorization': `Bearer ${token}`,
-        },
-      });
-
-      if (response.ok) {
-        const userData = await response.json();
-        
-        // Actualizar solo los menús del usuario
+      const response = await api.get('/auth/me');
+      if (response.data) {
+        const userData = response.data;
         const updatedUser = {
           ...currentUser,
+          ...userData,
           menus: userData.menus || currentUser.menus,
         };
 

@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import Select from 'react-select';
 import { tiposService, type Tipo, type CreateTipoDto } from '../../../services/admin.service';
 import { customSelectStyles } from '../../../styles/react-select-custom';
+import { PageHeader } from '../../../components/ui/PageHeader';
 
 interface TipoConNivel extends Tipo {
   nivel: number;
@@ -110,7 +111,7 @@ export function CatalogosManagement() {
 
   if (loading) {
     return (
-      <div className="container-fluid p-4">
+      <div className="container-fluid p-3">
         <div className="text-center py-5">
           <div className="spinner-border text-primary" role="status">
             <span className="visually-hidden">Cargando...</span>
@@ -121,75 +122,85 @@ export function CatalogosManagement() {
   }
 
   return (
-    <div className="container-fluid p-4">
-      <div className="d-flex justify-content-between align-items-center mb-4">
-        <h2 className="mb-0">
-          <i className="fas fa-folder-tree me-2"></i>
-          Gestion de Catalogos (Tipos)
-        </h2>
-        <button
-          onClick={() => handleOpenModal()}
-          className="btn btn-primary"
-        >
-          <i className="fas fa-plus me-2"></i>
-          Nuevo Tipo
-        </button>
-      </div>
+    <div className="container-fluid p-3">
+      <PageHeader
+        icon="fas fa-folder-tree"
+        title="Gestión de Catálogos (Tipos)"
+        subtitle="Mantenimiento de clasificaciones jerárquicas y catálogos maestros del sistema"
+        actions={
+          <button
+            onClick={() => handleOpenModal()}
+            className="btn btn-sm btn-primary"
+          >
+            <i className="fas fa-plus me-1"></i>
+            Nuevo Tipo
+          </button>
+        }
+      />
 
       {errors && (
-        <div className="alert alert-danger alert-dismissible fade show" role="alert">
+        <div className="alert alert-danger alert-dismissible fade show py-2" role="alert">
+          <i className="fas fa-exclamation-triangle me-2"></i>
           {errors}
-          <button type="button" className="btn-close" onClick={() => setErrors('')}></button>
+          <button type="button" className="btn-close btn-sm" onClick={() => setErrors('')}></button>
         </div>
       )}
 
       {success && (
-        <div className="alert alert-success alert-dismissible fade show" role="alert">
+        <div className="alert alert-success alert-dismissible fade show py-2" role="alert">
+          <i className="fas fa-check-circle me-2"></i>
           {success}
-          <button type="button" className="btn-close" onClick={() => setSuccess('')}></button>
+          <button type="button" className="btn-close btn-sm" onClick={() => setSuccess('')}></button>
         </div>
       )}
 
-      <div className="card border-0 shadow-sm">
-        <div className="card-body">
+      <div className="card border shadow-sm">
+        <div className="card-header bg-white border-bottom py-2">
+          <h6 className="card-title mb-0 fw-semibold text-dark" style={{ fontSize: '14px' }}>
+            <i className="fas fa-list me-2 text-primary"></i>
+            Árbol de Tipos y Catálogos ({tipos.length} registros)
+          </h6>
+        </div>
+        <div className="card-body p-0">
           <div className="table-responsive">
-            <table className="table table-hover mb-0">
-              <thead>
+            <table className="table table-hover table-striped align-middle mb-0" style={{ fontSize: '13px' }}>
+              <thead className="table-light text-uppercase" style={{ fontSize: '12px' }}>
                 <tr>
-                  <th>Nombre</th>
-                  <th>Padre</th>
-                  <th className="text-center">Estado</th>
-                  <th className="text-center">Acciones</th>
+                  <th className="px-3 py-2">Nombre</th>
+                  <th className="py-2">Padre</th>
+                  <th className="py-2 text-center">Estado</th>
+                  <th className="py-2 text-center">Acciones</th>
                 </tr>
               </thead>
               <tbody>
                 {tipos.length === 0 ? (
                   <tr>
                     <td colSpan={4} className="text-center py-4 text-muted">
-                      <i className="fas fa-folder-open fa-2x mb-2 d-block"></i>
+                      <i className="fas fa-folder-open fa-2x mb-2 d-block text-secondary opacity-50"></i>
                       No hay tipos registrados
                     </td>
                   </tr>
                 ) : (
                   tipos.map(tipo => (
                     <tr key={tipo.id}>
-                      <td>
+                      <td className="px-3">
                         <span style={{ marginLeft: `${(tipo.nivel || 0) * 20}px` }}>
-                          {tipo.nivel && tipo.nivel > 0 ? '|-- ' : ''}
-                          <strong>{tipo.name}</strong>
+                          {tipo.nivel && tipo.nivel > 0 ? <span className="text-muted me-1">└─</span> : ''}
+                          <strong className="text-dark">{tipo.name}</strong>
                         </span>
                       </td>
                       <td>
                         {tipo.parent_id ? (
                           <small className="text-muted">
+                            <i className="fas fa-folder me-1 text-warning"></i>
                             {tiposPlanos.find(t => t.id === tipo.parent_id)?.name || '-'}
                           </small>
                         ) : (
-                          <span className="text-muted">-</span>
+                          <span className="text-muted small">Categoría Principal</span>
                         )}
                       </td>
                       <td className="text-center">
-                        <span className={`badge ${tipo.estado ? 'bg-success' : 'bg-secondary'}`}>
+                        <span className={`badge ${tipo.estado ? 'bg-success' : 'bg-danger'}`}>
                           {tipo.estado ? 'Activo' : 'Inactivo'}
                         </span>
                       </td>
@@ -197,17 +208,17 @@ export function CatalogosManagement() {
                         <div className="btn-group btn-group-sm" role="group">
                           <button
                             onClick={() => handleOpenModal(tipo)}
-                            className="btn btn-outline-warning"
+                            className="btn btn-outline-primary py-1 px-2"
                             title="Editar"
                           >
-                            <i className="fas fa-edit"></i>
+                            <i className="fa-solid fa-pen-to-square"></i>
                           </button>
                           <button
                             onClick={() => handleDelete(tipo.id)}
-                            className="btn btn-outline-danger"
+                            className="btn btn-outline-danger py-1 px-2"
                             title="Eliminar"
                           >
-                            <i className="fas fa-trash"></i>
+                            <i className="fa-solid fa-trash-can"></i>
                           </button>
                         </div>
                       </td>

@@ -35,7 +35,7 @@ export class CrucesService {
       data.via2 = Number(via2);
     }
 
-    // Crear el cruce (sin geom, ya que es Unsupported)
+    // Crear el cruce
     const cruce = await this.prisma.cruce.create({
       data,
       include: {
@@ -49,15 +49,6 @@ export class CrucesService {
         },
       },
     });
-
-    // Si hay latitud y longitud, actualizar la geometría PostGIS con query raw
-    if (createCruceDto.latitud && createCruceDto.longitud) {
-      await this.prisma.$executeRaw`
-        UPDATE cruces 
-        SET geom = ST_SetSRID(ST_MakePoint(${createCruceDto.longitud}, ${createCruceDto.latitud}), 4326)
-        WHERE id = ${cruce.id}
-      `;
-    }
 
     return cruce;
   }
@@ -107,13 +98,29 @@ export class CrucesService {
       };
     }
 
+    // Ordenamiento seguro
+    let orderBy: any = { id: 'desc' };
+    if (sortBy) {
+      if (sortBy === 'distrito') {
+        orderBy = { ubigeo: { distrito: sortOrder || 'asc' } };
+      } else if (sortBy === 'administrador') {
+        orderBy = { administrador: { nombre: sortOrder || 'asc' } };
+      } else if (sortBy === 'proyecto') {
+        orderBy = { proyecto: { nombre: sortOrder || 'asc' } };
+      } else if (['codigo', 'nombre', 'estado', 'id', 'createdAt', 'updatedAt', 'via1', 'via2'].includes(sortBy)) {
+        orderBy = { [sortBy]: sortOrder || 'asc' };
+      } else {
+        orderBy = { id: sortOrder || 'desc' };
+      }
+    }
+
     const [total, data] = await Promise.all([
       this.prisma.cruce.count({ where }),
       this.prisma.cruce.findMany({
         where,
         skip: (page - 1) * limit,
         take: limit,
-        orderBy: { [sortBy]: sortOrder },
+        orderBy,
         include: {
           ubigeo: true,
           proyecto: true,
@@ -196,7 +203,7 @@ export class CrucesService {
       data.via2 = via2 === null ? null : Number(via2);
     }
 
-    // Actualizar el cruce (sin geom, ya que es Unsupported)
+    // Actualizar el cruce
     const updatedCruce = await this.prisma.cruce.update({
       where: { id },
       data,
@@ -211,15 +218,6 @@ export class CrucesService {
         },
       },
     });
-
-    // Si se actualizan las coordenadas, actualizar la geometría con query raw
-    if (updateCruceDto.latitud !== undefined && updateCruceDto.longitud !== undefined) {
-      await this.prisma.$executeRaw`
-        UPDATE cruces 
-        SET geom = ST_SetSRID(ST_MakePoint(${updateCruceDto.longitud}, ${updateCruceDto.latitud}), 4326)
-        WHERE id = ${id}
-      `;
-    }
 
     return updatedCruce;
   }

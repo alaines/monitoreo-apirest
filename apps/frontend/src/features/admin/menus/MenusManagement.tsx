@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import axios from 'axios';
 import { useAuthStore } from '../../auth/authStore';
 import { toast } from 'react-hot-toast';
+import { PageHeader } from '../../../components/ui/PageHeader';
 
 interface Menu {
   id: number;
@@ -165,17 +166,18 @@ export function MenusManagement() {
   const getRootMenus = () => menus.filter(m => !m.menuPadreId);
 
   return (
-    <div className="container-fluid p-4">
-      <div className="d-flex justify-content-between align-items-center mb-4">
-        <h2 className="mb-0">
-          <i className="fas fa-bars me-2"></i>
-          Gestión de Menús
-        </h2>
-        <button onClick={handleCreate} className="btn btn-primary">
-          <i className="fas fa-plus me-2"></i>
-          Nuevo Menú
-        </button>
-      </div>
+    <div className="container-fluid p-3">
+      <PageHeader
+        icon="fas fa-bars"
+        title="Gestión de Menús"
+        subtitle="Administración del árbol de navegación, rutas, jerarquías y accesos del sistema"
+        actions={
+          <button onClick={handleCreate} className="btn btn-sm btn-primary">
+            <i className="fas fa-plus me-1"></i>
+            Nuevo Menú
+          </button>
+        }
+      />
 
       {loading ? (
         <div className="text-center py-5">
@@ -184,36 +186,42 @@ export function MenusManagement() {
           </div>
         </div>
       ) : (
-        <div className="card border-0 shadow-sm">
-          <div className="card-body">
+        <div className="card border shadow-sm">
+          <div className="card-header bg-white border-bottom py-2">
+            <h6 className="card-title mb-0 fw-semibold text-dark" style={{ fontSize: '14px' }}>
+              <i className="fas fa-sitemap me-2 text-primary"></i>
+              Estructura Jerárquica de Navegación ({menus.length} nodos)
+            </h6>
+          </div>
+          <div className="card-body p-0">
             <div className="table-responsive">
-              <table className="table table-hover mb-0">
-                <thead>
+              <table className="table table-hover table-striped align-middle mb-0" style={{ fontSize: '13px' }}>
+                <thead className="table-light text-uppercase" style={{ fontSize: '12px' }}>
                   <tr>
-                    <th>Nombre</th>
-                    <th>Código</th>
-                    <th>Ruta</th>
-                    <th className="text-center">Icono</th>
-                    <th>Padre</th>
-                    <th className="text-center">Orden</th>
-                    <th className="text-center">lft/rght</th>
-                    <th className="text-center">Estado</th>
-                    <th className="text-center">Acciones</th>
+                    <th className="px-3 py-2">Nombre</th>
+                    <th className="py-2">Código</th>
+                    <th className="py-2">Ruta</th>
+                    <th className="py-2 text-center">Icono</th>
+                    <th className="py-2">Padre</th>
+                    <th className="py-2 text-center">Orden</th>
+                    <th className="py-2 text-center">lft/rght</th>
+                    <th className="py-2 text-center">Estado</th>
+                    <th className="py-2 text-center">Acciones</th>
                   </tr>
                 </thead>
                 <tbody>
                   {menus.map((menu) => (
                     <tr key={menu.id}>
-                      <td>
+                      <td className="px-3">
                         <span style={{ marginLeft: `${(menu.nivel || 0) * 20}px` }}>
-                          {menu.nivel && menu.nivel > 0 ? '└─ ' : ''}
-                          <strong>{menu.nombre}</strong>
+                          {menu.nivel && menu.nivel > 0 ? <span className="text-muted me-1">└─</span> : ''}
+                          <strong className="text-dark">{menu.nombre}</strong>
                         </span>
                       </td>
-                      <td><code className="small">{menu.codigo}</code></td>
+                      <td><code className="small font-monospace">{menu.codigo}</code></td>
                       <td><small className="text-muted">{menu.ruta}</small></td>
                       <td className="text-center">
-                        <i className={menu.icono}></i>
+                        <i className={`${menu.icono} text-primary`}></i>
                       </td>
                       <td>
                         {menu.menuPadreId ? (
@@ -229,14 +237,14 @@ export function MenusManagement() {
                             ))}
                           </select>
                         ) : (
-                          <span className="text-muted">-</span>
+                          <span className="text-muted small">Raíz</span>
                         )}
                       </td>
                       <td className="text-center">
-                        <span className="badge bg-secondary">{menu.orden}</span>
+                        <span className="badge bg-secondary font-monospace">{menu.orden}</span>
                       </td>
                       <td className="text-center">
-                        <small className="text-muted">{menu.lft}/{menu.rght}</small>
+                        <small className="text-muted font-monospace">{menu.lft}/{menu.rght}</small>
                       </td>
                       <td className="text-center">
                         <span className={`badge ${menu.activo ? 'bg-success' : 'bg-danger'}`}>
@@ -247,31 +255,31 @@ export function MenusManagement() {
                         <div className="btn-group btn-group-sm" role="group">
                           <button
                             onClick={() => handleMoveUp(menu.id)}
-                            className="btn btn-outline-primary"
+                            className="btn btn-outline-secondary py-1 px-2"
                             title="Subir"
                           >
-                            <i className="fas fa-arrow-up"></i>
+                            <i className="fa-solid fa-arrow-up"></i>
                           </button>
                           <button
                             onClick={() => handleMoveDown(menu.id)}
-                            className="btn btn-outline-primary"
+                            className="btn btn-outline-secondary py-1 px-2"
                             title="Bajar"
                           >
-                            <i className="fas fa-arrow-down"></i>
+                            <i className="fa-solid fa-arrow-down"></i>
                           </button>
                           <button
                             onClick={() => handleEdit(menu)}
-                            className="btn btn-outline-warning"
+                            className="btn btn-outline-primary py-1 px-2"
                             title="Editar"
                           >
-                            <i className="fas fa-edit"></i>
+                            <i className="fa-solid fa-pen-to-square"></i>
                           </button>
                           <button
                             onClick={() => handleDelete(menu.id)}
-                            className="btn btn-outline-danger"
+                            className="btn btn-outline-danger py-1 px-2"
                             title="Eliminar"
                           >
-                            <i className="fas fa-trash"></i>
+                            <i className="fa-solid fa-trash-can"></i>
                           </button>
                         </div>
                       </td>

@@ -1,6 +1,11 @@
-import { useEffect } from 'react';
+import { useEffect, useRef } from 'react';
 import { useMap } from 'react-leaflet';
 import L from 'leaflet';
+
+// Asegurar compatibilidad de plugins legacy de Leaflet en Vite/ESM
+if (typeof window !== 'undefined') {
+  (window as any).L = L;
+}
 import 'leaflet.heat';
 
 interface HeatmapLayerProps {
@@ -15,36 +20,64 @@ interface HeatmapLayerProps {
   };
 }
 
-export function HeatmapLayer({ points, options = {} }: HeatmapLayerProps) {
+export function HeatmapLayer({ points, options }: HeatmapLayerProps) {
   const map = useMap();
+  const layerRef = useRef<any>(null);
 
   useEffect(() => {
-    if (!map || points.length === 0) return;
+    if (!map) return;
+
+    // Remover capa previa si existe
+    if (layerRef.current) {
+      try {
+        map.removeLayer(layerRef.current);
+      } catch {
+        // Ignorar si ya fue removido del DOM
+      }
+      layerRef.current = null;
+    }
+
+    if (!points || points.length === 0) return;
 
     const defaultOptions = {
-      radius: 25,
-      blur: 15,
-      maxZoom: 17,
+      radius: 22,
+      blur: 16,
+      maxZoom: 16,
       max: 1.0,
-      minOpacity: 0.4,
+      minOpacity: 0.25,
       gradient: {
-        0.0: '#ffff00',  // amarillo
-        0.2: '#ffd700',  // dorado
-        0.4: '#ffa500',  // naranja
-        0.6: '#ff6347',  // tomate
-        0.8: '#dc143c',  // rojo
-        1.0: '#8b0000'   // rojo oscuro
+        0.2: '#3b82f6', // azul suave
+        0.4: '#06b6d4', // cian / turquesa
+        0.6: '#10b981', // verde esmeralda
+        0.8: '#f59e0b', // ámbar / naranja
+        1.0: '#ef4444', // rojo suave
       },
-      ...options
+      ...options,
     };
 
-    // @ts-ignore - leaflet.heat no tiene tipos completos
-    const heatLayer = L.heatLayer(points, defaultOptions).addTo(map);
+    try {
+      const heatFn = (L as any).heatLayer || (window as any).L?.heatLayer;
+      if (typeof heatFn === 'function') {
+        const heatLayer = heatFn(points, defaultOptions).addTo(map);
+        layerRef.current = heatLayer;
+      } else {
+        console.warn('Leaflet heatLayer no se encuentra disponible');
+      }
+    } catch (err) {
+      console.error('Error al inicializar capa de calor:', err);
+    }
 
     return () => {
-      map.removeLayer(heatLayer);
+      if (layerRef.current && map) {
+        try {
+          map.removeLayer(layerRef.current);
+        } catch {
+          // Ignorar
+        }
+        layerRef.current = null;
+      }
     };
-  }, [map, points, options]);
+  }, [map, points, JSON.stringify(options || {})]);
 
   return null;
 }

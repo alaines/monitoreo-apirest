@@ -1,8 +1,9 @@
 import { useState, useEffect, useRef } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import Select from 'react-select';
+import { toast } from 'react-hot-toast';
 import { customSelectStyles } from '../../styles/react-select-custom';
-import { MapContainer, TileLayer, Marker, useMapEvents } from 'react-leaflet';
+import { MapContainer, TileLayer, Marker, useMapEvents, useMap } from 'react-leaflet';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
 import { crucesService, Cruce } from '../../services/cruces.service';
@@ -54,8 +55,36 @@ function MapClickHandler({ setPosition }: { setPosition: (pos: [number, number])
 function MapUpdater({ center }: { center: [number, number] }) {
   const map = useMapEvents({});
   useEffect(() => {
-    map.setView(center, map.getZoom());
-  }, [center, map]);
+    if (center && !isNaN(center[0]) && !isNaN(center[1])) {
+      map.setView(center, map.getZoom() || 16);
+    }
+  }, [center[0], center[1], map]);
+  return null;
+}
+
+function MapResizer() {
+  const map = useMap();
+  useEffect(() => {
+    const container = map.getContainer().parentElement;
+    if (!container) return;
+
+    const resizeObserver = new ResizeObserver(() => {
+      map.invalidateSize();
+    });
+
+    resizeObserver.observe(container);
+
+    const timers = [50, 150, 300, 500].map(delay =>
+      setTimeout(() => {
+        map.invalidateSize();
+      }, delay)
+    );
+
+    return () => {
+      resizeObserver.disconnect();
+      timers.forEach(t => clearTimeout(t));
+    };
+  }, [map]);
   return null;
 }
 
@@ -72,6 +101,7 @@ export function CruceForm({ cruceId, onClose, onSave }: { cruceId?: number | nul
   const [ejes, setEjes] = useState<Eje[]>([]);
   const [distritoSearch, setDistritoSearch] = useState('');
   const [showDistritoDropdown, setShowDistritoDropdown] = useState(false);
+  const [hasOriginalCoords, setHasOriginalCoords] = useState(true);
   const distritoRef = useRef<HTMLDivElement>(null);
   const [planoPdfFile, setPlanoPdfFile] = useState<File | null>(null);
   const [planoDwgFile, setPlanoDwgFile] = useState<File | null>(null);
@@ -125,7 +155,6 @@ export function CruceForm({ cruceId, onClose, onSave }: { cruceId?: number | nul
     }
   }, [formData.via1, formData.via2, ejes]);
 
-
   const loadTipos = async () => {
     try {
       const data = await tiposService.getTipos();
@@ -169,15 +198,15 @@ export function CruceForm({ cruceId, onClose, onSave }: { cruceId?: number | nul
   const handleMapPositionChange = (position: [number, number]) => {
     setFormData(prev => ({
       ...prev,
-      latitud: position[0],
-      longitud: position[1],
+      latitud: Number(position[0].toFixed(6)),
+      longitud: Number(position[1].toFixed(6)),
     }));
   };
 
   const getFilteredUbigeos = () => {
     const search = distritoSearch.toLowerCase().trim();
     if (!search) {
-      return ubigeos.slice(0, 50); // Mostrar primeros 50 cuando no hay búsqueda
+      return ubigeos.slice(0, 50);
     }
     return ubigeos.filter(u => 
       u.distrito?.toLowerCase().includes(search) ||
@@ -197,7 +226,16 @@ export function CruceForm({ cruceId, onClose, onSave }: { cruceId?: number | nul
       setLoading(true);
       const cruce = await crucesService.getCruce(id!);
       
-      // Extraer solo los campos permitidos del cruce
+      const rawLat = cruce.latitud;
+      const rawLng = cruce.longitud;
+      const validCoords = rawLat !== null && rawLat !== undefined && rawLat !== '' && !isNaN(Number(rawLat)) &&
+                          rawLng !== null && rawLng !== undefined && rawLng !== '' && !isNaN(Number(rawLng));
+      
+      setHasOriginalCoords(validCoords);
+
+      const finalLat = validCoords ? Number(rawLat) : -12.0464;
+      const finalLng = validCoords ? Number(rawLng) : -77.0428;
+
       setFormData({
         ubigeoId: cruce.ubigeoId,
         tipoGestion: cruce.tipoGestion,
@@ -213,8 +251,8 @@ export function CruceForm({ cruceId, onClose, onSave }: { cruceId?: number | nul
         anoImplementacion: cruce.anoImplementacion,
         observaciones: cruce.observaciones,
         nombre: cruce.nombre,
-        latitud: typeof cruce.latitud === 'string' ? parseFloat(cruce.latitud) : cruce.latitud,
-        longitud: typeof cruce.longitud === 'string' ? parseFloat(cruce.longitud) : cruce.longitud,
+        latitud: finalLat,
+        longitud: finalLng,
         codigo: cruce.codigo,
         tipoControl: cruce.tipoControl,
         codigoAnterior: cruce.codigoAnterior,
@@ -231,7 +269,7 @@ export function CruceForm({ cruceId, onClose, onSave }: { cruceId?: number | nul
       }
     } catch (error) {
       console.error('Error loading cruce:', error);
-      alert('Error al cargar el cruce');
+      toast.error('Error al cargar la información de la intersección');
     } finally {
       setLoading(false);
     }
@@ -241,7 +279,6 @@ export function CruceForm({ cruceId, onClose, onSave }: { cruceId?: number | nul
     const { name, value, type } = e.target;
     const checked = (e.target as HTMLInputElement).checked;
     
-    // Campos que deben ser numéricos
     const numericFields = ['tipoCruce', 'tipoGestion', 'tipoComunicacion', 'tipoControl', 
                            'tipoEstructura', 'administradorId', 'proyectoId', 
                            'via1', 'via2', 'anoImplementacion'];
@@ -265,15 +302,14 @@ export function CruceForm({ cruceId, onClose, onSave }: { cruceId?: number | nul
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    if (!formData.nombre || !formData.latitud || !formData.longitud) {
-      alert('Por favor complete los campos requeridos');
+    if (!formData.nombre || formData.latitud === undefined || formData.longitud === undefined) {
+      toast.error('Por favor complete todos los campos requeridos (*)');
       return;
     }
 
     try {
       setLoading(true);
       
-      // Campos permitidos según el DTO
       const allowedFields = [
         'ubigeoId', 'tipoGestion', 'administradorId', 'proyectoId', 'via1', 'via2',
         'tipoComunicacion', 'estado', 'tipoCruce', 'tipoEstructura', 'tipoOperacion',
@@ -281,14 +317,12 @@ export function CruceForm({ cruceId, onClose, onSave }: { cruceId?: number | nul
         'tipoControl', 'codigoAnterior', 'usuarioRegistra', 'electricoEmpresa', 'electricoSuministro'
       ];
 
-      // Función para extraer solo los campos permitidos y convertir tipos
       const extractAllowedFields = (data: any) => {
         const cleaned: any = {};
         allowedFields.forEach(field => {
           if (data[field] !== undefined && data[field] !== null && data[field] !== '') {
             let value = data[field];
             
-            // Convertir a número campos numéricos
             const numericFields = ['tipoGestion', 'administradorId', 'proyectoId', 'via1', 'via2', 
                                    'tipoComunicacion', 'tipoCruce', 'tipoEstructura',
                                    'anoImplementacion', 'tipoControl', 'latitud', 'longitud'];
@@ -296,7 +330,6 @@ export function CruceForm({ cruceId, onClose, onSave }: { cruceId?: number | nul
               value = typeof value === 'string' ? parseFloat(value) : Number(value);
             }
             
-            // Convertir a boolean campo estado
             if (field === 'estado') {
               value = value === true || value === 'true' || value === 1 || value === '1';
             }
@@ -307,15 +340,12 @@ export function CruceForm({ cruceId, onClose, onSave }: { cruceId?: number | nul
         return cleaned;
       };
       
-      // Si hay archivos, usar FormData
       if (planoPdfFile || planoDwgFile) {
         const formDataToSend = new FormData();
         
-        // Agregar solo los campos permitidos y ya convertidos
         const cleanedData = extractAllowedFields(formData);
         Object.keys(cleanedData).forEach(key => {
           const value = cleanedData[key];
-          // FormData requiere strings, pero el backend hará la conversión
           if (typeof value === 'boolean') {
             formDataToSend.append(key, value ? 'true' : 'false');
           } else {
@@ -323,7 +353,6 @@ export function CruceForm({ cruceId, onClose, onSave }: { cruceId?: number | nul
           }
         });
         
-        // Agregar archivos si existen
         if (planoPdfFile) {
           formDataToSend.append('planoPdf', planoPdfFile);
         }
@@ -333,20 +362,19 @@ export function CruceForm({ cruceId, onClose, onSave }: { cruceId?: number | nul
 
         if (isEdit) {
           await crucesService.updateCruceWithFiles(id!, formDataToSend);
-          alert('Cruce actualizado exitosamente');
+          toast.success('Intersección actualizada exitosamente');
         } else {
           await crucesService.createCruceWithFiles(formDataToSend);
-          alert('Cruce creado exitosamente');
+          toast.success('Intersección registrada exitosamente');
         }
       } else {
-        // Sin archivos, usar JSON normal con datos limpios
         const cleanedData = extractAllowedFields(formData);
         if (isEdit) {
           await crucesService.updateCruce(id!, cleanedData);
-          alert('Cruce actualizado exitosamente');
+          toast.success('Intersección actualizada exitosamente');
         } else {
           await crucesService.createCruce(cleanedData);
-          alert('Cruce creado exitosamente');
+          toast.success('Intersección registrada exitosamente');
         }
       }
       
@@ -355,23 +383,31 @@ export function CruceForm({ cruceId, onClose, onSave }: { cruceId?: number | nul
       else navigate('/cruces');
     } catch (error: any) {
       console.error('Error saving cruce:', error);
-      alert(error.response?.data?.message || 'Error al guardar el cruce');
+      toast.error(error.response?.data?.message || 'Error al guardar la intersección');
     } finally {
       setLoading(false);
     }
   };
 
+  const validLat = (formData.latitud !== undefined && formData.latitud !== null && !isNaN(Number(formData.latitud)))
+    ? Number(formData.latitud)
+    : -12.0464;
+  const validLng = (formData.longitud !== undefined && formData.longitud !== null && !isNaN(Number(formData.longitud)))
+    ? Number(formData.longitud)
+    : -77.0428;
+  const currentPos: [number, number] = [validLat, validLng];
+
   return (
     <form className="px-2 py-3" onSubmit={handleSubmit}>
       <div className="row g-3">
         <div className="col-12">
-          <h5 className="fw-bold mb-3">
-            <i className="fas fa-traffic-light me-2"></i>
-            {isEdit ? 'Editar Cruce' : 'Nuevo Cruce'}
+          <h5 className="fw-bold mb-3 text-dark">
+            <i className="fa-solid fa-traffic-light me-2 text-primary"></i>
+            {isEdit ? 'Editar Intersección' : 'Nueva Intersección'}
           </h5>
         </div>
         <div className="col-md-6">
-          <label className="form-label">Vía 1 <span className="text-danger">*</span></label>
+          <label className="form-label fw-semibold small text-secondary">Vía 1 <span className="text-danger">*</span></label>
           <Select
             options={[
               { value: '', label: 'Seleccione vía 1...' },
@@ -385,7 +421,7 @@ export function CruceForm({ cruceId, onClose, onSave }: { cruceId?: number | nul
           />
         </div>
         <div className="col-md-6">
-          <label className="form-label">Vía 2 <span className="text-danger">*</span></label>
+          <label className="form-label fw-semibold small text-secondary">Vía 2 <span className="text-danger">*</span></label>
           <Select
             options={[
               { value: '', label: 'Seleccione vía 2...' },
@@ -399,7 +435,7 @@ export function CruceForm({ cruceId, onClose, onSave }: { cruceId?: number | nul
           />
         </div>
         <div className="col-12">
-          <label className="form-label">Nombre del Cruce <span className="text-danger">*</span></label>
+          <label className="form-label fw-semibold small text-secondary">Nombre de la Intersección <span className="text-danger">*</span></label>
           <input
             type="text"
             className="form-control custom-input"
@@ -414,7 +450,7 @@ export function CruceForm({ cruceId, onClose, onSave }: { cruceId?: number | nul
           <small className="text-muted">El nombre se genera automáticamente como: VÍA 1 CON VÍA 2</small>
         </div>
         <div className="col-md-12">
-          <label className="form-label">Código</label>
+          <label className="form-label fw-semibold small text-secondary">Código</label>
           <input
             type="text"
             className="form-control custom-input"
@@ -425,40 +461,66 @@ export function CruceForm({ cruceId, onClose, onSave }: { cruceId?: number | nul
           />
         </div>
         <div className="col-12 mt-3">
-          <h6 className="fw-bold mb-2">Ubicación Geográfica</h6>
-        </div>
-        <div className="col-12">
-          <label className="form-label">Ubicación en Mapa <span className="text-danger">*</span></label>
-          <div style={{ height: '300px', width: '100%', borderRadius: '8px', overflow: 'hidden', border: '1px solid #dee2e6' }}>
-            {formData.latitud && formData.longitud && (
-              <MapContainer
-                center={[formData.latitud, formData.longitud]}
-                zoom={17}
-                style={{ height: '100%', width: '100%' }}
-                scrollWheelZoom={true}
-              >
-                <TileLayer
-                  url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-                  attribution="&copy; OpenStreetMap contributors"
-                />
-                <DraggableMarker
-                  position={[formData.latitud, formData.longitud]}
-                  setPosition={handleMapPositionChange}
-                />
-                <MapClickHandler setPosition={handleMapPositionChange} />
-                <MapUpdater center={[formData.latitud, formData.longitud]} />
-              </MapContainer>
+          <div className="d-flex align-items-center justify-content-between mb-2">
+            <h6 className="fw-bold mb-0 text-dark">
+              <i className="fa-solid fa-map-location-dot me-2 text-primary"></i>
+              Ubicación Geográfica
+            </h6>
+            {!hasOriginalCoords && isEdit && (
+              <span className="badge bg-warning text-dark border">
+                <i className="fa-solid fa-triangle-exclamation me-1"></i>
+                Sin coordenadas previas en BD (Centrado inicial sugerido en Lima)
+              </span>
             )}
           </div>
-          <small className="text-muted">Arrastra el marcador o haz clic en el mapa para cambiar la ubicación</small>
+        </div>
+        <div className="col-12">
+          <label className="form-label fw-semibold small text-secondary">
+            Ubicación en Mapa <span className="text-danger">*</span>
+          </label>
+          <div style={{ height: '320px', width: '100%', borderRadius: '8px', overflow: 'hidden', border: '1px solid #dee2e6', position: 'relative' }}>
+            <MapContainer
+              center={currentPos}
+              zoom={16}
+              style={{ height: '100%', width: '100%' }}
+              scrollWheelZoom={true}
+            >
+              <TileLayer
+                url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+                attribution="&copy; OpenStreetMap contributors"
+              />
+              <DraggableMarker
+                position={currentPos}
+                setPosition={handleMapPositionChange}
+              />
+              <MapClickHandler setPosition={handleMapPositionChange} />
+              <MapUpdater center={currentPos} />
+              <MapResizer />
+            </MapContainer>
+          </div>
+          <div className="d-flex justify-content-between align-items-center mt-1">
+            <small className="text-muted">
+              <i className="fa-solid fa-circle-info me-1 text-primary"></i>
+              Arrastra el marcador o haz clic en el mapa para fijar las coordenadas exactas.
+            </small>
+            <button
+              type="button"
+              className="btn btn-sm btn-link text-decoration-none py-0 px-1 text-primary"
+              onClick={() => handleMapPositionChange([-12.0464, -77.0428])}
+              title="Centrar en Lima Centro"
+            >
+              <i className="fa-solid fa-location-crosshairs me-1"></i>
+              Centrar en Lima
+            </button>
+          </div>
         </div>
         <div className="col-md-6">
-          <label className="form-label">Latitud <span className="text-danger">*</span></label>
+          <label className="form-label fw-semibold small text-secondary">Latitud <span className="text-danger">*</span></label>
           <input
             type="number"
             className="form-control custom-input"
             name="latitud"
-            value={formData.latitud || ''}
+            value={formData.latitud !== undefined && formData.latitud !== null ? formData.latitud : ''}
             onChange={handleChange}
             required
             step="any"
@@ -467,12 +529,12 @@ export function CruceForm({ cruceId, onClose, onSave }: { cruceId?: number | nul
           />
         </div>
         <div className="col-md-6">
-          <label className="form-label">Longitud <span className="text-danger">*</span></label>
+          <label className="form-label fw-semibold small text-secondary">Longitud <span className="text-danger">*</span></label>
           <input
             type="number"
             className="form-control custom-input"
             name="longitud"
-            value={formData.longitud || ''}
+            value={formData.longitud !== undefined && formData.longitud !== null ? formData.longitud : ''}
             onChange={handleChange}
             required
             step="any"
@@ -481,10 +543,13 @@ export function CruceForm({ cruceId, onClose, onSave }: { cruceId?: number | nul
           />
         </div>
         <div className="col-12 mt-3">
-          <h6 className="fw-bold mb-2">Información General</h6>
+          <h6 className="fw-bold mb-2 text-dark">
+            <i className="fa-solid fa-info-circle me-2 text-primary"></i>
+            Información General
+          </h6>
         </div>
         <div className="col-md-6">
-          <label className="form-label">Código Anterior</label>
+          <label className="form-label fw-semibold small text-secondary">Código Anterior</label>
           <input
             type="text"
             className="form-control custom-input"
@@ -494,7 +559,7 @@ export function CruceForm({ cruceId, onClose, onSave }: { cruceId?: number | nul
           />
         </div>
         <div className="col-md-6">
-          <label className="form-label">Distrito</label>
+          <label className="form-label fw-semibold small text-secondary">Distrito</label>
           <div className="position-relative" ref={distritoRef}>
             <input
               type="text"
@@ -541,10 +606,13 @@ export function CruceForm({ cruceId, onClose, onSave }: { cruceId?: number | nul
           )}
         </div>
         <div className="col-12 mt-3">
-          <h6 className="fw-bold mb-2">Tipos y Clasificación</h6>
+          <h6 className="fw-bold mb-2 text-dark">
+            <i className="fa-solid fa-layer-group me-2 text-primary"></i>
+            Tipos y Clasificación
+          </h6>
         </div>
         <div className="col-md-6">
-          <label className="form-label">Tipo de Cruce</label>
+          <label className="form-label fw-semibold small text-secondary">Tipo de Intersección</label>
           <Select
             options={[
               { value: '', label: 'Seleccione...' },
@@ -557,7 +625,7 @@ export function CruceForm({ cruceId, onClose, onSave }: { cruceId?: number | nul
           />
         </div>
         <div className="col-md-6">
-          <label className="form-label">Tipo de Gestión</label>
+          <label className="form-label fw-semibold small text-secondary">Tipo de Gestión</label>
           <Select
             options={[
               { value: '', label: 'Seleccione...' },
@@ -570,7 +638,7 @@ export function CruceForm({ cruceId, onClose, onSave }: { cruceId?: number | nul
           />
         </div>
         <div className="col-md-6">
-          <label className="form-label">Tipo de Comunicación</label>
+          <label className="form-label fw-semibold small text-secondary">Tipo de Comunicación</label>
           <Select
             options={[
               { value: '', label: 'Seleccione...' },
@@ -583,7 +651,7 @@ export function CruceForm({ cruceId, onClose, onSave }: { cruceId?: number | nul
           />
         </div>
         <div className="col-md-6">
-          <label className="form-label">Tipo de Control</label>
+          <label className="form-label fw-semibold small text-secondary">Tipo de Control</label>
           <Select
             options={[
               { value: '', label: 'Seleccione...' },
@@ -596,7 +664,7 @@ export function CruceForm({ cruceId, onClose, onSave }: { cruceId?: number | nul
           />
         </div>
         <div className="col-md-6">
-          <label className="form-label">Tipo de Estructura</label>
+          <label className="form-label fw-semibold small text-secondary">Tipo de Estructura</label>
           <Select
             options={[
               { value: '', label: 'Seleccione...' },
@@ -609,7 +677,7 @@ export function CruceForm({ cruceId, onClose, onSave }: { cruceId?: number | nul
           />
         </div>
         <div className="col-md-6">
-          <label className="form-label">Tipo de Operación</label>
+          <label className="form-label fw-semibold small text-secondary">Tipo de Operación</label>
           <Select
             options={[
               { value: '', label: 'Seleccione...' },
@@ -622,10 +690,13 @@ export function CruceForm({ cruceId, onClose, onSave }: { cruceId?: number | nul
           />
         </div>
         <div className="col-12 mt-3">
-          <h6 className="fw-bold mb-2">Configuración Adicional</h6>
+          <h6 className="fw-bold mb-2 text-dark">
+            <i className="fa-solid fa-sliders me-2 text-primary"></i>
+            Configuración Adicional
+          </h6>
         </div>
         <div className="col-md-6">
-          <label className="form-label">Año de Implementación</label>
+          <label className="form-label fw-semibold small text-secondary">Año de Implementación</label>
           <input
             type="number"
             className="form-control custom-input"
@@ -637,7 +708,7 @@ export function CruceForm({ cruceId, onClose, onSave }: { cruceId?: number | nul
           />
         </div>
         <div className="col-md-6">
-          <label className="form-label">Administrador</label>
+          <label className="form-label fw-semibold small text-secondary">Administrador</label>
           <Select
             options={[
               { value: '', label: 'Seleccionar administrador...' },
@@ -650,7 +721,7 @@ export function CruceForm({ cruceId, onClose, onSave }: { cruceId?: number | nul
           />
         </div>
         <div className="col-md-6">
-          <label className="form-label">Empresa Eléctrica</label>
+          <label className="form-label fw-semibold small text-secondary">Empresa Eléctrica</label>
           <input
             type="text"
             className="form-control custom-input"
@@ -660,7 +731,7 @@ export function CruceForm({ cruceId, onClose, onSave }: { cruceId?: number | nul
           />
         </div>
         <div className="col-md-6">
-          <label className="form-label">Suministro Eléctrico</label>
+          <label className="form-label fw-semibold small text-secondary">Suministro Eléctrico</label>
           <input
             type="text"
             className="form-control custom-input"
@@ -670,8 +741,8 @@ export function CruceForm({ cruceId, onClose, onSave }: { cruceId?: number | nul
           />
         </div>
         <div className="col-md-6">
-          <label className="form-label">
-            <i className="fas fa-file-pdf me-2 text-danger"></i>
+          <label className="form-label fw-semibold small text-secondary">
+            <i className="fa-solid fa-file-pdf me-2 text-danger"></i>
             Plano PDF
           </label>
           <input
@@ -687,8 +758,8 @@ export function CruceForm({ cruceId, onClose, onSave }: { cruceId?: number | nul
           )}
         </div>
         <div className="col-md-6">
-          <label className="form-label">
-            <i className="fas fa-drafting-compass me-2 text-primary"></i>
+          <label className="form-label fw-semibold small text-secondary">
+            <i className="fa-solid fa-compass-drafting me-2 text-primary"></i>
             Plano DWG
           </label>
           <input
@@ -704,7 +775,7 @@ export function CruceForm({ cruceId, onClose, onSave }: { cruceId?: number | nul
           )}
         </div>
         <div className="col-12">
-          <label className="form-label">Observaciones</label>
+          <label className="form-label fw-semibold small text-secondary">Observaciones</label>
           <textarea
             className="form-control custom-textarea"
             name="observaciones"
@@ -723,7 +794,7 @@ export function CruceForm({ cruceId, onClose, onSave }: { cruceId?: number | nul
               checked={formData.estado || false}
               onChange={handleChange}
             />
-            <label className="form-check-label" htmlFor="estado">
+            <label className="form-check-label fw-semibold small" htmlFor="estado">
               Estado Activo
             </label>
           </div>
@@ -731,19 +802,19 @@ export function CruceForm({ cruceId, onClose, onSave }: { cruceId?: number | nul
         <div className="col-12 mt-4 d-flex gap-2 justify-content-end">
           <button
             type="button"
-            className="btn btn-outline-secondary"
+            className="btn btn-outline-secondary btn-sm px-3"
             onClick={() => onClose ? onClose() : navigate('/cruces')}
             disabled={loading}
           >
-            <i className="fas fa-times me-2"></i>
+            <i className="fa-solid fa-xmark me-2"></i>
             Cancelar
           </button>
           <button
             type="submit"
-            className="btn btn-primary"
+            className="btn btn-primary btn-sm px-3"
             disabled={loading}
           >
-            <i className="fas fa-save me-2"></i>
+            <i className="fa-solid fa-floppy-disk me-2"></i>
             {loading ? 'Guardando...' : (isEdit ? 'Actualizar' : 'Guardar')}
           </button>
         </div>

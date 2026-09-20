@@ -13,6 +13,12 @@ import './theme.css';
 // Estilos personalizados para formularios
 import './styles/form-inputs.css';
 
+// Estilos Enterprise Dashboard (ArchitectUI / AdminLTE)
+import './assets/css/dashboard-enterprise.css';
+
+// Estilos de Clustering y Marcadores de Mapa
+import './styles/mapClusters.css';
+
 // Fix Leaflet marker icons
 import markerIcon2x from 'leaflet/dist/images/marker-icon-2x.png';
 import markerIcon from 'leaflet/dist/images/marker-icon.png';

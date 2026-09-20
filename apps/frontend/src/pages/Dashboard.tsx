@@ -205,7 +205,7 @@ export function Dashboard() {
   }
 
   return (
-    <div className="container-fluid" style={{ padding: '20px' }}>
+    <div className="container-fluid p-3">
         <div className="mb-4 d-flex justify-content-between align-items-center">
           <div>
             <h4 className="mb-0">Estadísticas - {getPeriodLabel()}</h4>

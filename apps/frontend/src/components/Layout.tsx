@@ -1,9 +1,141 @@
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useAuthStore } from '../features/auth/authStore';
 import { NotificationBell } from './notifications/NotificationBell';
 import { NotificationToast } from './notifications/NotificationToast';
 import { DynamicMenuItem } from './DynamicMenuItem';
+import type { Menu } from '../features/auth/types';
+
+const DEFAULT_FALLBACK_MENUS: Menu[] = [
+  {
+    id: 2,
+    nombre: 'Incidencias',
+    ruta: '#',
+    icono: 'fa-solid fa-triangle-exclamation',
+    orden: 1,
+    menuPadreId: null,
+    codigo: 'incidencias',
+    submenus: [
+      {
+        id: 4,
+        nombre: 'Gestión de Tickets',
+        ruta: '/incidents',
+        icono: 'fa-solid fa-clipboard-list',
+        orden: 1,
+        menuPadreId: 2,
+        codigo: 'tickets',
+        submenus: []
+      }
+    ]
+  },
+  {
+    id: 1,
+    nombre: 'Intersecciones',
+    ruta: '#',
+    icono: 'fa-solid fa-traffic-light',
+    orden: 2,
+    menuPadreId: null,
+    codigo: 'intersecciones',
+    submenus: [
+      {
+        id: 41,
+        nombre: 'Mapa de Red',
+        ruta: '/cruces/mapa',
+        icono: 'fa-solid fa-map-location-dot',
+        orden: 1,
+        menuPadreId: 1,
+        codigo: 'mapas/red',
+        submenus: []
+      },
+      {
+        id: 38,
+        nombre: 'Gestión de Intersecciones',
+        ruta: '/cruces',
+        icono: 'fa-solid fa-traffic-light',
+        orden: 2,
+        menuPadreId: 1,
+        codigo: 'intersecciones/cruces',
+        submenus: []
+      }
+    ]
+  },
+  {
+    id: 6,
+    nombre: 'Reportes',
+    ruta: '#',
+    icono: 'fa-solid fa-chart-column',
+    orden: 3,
+    menuPadreId: null,
+    codigo: 'reportes',
+    submenus: [
+      {
+        id: 8,
+        nombre: 'Reporte de Incidencias',
+        ruta: '/reportes/incidencias',
+        icono: 'fa-solid fa-file-invoice',
+        orden: 1,
+        menuPadreId: 6,
+        codigo: 'reportes-generar',
+        submenus: []
+      },
+      {
+        id: 30,
+        nombre: 'Gráficos Estadísticos',
+        ruta: '/reportes/grafico',
+        icono: 'fa-solid fa-chart-pie',
+        orden: 2,
+        menuPadreId: 6,
+        codigo: 'estadisticas',
+        submenus: []
+      },
+      {
+        id: 31,
+        nombre: 'Mapa de Calor',
+        ruta: '/reportes/mapa',
+        icono: 'fa-solid fa-fire',
+        orden: 3,
+        menuPadreId: 6,
+        codigo: 'mapa-calor',
+        submenus: []
+      }
+    ]
+  },
+  {
+    id: 9,
+    nombre: 'Mantenimientos',
+    ruta: '#',
+    icono: 'fa-solid fa-wrench',
+    orden: 4,
+    menuPadreId: null,
+    codigo: 'mantenimientos',
+    submenus: [
+      { id: 21, nombre: 'Tipos de Incidencias', ruta: '/mantenimientos/incidencias', icono: 'fa-solid fa-circle-exclamation', orden: 1, menuPadreId: 9, codigo: 'incidencias_mant', submenus: [] },
+      { id: 18, nombre: 'Áreas', ruta: '/mantenimientos/areas', icono: 'fa-solid fa-building', orden: 2, menuPadreId: 9, codigo: 'areas', submenus: [] },
+      { id: 20, nombre: 'Equipos', ruta: '/mantenimientos/equipos', icono: 'fa-solid fa-users-gear', orden: 3, menuPadreId: 9, codigo: 'equipos', submenus: [] },
+      { id: 23, nombre: 'Proyectos', ruta: '/mantenimientos/proyectos', icono: 'fa-solid fa-diagram-project', orden: 4, menuPadreId: 9, codigo: 'proyectos', submenus: [] },
+      { id: 24, nombre: 'Reportadores', ruta: '/mantenimientos/reportadores', icono: 'fa-solid fa-user-pen', orden: 5, menuPadreId: 9, codigo: 'reportadores', submenus: [] },
+      { id: 25, nombre: 'Responsables', ruta: '/mantenimientos/responsables', icono: 'fa-solid fa-user-check', orden: 6, menuPadreId: 9, codigo: 'responsables', submenus: [] },
+      { id: 36, nombre: 'Tipos de Intersección', ruta: '/mantenimientos/tipos', icono: 'fa-solid fa-tags', orden: 7, menuPadreId: 9, codigo: 'tipos', submenus: [] },
+      { id: 39, nombre: 'Administradores / Contratistas', ruta: '/mantenimientos/administradores', icono: 'fa-solid fa-user-shield', orden: 8, menuPadreId: 9, codigo: 'administradores', submenus: [] },
+      { id: 42, nombre: 'Ejes y Vías', ruta: '/mantenimientos/ejes', icono: 'fa-solid fa-road', orden: 9, menuPadreId: 9, codigo: 'ejes-vias', submenus: [] },
+    ]
+  },
+  {
+    id: 11,
+    nombre: 'Panel de Control',
+    ruta: '#',
+    icono: 'fa-solid fa-gauge-high',
+    orden: 5,
+    menuPadreId: null,
+    codigo: 'panel-control',
+    submenus: [
+      { id: 13, nombre: 'Usuarios', ruta: '/admin/users', icono: 'fa-solid fa-users', orden: 1, menuPadreId: 11, codigo: 'usuarios', submenus: [] },
+      { id: 15, nombre: 'Grupos y Permisos', ruta: '/admin/grupos', icono: 'fa-solid fa-user-tag', orden: 2, menuPadreId: 11, codigo: 'grupos', submenus: [] },
+      { id: 17, nombre: 'Menús del Sistema', ruta: '/admin/menus', icono: 'fa-solid fa-bars', orden: 3, menuPadreId: 11, codigo: 'menus', submenus: [] },
+      { id: 48, nombre: 'Catálogos Generales', ruta: '/admin/catalogos', icono: 'fa-solid fa-tags', orden: 4, menuPadreId: 11, codigo: 'catalogos', submenus: [] },
+    ]
+  }
+];
 
 export function Layout({ children }: { children: React.ReactNode }) {
   const navigate = useNavigate();
@@ -12,12 +144,10 @@ export function Layout({ children }: { children: React.ReactNode }) {
   const [showUserMenu, setShowUserMenu] = useState(false);
   const [sidebarOpen, setSidebarOpen] = useState(true);
 
-  const canManageUsers = user?.grupo?.nombre === 'SUPER_ADMIN' || 
-                         user?.grupo?.nombre === 'ADMINISTRADOR' || 
-                         user?.grupo?.nombre === 'SUPERVISOR';
-
   const isActive = (path: string) => location.pathname === path;
   const isActivePath = (path: string) => location.pathname.startsWith(path);
+
+  const menusToRender = (user?.menus && user.menus.length > 0) ? user.menus : DEFAULT_FALLBACK_MENUS;
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', height: '100vh', backgroundColor: 'var(--gray-100)', overflow: 'hidden' }}>
@@ -37,23 +167,29 @@ export function Layout({ children }: { children: React.ReactNode }) {
             onClick={() => setSidebarOpen(!sidebarOpen)}
             className="btn btn-light"
             style={{ fontSize: '20px', padding: '8px 12px' }}
+            title="Mostrar / Ocultar menú lateral"
           >
-            <i className="fas fa-bars"></i>
+            <i className="fa-solid fa-bars"></i>
           </button>
           
-          <div style={{ fontSize: '20px', fontWeight: 'bold', color: 'var(--primary)', display: 'flex', alignItems: 'center', gap: '8px' }}>
-            <i className="fas fa-map-marker-alt" style={{ fontSize: '24px' }}></i>
+          <div 
+            style={{ fontSize: '18px', fontWeight: 'bold', color: 'var(--primary)', display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer' }}
+            onClick={() => navigate('/')}
+          >
+            <i className="fa-solid fa-traffic-light" style={{ fontSize: '22px' }}></i>
             SISTEMA DE MONITOREO
           </div>
         </div>
 
-        <div style={{ fontSize: '16px', fontWeight: '500', color: 'var(--gray-600)' }}>
+        <div style={{ fontSize: '15px', fontWeight: '500', color: 'var(--gray-600)' }}>
           {isActive('/') && 'Inicio'}
           {isActive('/incidents') && 'Gestión de Incidencias'}
-          {isActivePath('/cruces') && 'Cruces'}
+          {isActivePath('/cruces') && 'Intersecciones'}
           {isActivePath('/reportes') && 'Reportes'}
+          {isActivePath('/mantenimientos') && 'Mantenimientos'}
           {isActivePath('/admin') && 'Panel de Control'}
-          {isActive('/users') && 'Gestión de Usuarios'}
+          {isActive('/perfil') && 'Mi Perfil'}
+          {isActive('/configuracion') && 'Configuración'}
         </div>
 
         {/* Notificaciones y Usuario en header */}
@@ -61,90 +197,90 @@ export function Layout({ children }: { children: React.ReactNode }) {
           <NotificationBell />
           
           <div style={{ position: 'relative' }}>
-          <button
-            onClick={() => setShowUserMenu(!showUserMenu)}
-            className="btn btn-light d-flex align-items-center gap-2"
-            style={{
-              padding: '6px 12px',
-              border: '1px solid #dee2e6',
-              borderRadius: '8px'
-            }}
-          >
-            <div style={{ 
-              width: '32px', 
-              height: '32px', 
-              borderRadius: '50%', 
-              backgroundColor: 'var(--primary)', 
-              display: 'flex', 
-              alignItems: 'center', 
-              justifyContent: 'center',
-              color: 'white'
-            }}>
-              <i className="fas fa-user" style={{ fontSize: '14px' }}></i>
-            </div>
-            <div style={{ textAlign: 'left' }}>
-              <div style={{ fontSize: '13px', fontWeight: '500', lineHeight: '1.2' }}>
-                {user?.usuario || 'Usuario'}
-              </div>
-              <div style={{ fontSize: '11px', color: '#6c757d', lineHeight: '1.2' }}>
-                {user?.grupo?.nombre || 'Usuario'}
-              </div>
-            </div>
-            <i className="fas fa-chevron-down" style={{ fontSize: '10px', marginLeft: '4px' }}></i>
-          </button>
-
-          {/* Dropdown usuario */}
-          {showUserMenu && (
-            <div
-              className="bg-white border rounded shadow"
+            <button
+              onClick={() => setShowUserMenu(!showUserMenu)}
+              className="btn btn-light d-flex align-items-center gap-2"
               style={{
-                position: 'absolute',
-                top: '100%',
-                right: '0',
-                marginTop: '8px',
-                minWidth: '200px',
-                zIndex: 1060
+                padding: '6px 12px',
+                border: '1px solid #dee2e6',
+                borderRadius: '8px'
               }}
             >
-              <a
-                href="#"
-                className="d-block p-3 text-decoration-none text-dark border-bottom"
-                style={{ fontSize: '14px' }}
-                onClick={(e) => {
-                  e.preventDefault();
-                  setShowUserMenu(false);
-                  navigate('/perfil');
+              <div style={{ 
+                width: '32px', 
+                height: '32px', 
+                borderRadius: '50%', 
+                backgroundColor: 'var(--primary)', 
+                display: 'flex', 
+                alignItems: 'center', 
+                justifyContent: 'center',
+                color: 'white'
+              }}>
+                <i className="fa-solid fa-user" style={{ fontSize: '14px' }}></i>
+              </div>
+              <div style={{ textAlign: 'left' }}>
+                <div style={{ fontSize: '13px', fontWeight: '500', lineHeight: '1.2' }}>
+                  {user?.usuario || 'Usuario'}
+                </div>
+                <div style={{ fontSize: '11px', color: '#6c757d', lineHeight: '1.2' }}>
+                  {user?.grupo?.nombre || 'Usuario'}
+                </div>
+              </div>
+              <i className="fa-solid fa-chevron-down" style={{ fontSize: '10px', marginLeft: '4px' }}></i>
+            </button>
+
+            {/* Dropdown usuario */}
+            {showUserMenu && (
+              <div
+                className="bg-white border rounded shadow"
+                style={{
+                  position: 'absolute',
+                  top: '100%',
+                  right: '0',
+                  marginTop: '8px',
+                  minWidth: '200px',
+                  zIndex: 1060
                 }}
               >
-                <i className="fas fa-user me-2"></i>Mi Perfil
-              </a>
-              <a
-                href="#"
-                className="d-block p-3 text-decoration-none text-dark border-bottom"
-                style={{ fontSize: '14px' }}
-                onClick={(e) => {
-                  e.preventDefault();
-                  setShowUserMenu(false);
-                  navigate('/configuracion');
-                }}
-              >
-                <i className="fas fa-cog me-2"></i>Configuración
-              </a>
-              <a
-                href="#"
-                className="d-block p-3 text-decoration-none"
-                style={{ fontSize: '14px', color: 'var(--danger)' }}
-                onClick={(e) => {
-                  e.preventDefault();
-                  logout();
-                  navigate('/login');
-                }}
-              >
-                <i className="fas fa-sign-out-alt me-2"></i>Cerrar Sesión
-              </a>
-            </div>
-          )}
-        </div>
+                <a
+                  href="#"
+                  className="d-block p-3 text-decoration-none text-dark border-bottom"
+                  style={{ fontSize: '14px' }}
+                  onClick={(e) => {
+                    e.preventDefault();
+                    setShowUserMenu(false);
+                    navigate('/perfil');
+                  }}
+                >
+                  <i className="fa-solid fa-user me-2 text-primary"></i>Mi Perfil
+                </a>
+                <a
+                  href="#"
+                  className="d-block p-3 text-decoration-none text-dark border-bottom"
+                  style={{ fontSize: '14px' }}
+                  onClick={(e) => {
+                    e.preventDefault();
+                    setShowUserMenu(false);
+                    navigate('/configuracion');
+                  }}
+                >
+                  <i className="fa-solid fa-gear me-2 text-secondary"></i>Configuración
+                </a>
+                <a
+                  href="#"
+                  className="d-block p-3 text-decoration-none"
+                  style={{ fontSize: '14px', color: 'var(--danger)' }}
+                  onClick={(e) => {
+                    e.preventDefault();
+                    logout();
+                    navigate('/login');
+                  }}
+                >
+                  <i className="fa-solid fa-arrow-right-from-bracket me-2"></i>Cerrar Sesión
+                </a>
+              </div>
+            )}
+          </div>
         </div>
       </header>
 
@@ -153,53 +289,63 @@ export function Layout({ children }: { children: React.ReactNode }) {
         {/* Sidebar */}
         <aside 
           style={{ 
-            width: sidebarOpen ? '250px' : '0',
+            width: sidebarOpen ? '260px' : '0',
+            minWidth: sidebarOpen ? '260px' : '0',
             backgroundColor: 'var(--primary-darkest)',
-            transition: 'width 0.3s ease',
-            overflow: 'hidden',
+            transition: 'width 0.25s cubic-bezier(0.4, 0, 0.2, 1), min-width 0.25s cubic-bezier(0.4, 0, 0.2, 1)',
+            overflowX: 'hidden',
+            overflowY: 'auto',
             flexShrink: 0,
             display: 'flex',
-            flexDirection: 'column'
+            flexDirection: 'column',
+            boxShadow: sidebarOpen ? '2px 0 8px rgba(0,0,0,0.15)' : 'none'
           }}
         >
           {/* Navegación en sidebar */}
-          <nav style={{ flex: 1, padding: '20px 0', overflowY: 'auto' }}>
-            {user?.menus && user.menus.length > 0 ? (
-              user.menus.map(menu => (
-                <DynamicMenuItem key={menu.id} menu={menu} />
-              ))
-            ) : (
-              <div style={{ padding: '20px', color: 'rgba(255,255,255,0.5)', textAlign: 'center' }}>
-                <i className="fas fa-exclamation-triangle mb-2" style={{ display: 'block', fontSize: '24px' }}></i>
-                <small>No hay menús disponibles</small>
-              </div>
-            )}
+          <nav style={{ flex: 1, padding: '16px 0', overflowY: 'auto' }}>
+            {/* Inicio siempre fijo en primer lugar */}
+            <DynamicMenuItem 
+              menu={{
+                id: 0,
+                nombre: 'Inicio',
+                ruta: '/',
+                icono: 'fa-solid fa-house',
+                orden: 0,
+                menuPadreId: null,
+                codigo: 'inicio',
+                submenus: []
+              }}
+            />
+            {/* Menús dinámicos */}
+            {menusToRender.map(menu => (
+              <DynamicMenuItem key={menu.id} menu={menu} />
+            ))}
           </nav>
         </aside>
 
-      {/* Contenedor principal */}
-      <div style={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
-        {/* Contenido */}
-        <main style={{ flex: 1, overflow: 'auto' }}>
-          {children}
-        </main>
+        {/* Contenedor principal */}
+        <div style={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
+          {/* Contenido */}
+          <main style={{ flex: 1, overflow: 'auto' }}>
+            {children}
+          </main>
+        </div>
       </div>
-    </div>
 
       {/* Footer */}
       <footer className="bg-white border-top" style={{
         flexShrink: 0,
-        padding: '16px 20px'
+        padding: '12px 20px'
       }}>
         <div className="container-fluid">
           <div className="row align-items-center">
             <div className="col-md-6">
-              <p className="mb-0 text-muted" style={{ fontSize: '14px' }}>
-                © {new Date().getFullYear()} Sistema de Monitoreo <span className="ms-2 badge bg-secondary">v1.1.6</span>
+              <p className="mb-0 text-muted" style={{ fontSize: '13px' }}>
+                © {new Date().getFullYear()} Sistema de Monitoreo <span className="ms-2 badge bg-primary">v1.1.6</span>
               </p>
             </div>
             <div className="col-md-6 text-md-end">
-              <small className="text-muted">Todos los derechos reservados</small>
+              <small className="text-muted">División de Monitoreo y Control - SGF - GMU</small>
             </div>
           </div>
         </div>

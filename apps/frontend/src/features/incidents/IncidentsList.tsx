@@ -5,6 +5,7 @@ import { customSelectStylesSmall } from '../../styles/react-select-custom';
 import { incidentsService, Incident } from '../../services/incidents.service';
 import { IncidentDetail } from './IncidentDetail';
 import { IncidentForm } from './IncidentForm';
+import { PageHeader } from '../../components/ui/PageHeader';
 
 interface Filters {
   incidenciaId?: number;
@@ -105,14 +106,14 @@ export function IncidentsList() {
 
   const loadCatalogs = async () => {
     try {
-      const [tipos, crucesData, estadosData] = await Promise.all([
+      const [tiposData, crucesData, estadosData] = await Promise.all([
         incidentsService.getIncidenciasCatalog(),
         incidentsService.getCrucesCatalog(),
         incidentsService.getEstadosCatalog()
       ]);
-      setTiposIncidencia(tipos);
-      setCruces(crucesData);
-      setEstados(estadosData);
+      setTiposIncidencia(tiposData || []);
+      setCruces(crucesData || []);
+      setEstados(estadosData || []);
       setCatalogsLoaded(true);
     } catch (error) {
       console.error('Error loading catalogs:', error);
@@ -120,116 +121,71 @@ export function IncidentsList() {
   };
 
   const loadIncidents = async () => {
-    setLoading(true);
     try {
-      let allData: Incident[] = [];
-      
-      // Si hay múltiples estados, hacer una llamada por cada estado y combinar resultados
-      if (filters.estadoId && filters.estadoId.length > 1) {
-        const promises = filters.estadoId.map(estadoId => 
-          incidentsService.getIncidents({ 
-            page: 1,
-            limit: 10000, // Necesitamos todos para luego paginar correctamente
-            incidenciaId: filters.incidenciaId,
-            cruceId: filters.cruceId,
-            estadoId: estadoId
-          })
-        );
-        
-        const responses = await Promise.all(promises);
-        // Combinar todos los resultados y eliminar duplicados por ID
-        const allIncidents = responses.flatMap(r => r.data);
-        const uniqueIncidents = Array.from(
-          new Map(allIncidents.map(item => [item.id, item])).values()
-        );
-        allData = uniqueIncidents;
-      } else {
-        // Un solo estado o sin filtro de estado
-        const queryEstadoId = filters.estadoId && filters.estadoId.length === 1 
-          ? filters.estadoId[0] 
-          : undefined;
-        
-        const response = await incidentsService.getIncidents({ 
-          page: currentPage, 
-          limit: pageSize,
-          incidenciaId: filters.incidenciaId,
-          cruceId: filters.cruceId,
-          estadoId: queryEstadoId
-        });
-        
-        allData = response.data;
+      setLoading(true);
+      const params: any = {
+        page: currentPage,
+        limit: pageSize,
+      };
+
+      if (filters.incidenciaId) params.incidenciaId = filters.incidenciaId;
+      if (filters.cruceId) params.cruceId = filters.cruceId;
+      if (filters.estadoId && filters.estadoId.length > 0) {
+        params.estadoId = filters.estadoId.join(',');
       }
+      if (filters.fechaDesde) params.fechaDesde = filters.fechaDesde;
+      if (filters.fechaHasta) params.fechaHasta = filters.fechaHasta;
+
+      const response = await incidentsService.getIncidents(params);
       
-      let sortedData = [...allData];
-      
-      // Filtrar por rango de fechas en el cliente
-      // Usar comparación de strings para evitar problemas de zona horaria
-      if (filters.fechaDesde || filters.fechaHasta) {
-        sortedData = sortedData.filter(incident => {
-          // Extraer YYYY-MM-DD del string ISO
-          const incidentDateStr = incident.createdAt.split('T')[0];
-          
-          if (filters.fechaDesde && incidentDateStr < filters.fechaDesde) {
-            return false;
+      // Ordenamiento en cliente si es necesario
+      let sortedData = [...(response?.data || [])];
+      if (sortField) {
+        sortedData.sort((a, b) => {
+          let aVal: any = '';
+          let bVal: any = '';
+
+          switch (sortField) {
+            case 'id':
+              aVal = a.id;
+              bVal = b.id;
+              break;
+            case 'tipo':
+              aVal = a.incidencia?.tipo || '';
+              bVal = b.incidencia?.tipo || '';
+              break;
+            case 'cruce':
+              aVal = a.cruce?.nombre || '';
+              bVal = b.cruce?.nombre || '';
+              break;
+            case 'estado':
+              aVal = a.estado?.nombre || a.estadoId || 0;
+              bVal = b.estado?.nombre || b.estadoId || 0;
+              break;
+            case 'fecha':
+              aVal = new Date(a.createdAt).getTime();
+              bVal = new Date(b.createdAt).getTime();
+              break;
+            case 'tiempo':
+              aVal = new Date(a.createdAt).getTime();
+              bVal = new Date(b.createdAt).getTime();
+              break;
           }
-          
-          if (filters.fechaHasta && incidentDateStr > filters.fechaHasta) {
-            return false;
-          }
-          
-          return true;
+
+          if (aVal < bVal) return sortOrder === 'asc' ? -1 : 1;
+          if (aVal > bVal) return sortOrder === 'asc' ? 1 : -1;
+          return 0;
         });
       }
-      
-      // Ordenamiento en el cliente
-      sortedData.sort((a, b) => {
-        let compareValue = 0;
-        
-        switch (sortField) {
-          case 'id':
-            compareValue = a.id - b.id;
-            break;
-          case 'tipo':
-            compareValue = (a.incidencia?.tipo || '').localeCompare(b.incidencia?.tipo || '');
-            break;
-          case 'cruce':
-            compareValue = (a.cruce?.nombre || '').localeCompare(b.cruce?.nombre || '');
-            break;
-          case 'estado':
-            compareValue = (a.estadoId || 0) - (b.estadoId || 0);
-            break;
-          case 'fecha':
-            compareValue = new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime();
-            break;
-          case 'tiempo':
-            // Ordenar por tiempo transcurrido (más reciente primero cuando desc)
-            compareValue = new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime();
-            break;
-        }
-        
-        return sortOrder === 'asc' ? compareValue : -compareValue;
-      });
-      
-      // Si tenemos múltiples estados o filtros de fecha, paginamos en cliente
-      if ((filters.estadoId && filters.estadoId.length > 1) || filters.fechaDesde || filters.fechaHasta) {
-        const totalFiltered = sortedData.length;
-        const totalPagesCalculated = Math.ceil(totalFiltered / pageSize);
-        const startIndex = (currentPage - 1) * pageSize;
-        const endIndex = startIndex + pageSize;
-        
-        setIncidents(sortedData.slice(startIndex, endIndex));
-        setTotalPages(totalPagesCalculated);
-        setTotalItems(totalFiltered);
-      } else {
-        // Paginación desde el backend (ya viene paginado)
-        setIncidents(sortedData);
-        // Calcular totales basados en los datos que tenemos
-        const estimatedTotal = sortedData.length;
-        setTotalPages(Math.ceil(estimatedTotal / pageSize));
-        setTotalItems(estimatedTotal);
-      }
+
+      setIncidents(sortedData);
+      setTotalPages(response?.meta?.totalPages || 1);
+      setTotalItems(response?.meta?.total || 0);
     } catch (error) {
       console.error('Error loading incidents:', error);
+      setIncidents([]);
+      setTotalPages(1);
+      setTotalItems(0);
     } finally {
       setLoading(false);
     }
@@ -245,10 +201,12 @@ export function IncidentsList() {
   };
 
   const getSortIcon = (field: SortField) => {
-    if (sortField !== field) return <i className="fas fa-sort ms-1 text-muted"></i>;
+    if (sortField !== field) {
+      return <i className="fa-solid fa-sort text-muted ms-1" style={{ fontSize: '11px' }}></i>;
+    }
     return sortOrder === 'asc' 
-      ? <i className="fas fa-sort-up ms-1"></i>
-      : <i className="fas fa-sort-down ms-1"></i>;
+      ? <i className="fa-solid fa-sort-up text-primary ms-1" style={{ fontSize: '11px' }}></i>
+      : <i className="fa-solid fa-sort-down text-primary ms-1" style={{ fontSize: '11px' }}></i>;
   };
 
   const applyFilters = (newFilters: Filters) => {
@@ -261,20 +219,20 @@ export function IncidentsList() {
     setCurrentPage(1);
   };
 
-  const getStatusBadge = (estadoId: number | undefined) => {
+  const getStatusBadge = (estadoId: number | undefined, estadoNombre?: string) => {
     switch (estadoId) {
       case 1:
-        return <span className="badge bg-info">Asignado</span>;
+        return <span className="badge bg-warning text-dark">{estadoNombre || 'ASIGNADO'}</span>;
       case 2:
-        return <span className="badge bg-primary">En Proceso</span>;
+        return <span className="badge bg-primary">{estadoNombre || 'EN PROCESO'}</span>;
       case 3:
-        return <span className="badge bg-danger">Cancelado</span>;
+        return <span className="badge bg-secondary">{estadoNombre || 'CANCELADO'}</span>;
       case 4:
-        return <span className="badge bg-success">Resuelto - Finalizado</span>;
+        return <span className="badge bg-success">{estadoNombre || 'RESUELTO'}</span>;
       case 5:
-        return <span className="badge bg-warning">Reasignado</span>;
+        return <span className="badge bg-info text-dark">{estadoNombre || 'REASIGNADO'}</span>;
       default:
-        return <span className="badge bg-secondary">Desconocido</span>;
+        return <span className="badge bg-secondary">{estadoNombre || 'DESCONOCIDO'}</span>;
     }
   };
 
@@ -297,31 +255,28 @@ export function IncidentsList() {
   };
 
   const getTimeBadge = (estadoId: number | undefined, createdAt: string | Date) => {
-    // Estados 3 y 4 no muestran tiempo
     if (estadoId === 3 || estadoId === 4) {
       return null;
     }
 
     const timeData = getTimeElapsed(createdAt);
     
-    // Estados 1, 2, 5: aplicar colores según días transcurridos
     if (estadoId === 1 || estadoId === 2 || estadoId === 5) {
-      let badgeClass = 'badge bg-success'; // Por defecto verde (menos de 1 día)
+      let badgeClass = 'badge bg-success';
       
       if (timeData.days === 1) {
-        badgeClass = 'badge bg-warning text-dark'; // Naranja - exactamente 1 día
+        badgeClass = 'badge bg-warning text-dark';
       } else if (timeData.days > 1) {
-        badgeClass = 'badge bg-danger'; // Rojo - más de 1 día
+        badgeClass = 'badge bg-danger';
       }
       
       return <span className={badgeClass}>{timeData.text}</span>;
     }
     
-    // Otros estados: mostrar con color secundario
     return <span className="badge bg-secondary">{timeData.text}</span>;
   };
 
-  if (loading) {
+  if (loading && incidents.length === 0) {
     return (
       <div className="d-flex justify-content-center align-items-center" style={{ height: '400px' }}>
         <div className="spinner-border text-primary" role="status">
@@ -332,41 +287,66 @@ export function IncidentsList() {
   }
 
   return (
-    <div className="container-fluid p-4">
-      <div className="d-flex justify-content-between align-items-center mb-4">
-        <h2><i className="fas fa-ticket-alt me-2"></i>Gestión de Incidencias</h2>
-        <button 
-          className="btn btn-primary" 
-          onClick={() => {
-            setSelectedIncidentId(null);
-            setFormMode('create');
-            setFormModalOpen(true);
-          }}
-        >
-          <i className="fas fa-plus me-2"></i>Nueva Incidencia
-        </button>
-      </div>
+    <div className="container-fluid p-3">
+      {/* Cabecera estándar de página */}
+      <PageHeader 
+        icon="fa-solid fa-clipboard-list"
+        title="Gestión de Incidencias"
+        subtitle="Registro, seguimiento y atención de averías y fallas en la red semafórica"
+        actions={
+          <div className="d-flex gap-2">
+            <button 
+              className={`btn btn-sm ${showFilters ? 'btn-secondary' : 'btn-outline-secondary'}`}
+              onClick={() => setShowFilters(!showFilters)}
+            >
+              <i className="fa-solid fa-filter me-1"></i>
+              {showFilters ? 'Ocultar Filtros' : 'Filtros'}
+            </button>
+            <button 
+              className="btn btn-sm btn-outline-primary"
+              onClick={loadIncidents}
+              title="Recargar listado"
+            >
+              <i className="fa-solid fa-arrows-rotate me-1"></i> Actualizar
+            </button>
+            <button 
+              className="btn btn-sm btn-primary" 
+              onClick={() => {
+                setSelectedIncidentId(null);
+                setFormMode('create');
+                setFormModalOpen(true);
+              }}
+            >
+              <i className="fa-solid fa-plus me-1"></i> Nueva Incidencia
+            </button>
+          </div>
+        }
+      />
 
       {/* Filtros */}
-      <div className="card border-0 shadow-sm mb-3">
-        <div className="card-header bg-white border-bottom">
-          <button 
-            className="btn btn-sm btn-outline-secondary"
-            onClick={() => setShowFilters(!showFilters)}
-          >
-            <i className={`fas fa-filter me-2`}></i>
-            {showFilters ? 'Ocultar Filtros' : 'Mostrar Filtros'}
-          </button>
-        </div>
-        {showFilters && (
-          <div className="card-body">
+      {showFilters && (
+        <div className="card mb-3 border shadow-sm">
+          <div className="card-header bg-white border-bottom py-2 d-flex justify-content-between align-items-center">
+            <div className="d-flex align-items-center">
+              <i className="fa-solid fa-sliders text-primary me-2"></i>
+              <span className="fw-bold text-dark" style={{ fontSize: '13px' }}>Filtros de Búsqueda</span>
+            </div>
+            <button 
+              className="btn btn-sm btn-link text-decoration-none text-muted p-0"
+              onClick={clearFilters}
+              style={{ fontSize: '12px' }}
+            >
+              <i className="fa-solid fa-eraser me-1"></i> Limpiar Filtros
+            </button>
+          </div>
+          <div className="card-body p-3">
             <div className="row g-2">
               <div className="col-md-3">
-                <label className="form-label small">Tipo de Incidencia</label>
+                <label className="form-label mb-1">Tipo de Incidencia</label>
                 <Select
                   options={tiposIncidencia.map(inc => ({ value: inc.id, label: inc.tipo }))}
-                  value={filters.incidenciaId ? tiposIncidencia.find(i => i.id === filters.incidenciaId) ? { value: filters.incidenciaId, label: tiposIncidencia.find(i => i.id === filters.incidenciaId)?.tipo || '' } : null : null}
-                  onChange={(option) => {
+                  value={filters.incidenciaId ? (tiposIncidencia.find(i => i.id === filters.incidenciaId) ? { value: filters.incidenciaId, label: tiposIncidencia.find(i => i.id === filters.incidenciaId)?.tipo || '' } : null) : null}
+                  onChange={(option: any) => {
                     if (option) {
                       applyFilters({ ...filters, incidenciaId: option.value });
                     } else {
@@ -376,34 +356,50 @@ export function IncidentsList() {
                     }
                   }}
                   isClearable
-                  placeholder="Buscar tipo de incidencia..."
+                  isSearchable
+                  placeholder="Todos los tipos..."
+                  menuPortalTarget={typeof document !== 'undefined' ? document.body : undefined}
+                  menuPosition="fixed"
                   styles={customSelectStylesSmall}
+                  noOptionsMessage={() => "No hay opciones"}
                 />
               </div>
               <div className="col-md-2">
-                <label className="form-label small">Estados</label>
+                <label className="form-label mb-1">Estados</label>
                 <Select
                   options={estados.map(estado => ({ value: estado.id, label: estado.nombre }))}
                   value={(filters.estadoId || []).map(id => {
                     const estado = estados.find(e => e.id === id);
                     return estado ? { value: estado.id, label: estado.nombre } : null;
                   }).filter(Boolean) as any}
-                  onChange={(selected) => {
+                  onChange={(selected: any) => {
                     const estadoIds = selected ? (selected as any[]).map((s: any) => s.value) : [];
                     applyFilters({ ...filters, estadoId: estadoIds.length > 0 ? estadoIds : undefined });
                   }}
                   isMulti
                   isClearable
-                  placeholder="Seleccionar estados..."
+                  isSearchable
+                  placeholder="Estados..."
+                  menuPortalTarget={typeof document !== 'undefined' ? document.body : undefined}
+                  menuPosition="fixed"
                   styles={customSelectStylesSmall}
+                  noOptionsMessage={() => "No hay opciones"}
                 />
               </div>
               <div className="col-md-3">
-                <label className="form-label small">Cruce</label>
+                <label className="form-label mb-1">Intersección</label>
                 <Select
-                  options={cruces.map(cruce => ({ value: cruce.id, label: cruce.nombre }))}
-                  value={filters.cruceId ? cruces.find(c => c.id === filters.cruceId) ? { value: filters.cruceId, label: cruces.find(c => c.id === filters.cruceId)?.nombre || '' } : null : null}
-                  onChange={(option) => {
+                  options={cruces.map(cruce => ({ 
+                    value: cruce.id, 
+                    label: cruce.codigo ? `[${cruce.codigo}] ${cruce.nombre}` : cruce.nombre 
+                  }))}
+                  value={filters.cruceId ? (cruces.find(c => c.id === filters.cruceId) ? { 
+                    value: filters.cruceId, 
+                    label: cruces.find(c => c.id === filters.cruceId)?.codigo 
+                      ? `[${cruces.find(c => c.id === filters.cruceId)?.codigo}] ${cruces.find(c => c.id === filters.cruceId)?.nombre}`
+                      : (cruces.find(c => c.id === filters.cruceId)?.nombre || '')
+                  } : null) : null}
+                  onChange={(option: any) => {
                     if (option) {
                       applyFilters({ ...filters, cruceId: option.value });
                     } else {
@@ -413,50 +409,51 @@ export function IncidentsList() {
                     }
                   }}
                   isClearable
-                  placeholder="Buscar cruce..."
+                  isSearchable
+                  placeholder="Buscar intersección..."
+                  menuPortalTarget={typeof document !== 'undefined' ? document.body : undefined}
+                  menuPosition="fixed"
                   styles={customSelectStylesSmall}
+                  noOptionsMessage={() => "No hay opciones"}
                 />
               </div>
               <div className="col-md-2">
-                <label className="form-label small">Fecha Desde</label>
+                <label className="form-label mb-1">Fecha Desde</label>
                 <input 
                   type="date" 
-                  className="form-control custom-date-input-sm"
+                  className="form-control form-control-sm"
                   value={filters.fechaDesde || ''}
                   onChange={(e) => applyFilters({ ...filters, fechaDesde: e.target.value })}
                 />
               </div>
               <div className="col-md-2">
-                <label className="form-label small">Fecha Hasta</label>
+                <label className="form-label mb-1">Fecha Hasta</label>
                 <input 
                   type="date" 
-                  className="form-control custom-date-input-sm"
+                  className="form-control form-control-sm"
                   value={filters.fechaHasta || ''}
                   onChange={(e) => applyFilters({ ...filters, fechaHasta: e.target.value })}
                 />
               </div>
-              <div className="col-md-1 d-flex align-items-end">
-                <button 
-                  className="btn btn-outline-secondary w-100"
-                  onClick={clearFilters}
-                  title="Limpiar filtros"
-                >
-                  <i className="fas fa-eraser"></i>
-                </button>
-              </div>
             </div>
           </div>
-        )}
-      </div>
+        </div>
+      )}
 
-      <div className="card border-0 shadow-sm">
-        <div className="card-header bg-white border-bottom">
+      <div className="card mb-3 border shadow-sm">
+        <div className="card-header bg-white border-bottom py-2">
           <div className="d-flex justify-content-between align-items-center">
-            <div className="text-muted small">
-              Mostrando {incidents.length} de {totalItems} incidencias
+            <div className="d-flex align-items-center">
+              <i className="fa-solid fa-list text-primary me-2"></i>
+              <span className="fw-bold text-dark" style={{ fontSize: '13px' }}>
+                Listado de Incidencias Registradas
+              </span>
+              <span className="badge bg-light text-muted border ms-2" style={{ fontSize: '11px' }}>
+                {totalItems} total
+              </span>
             </div>
             <div className="d-flex align-items-center">
-              <label className="me-2 small mb-0">Filas por página:</label>
+              <label className="me-2 text-muted small mb-0">Filas por página:</label>
               <div style={{ width: '80px' }}>
                 <Select
                   options={[
@@ -478,54 +475,54 @@ export function IncidentsList() {
         </div>
         <div className="card-body p-0">
           <div className="table-responsive">
-            <table className="table table-hover mb-0">
-              <thead className="bg-light">
+            <table className="table table-hover table-striped align-middle mb-0" style={{ fontSize: '13px' }}>
+              <thead className="table-light text-uppercase" style={{ fontSize: '12px' }}>
                 <tr>
-                  <th className="px-4 py-3" style={{ cursor: 'pointer' }} onClick={() => handleSort('id')}>
+                  <th className="ps-3 py-2" style={{ cursor: 'pointer', width: '90px' }} onClick={() => handleSort('id')}>
                     ID {getSortIcon('id')}
                   </th>
-                  <th className="py-3" style={{ cursor: 'pointer' }} onClick={() => handleSort('tipo')}>
+                  <th className="py-2" style={{ cursor: 'pointer' }} onClick={() => handleSort('tipo')}>
                     Tipo {getSortIcon('tipo')}
                   </th>
-                  <th className="py-3" style={{ cursor: 'pointer' }} onClick={() => handleSort('cruce')}>
-                    Cruce {getSortIcon('cruce')}
+                  <th className="py-2" style={{ cursor: 'pointer' }} onClick={() => handleSort('cruce')}>
+                    Intersección {getSortIcon('cruce')}
                   </th>
-                  <th className="py-3" style={{ cursor: 'pointer' }} onClick={() => handleSort('estado')}>
+                  <th className="py-2" style={{ cursor: 'pointer', width: '130px' }} onClick={() => handleSort('estado')}>
                     Estado {getSortIcon('estado')}
                   </th>
-                  <th className="py-3" style={{ cursor: 'pointer' }} onClick={() => handleSort('fecha')}>
+                  <th className="py-2" style={{ cursor: 'pointer', width: '160px' }} onClick={() => handleSort('fecha')}>
                     Fecha {getSortIcon('fecha')}
                   </th>
-                  <th className="py-3" style={{ cursor: 'pointer' }} onClick={() => handleSort('tiempo')}>
+                  <th className="py-2" style={{ cursor: 'pointer', width: '100px' }} onClick={() => handleSort('tiempo')}>
                     Tiempo {getSortIcon('tiempo')}
                   </th>
-                  <th className="py-3 text-center">Acciones</th>
+                  <th className="py-2 text-center pe-3" style={{ width: '110px' }}>Acciones</th>
                 </tr>
               </thead>
               <tbody>
                 {incidents.length === 0 ? (
                   <tr>
                     <td colSpan={7} className="text-center py-5 text-muted">
-                      <i className="fas fa-inbox fa-3x mb-3 d-block"></i>
+                      <i className="fa-solid fa-inbox fa-3x mb-3 d-block"></i>
                       No hay incidencias registradas
                     </td>
                   </tr>
                 ) : (
                   incidents.map((incident) => (
                     <tr key={incident.id}>
-                      <td className="px-4">#{incident.id}</td>
+                      <td className="ps-3 fw-medium text-muted">#{incident.id}</td>
                       <td>{incident.incidencia?.tipo || '-'}</td>
                       <td>
                         {incident.cruce?.nombre ? (
                           <span className="text-primary">
-                            <i className="fas fa-map-marker-alt me-1"></i>
+                            <i className="fa-solid fa-location-dot me-1"></i>
                             {incident.cruce.nombre}
                           </span>
                         ) : (
-                          <span className="text-muted">Sin cruce</span>
+                          <span className="text-muted">Sin intersección</span>
                         )}
                       </td>
-                      <td>{getStatusBadge(incident.estadoId)}</td>
+                      <td>{getStatusBadge(incident.estadoId, incident.estado?.nombre)}</td>
                       <td>
                         <small>{new Date(incident.createdAt).toLocaleString('es-PE')}</small>
                       </td>
@@ -534,17 +531,17 @@ export function IncidentsList() {
                       </td>
                       <td className="text-center">
                         <button
-                          className="btn btn-sm btn-outline-primary me-2"
+                          className="btn btn-outline-primary btn-sm py-1 px-2 me-1"
                           onClick={() => {
                             setSelectedIncidentId(incident.id);
                             setDetailModalOpen(true);
                           }}
                           title="Ver detalle"
                         >
-                          <i className="fas fa-eye"></i>
+                          <i className="fa-solid fa-eye"></i>
                         </button>
                         <button
-                          className="btn btn-sm btn-outline-warning"
+                          className="btn btn-outline-warning btn-sm py-1 px-2"
                           onClick={() => {
                             setSelectedIncidentId(incident.id);
                             setFormMode('edit');
@@ -552,7 +549,7 @@ export function IncidentsList() {
                           }}
                           title="Editar"
                         >
-                          <i className="fas fa-edit"></i>
+                          <i className="fa-solid fa-pen-to-square"></i>
                         </button>
                       </td>
                     </tr>
@@ -576,7 +573,7 @@ export function IncidentsList() {
                       onClick={() => setCurrentPage(1)}
                       disabled={currentPage === 1}
                     >
-                      <i className="fas fa-angle-double-left"></i>
+                      <i className="fa-solid fa-angles-left"></i>
                     </button>
                   </li>
                   <li className={`page-item ${currentPage === 1 ? 'disabled' : ''}`}>
@@ -585,7 +582,7 @@ export function IncidentsList() {
                       onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
                       disabled={currentPage === 1}
                     >
-                      <i className="fas fa-angle-left"></i>
+                      <i className="fa-solid fa-angle-left"></i>
                     </button>
                   </li>
                   <li className="page-item active">
@@ -597,7 +594,7 @@ export function IncidentsList() {
                       onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
                       disabled={currentPage === totalPages}
                     >
-                      <i className="fas fa-angle-right"></i>
+                      <i className="fa-solid fa-angle-right"></i>
                     </button>
                   </li>
                   <li className={`page-item ${currentPage === totalPages ? 'disabled' : ''}`}>
@@ -606,7 +603,7 @@ export function IncidentsList() {
                       onClick={() => setCurrentPage(totalPages)}
                       disabled={currentPage === totalPages}
                     >
-                      <i className="fas fa-angle-double-right"></i>
+                      <i className="fa-solid fa-angles-right"></i>
                     </button>
                   </li>
                 </ul>
@@ -623,7 +620,7 @@ export function IncidentsList() {
             <div className="modal-content">
               <div className="modal-header bg-primary text-white">
                 <h5 className="modal-title">
-                  <i className="fas fa-eye me-2"></i>
+                  <i className="fa-solid fa-eye me-2"></i>
                   Ver Incidencia
                 </h5>
                 <button type="button" className="btn-close btn-close-white" onClick={() => setDetailModalOpen(false)}></button>
@@ -646,7 +643,7 @@ export function IncidentsList() {
             <div className="modal-content">
               <div className="modal-header bg-primary text-white">
                 <h5 className="modal-title">
-                  <i className={`fas ${formMode === 'create' ? 'fa-plus-circle' : 'fa-edit'} me-2`}></i>
+                  <i className={`fa-solid ${formMode === 'create' ? 'fa-circle-plus' : 'fa-pen-to-square'} me-2`}></i>
                   {formMode === 'create' ? 'Nueva Incidencia' : 'Editar Incidencia'}
                 </h5>
                 <button type="button" className="btn-close btn-close-white" onClick={() => setFormModalOpen(false)}></button>

@@ -1,11 +1,12 @@
 import { useState, useEffect } from 'react';
 import { MapContainer, TileLayer, Marker, Popup, useMap } from 'react-leaflet';
 import Select from 'react-select';
-import { customSelectStyles } from '../../styles/react-select-custom';
+import { customSelectStylesSmall } from '../../styles/react-select-custom';
 import { crucesService, Cruce } from '../../services/cruces.service';
 import { tiposService, Tipo } from '../../services/tipos.service';
 import { administradoresService, Administrador } from '../../services/administradores.service';
 import { CruceDetail } from './CruceDetail';
+import { PageHeader } from '../../components/ui/PageHeader';
 import 'leaflet/dist/leaflet.css';
 import L from 'leaflet';
 
@@ -71,6 +72,36 @@ const getTrafficLightIcon = (administradorId?: number | null, zoom: number = 13)
     popupAnchor: [0, -size]
   });
 };
+
+// Componente para forzar redimensionamiento del mapa
+function MapResizer() {
+  const map = useMap();
+  
+  useEffect(() => {
+    const container = map.getContainer().parentElement;
+    if (!container) return;
+
+    const resizeObserver = new ResizeObserver(() => {
+      const times = [0, 50, 100, 150, 200, 250, 300, 350];
+      times.forEach(delay => {
+        setTimeout(() => {
+          map.invalidateSize({ animate: true, duration: 0.1 });
+        }, delay);
+      });
+    });
+
+    resizeObserver.observe(container);
+    setTimeout(() => {
+      map.invalidateSize();
+    }, 100);
+
+    return () => {
+      resizeObserver.disconnect();
+    };
+  }, [map]);
+
+  return null;
+}
 
 // Componente para rastrear cambios de zoom
 function ZoomTracker({ onZoomChange }: { onZoomChange: (zoom: number) => void }) {
@@ -218,92 +249,58 @@ export function CrucesMap() {
   });
 
   return (
-    <div className="container-fluid" style={{ padding: '20px', height: 'calc(100vh - 120px)', display: 'flex', flexDirection: 'column' }}>
-      <div className="row mb-3" style={{ flexShrink: 0 }}>
-        <div className="col">
-          <h2 className="mb-0">
-            <i className="fas fa-map-marked-alt me-2"></i>
-            Mapa de Cruces
-          </h2>
-          {loadingData ? (
-            <div className="placeholder-glow">
-              <span className="placeholder col-4"></span>
+    <div className="container-fluid p-3" style={{ height: 'calc(100vh - 75px)', display: 'flex', flexDirection: 'column' }}>
+      <div style={{ flexShrink: 0 }}>
+        <PageHeader
+          icon="fa-solid fa-map-location-dot"
+          title="Mapa de Intersecciones"
+          subtitle={`Visualización geográfica de ${filteredCruces.length} intersección${filteredCruces.length !== 1 ? 'es' : ''} en red`}
+          actions={
+            <div className="d-flex gap-2">
+              <button 
+                className={`btn btn-sm ${showFilters ? 'btn-secondary' : 'btn-outline-secondary'}`}
+                onClick={() => setShowFilters(!showFilters)}
+              >
+                <i className="fa-solid fa-filter me-1"></i>
+                {showFilters ? 'Ocultar Filtros' : 'Filtros'}
+              </button>
             </div>
-          ) : (
-            <p className="text-muted mb-0">
-              Visualización geográfica de {filteredCruces.length} cruce{filteredCruces.length !== 1 ? 's' : ''}
-            </p>
-          )}
-        </div>
+          }
+        />
       </div>
 
       {/* Panel de Filtros */}
-      <div className="card shadow-sm mb-3" style={{ flexShrink: 0 }}>
-        <div className="card-header bg-white border-bottom">
-          <button 
-            className="btn btn-sm btn-outline-secondary"
-            onClick={() => setShowFilters(!showFilters)}
-          >
-            <i className="fas fa-filter me-2"></i>
-            {showFilters ? 'Ocultar Filtros' : 'Mostrar Filtros'}
-          </button>
-        </div>
-        {showFilters && (
-          <div className="card-body">
+      {showFilters && (
+        <div className="card border shadow-sm mb-3" style={{ flexShrink: 0 }}>
+          <div className="card-header bg-white border-bottom py-2">
+            <h6 className="card-title mb-0 fw-semibold text-dark" style={{ fontSize: '14px' }}>
+              <i className="fa-solid fa-sliders me-2 text-primary"></i>
+              Filtros del Mapa
+            </h6>
+          </div>
+          <div className="card-body py-3">
             {loadingData ? (
-              <div className="row g-3">
+              <div className="row g-2">
                 <div className="col-md-3">
-                  <label className="form-label fw-bold">
-                    <i className="fas fa-search me-2"></i>
-                    Búsqueda
-                  </label>
-                  <div className="placeholder-glow">
-                    <span className="placeholder col-12 form-control"></span>
-                  </div>
+                  <div className="placeholder-glow"><span className="placeholder col-12 form-control form-control-sm"></span></div>
                 </div>
                 <div className="col-md-3">
-                  <label className="form-label fw-bold">
-                    <i className="fas fa-cogs me-2"></i>
-                    Tipo de Gestión
-                  </label>
-                  <div className="placeholder-glow">
-                    <span className="placeholder col-12 form-control"></span>
-                  </div>
+                  <div className="placeholder-glow"><span className="placeholder col-12 form-control form-control-sm"></span></div>
                 </div>
                 <div className="col-md-3">
-                  <label className="form-label fw-bold">
-                    <i className="fas fa-wifi me-2"></i>
-                    Tipo de Comunicación
-                  </label>
-                  <div className="placeholder-glow">
-                    <span className="placeholder col-12 form-control"></span>
-                  </div>
+                  <div className="placeholder-glow"><span className="placeholder col-12 form-control form-control-sm"></span></div>
                 </div>
                 <div className="col-md-2">
-                  <label className="form-label fw-bold">
-                    <i className="fas fa-user-tie me-2"></i>
-                    Administrador
-                  </label>
-                  <div className="placeholder-glow">
-                    <span className="placeholder col-12 form-control"></span>
-                  </div>
-                </div>
-                <div className="col-md-1 d-flex align-items-end">
-                  <div className="placeholder-glow w-100">
-                    <span className="placeholder col-12 btn"></span>
-                  </div>
+                  <div className="placeholder-glow"><span className="placeholder col-12 form-control form-control-sm"></span></div>
                 </div>
               </div>
             ) : (
-              <div className="row g-3">
+              <div className="row g-2">
                 <div className="col-md-3">
-                  <label className="form-label fw-bold">
-                    <i className="fas fa-search me-2"></i>
-                    Búsqueda
-                  </label>
+                  <label className="form-label small fw-bold text-muted mb-1">Búsqueda</label>
                   <input
                     type="text"
-                    className="form-control"
+                    className="form-control form-control-sm"
                     placeholder="Código, nombre o distrito..."
                     value={searchTerm}
                     onChange={(e) => setSearchTerm(e.target.value)}
@@ -311,10 +308,7 @@ export function CrucesMap() {
                 </div>
 
                 <div className="col-md-3">
-                  <label className="form-label fw-bold">
-                    <i className="fas fa-cogs me-2"></i>
-                    Tipo de Gestión
-                  </label>
+                  <label className="form-label small fw-bold text-muted mb-1">Tipo de Gestión</label>
                   <Select
                     options={[
                       { value: null, label: 'Todos' },
@@ -324,15 +318,12 @@ export function CrucesMap() {
                     onChange={(option) => setSelectedTipoGestion(option?.value || null)}
                     placeholder="Seleccionar..."
                     isClearable
-                    styles={customSelectStyles}
+                    styles={customSelectStylesSmall}
                   />
                 </div>
 
                 <div className="col-md-3">
-                  <label className="form-label fw-bold">
-                    <i className="fas fa-wifi me-2"></i>
-                    Tipo de Comunicación
-                  </label>
+                  <label className="form-label small fw-bold text-muted mb-1">Tipo de Comunicación</label>
                   <Select
                     options={[
                       { value: null, label: 'Todos' },
@@ -342,15 +333,12 @@ export function CrucesMap() {
                     onChange={(option) => setSelectedTipoComunicacion(option?.value || null)}
                     placeholder="Seleccionar..."
                     isClearable
-                    styles={customSelectStyles}
+                    styles={customSelectStylesSmall}
                   />
                 </div>
 
                 <div className="col-md-2">
-                  <label className="form-label fw-bold">
-                    <i className="fas fa-user-tie me-2"></i>
-                    Administrador
-                  </label>
+                  <label className="form-label small fw-bold text-muted mb-1">Administrador</label>
                   <Select
                     options={[
                       { value: null, label: 'Todos' },
@@ -360,45 +348,46 @@ export function CrucesMap() {
                     onChange={(option) => setSelectedAdministrador(option?.value || null)}
                     placeholder="Seleccionar..."
                     isClearable
-                    styles={customSelectStyles}
+                    styles={customSelectStylesSmall}
                   />
                 </div>
 
                 <div className="col-md-1 d-flex align-items-end">
                   <button
-                    className="btn btn-outline-secondary w-100"
+                    className="btn btn-sm btn-outline-secondary w-100"
                     onClick={clearFilters}
                     title="Limpiar filtros"
                   >
-                    <i className="fas fa-eraser"></i>
+                    <i className="fa-solid fa-eraser me-1"></i>
                   </button>
                 </div>
               </div>
             )}
           </div>
-        )}
-      </div>
+        </div>
+      )}
 
       {/* Mapa */}
-      <div className="card shadow-sm" style={{ flex: 1, minHeight: 0, position: 'relative' }}>
+      <div className="card border shadow-sm" style={{ flex: 1, minHeight: 0, position: 'relative', overflow: 'hidden' }}>
         {/* Leyenda */}
         <div 
-          className="card position-absolute" 
+          className="card position-absolute border shadow" 
           style={{ 
-            top: '20px', 
-            right: '20px', 
+            top: '15px', 
+            right: '15px', 
             zIndex: 1000,
-            minWidth: '220px',
-            boxShadow: '0 2px 8px rgba(0,0,0,0.2)'
+            minWidth: '200px',
+            backgroundColor: 'rgba(255, 255, 255, 0.95)',
+            backdropFilter: 'blur(4px)'
           }}
         >
-          <div className="card-header bg-primary text-white py-2">
-            <h6 className="mb-0" style={{ fontSize: '14px' }}>
-              <i className="fas fa-palette me-2"></i>
+          <div className="card-header bg-primary text-white py-1 px-3">
+            <h6 className="mb-0 fw-semibold" style={{ fontSize: '13px' }}>
+              <i className="fa-solid fa-palette me-2"></i>
               Administradores
             </h6>
           </div>
-          <div className="card-body p-2" style={{ maxHeight: '300px', overflowY: 'auto' }}>
+          <div className="card-body p-2" style={{ maxHeight: '250px', overflowY: 'auto' }}>
             {loadingData ? (
               <div className="placeholder-glow">
                 <span className="placeholder col-12 mb-2"></span>
@@ -459,9 +448,9 @@ export function CrucesMap() {
             >
               <div className="text-center">
                 <div className="spinner-border text-primary mb-2" role="status">
-                  <span className="visually-hidden">Cargando cruces...</span>
+                  <span className="visually-hidden">Cargando intersecciones...</span>
                 </div>
-                <p className="text-muted">Cargando cruces...</p>
+                <p className="text-muted">Cargando intersecciones...</p>
               </div>
             </div>
           )}
@@ -475,69 +464,76 @@ export function CrucesMap() {
                 url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
                 attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
               />
+              <MapResizer />
               <ZoomTracker onZoomChange={setCurrentZoom} />
               
-              {!loadingData && filteredCruces.map((cruce) => (
-                <Marker
-                  key={cruce.id}
-                  position={[cruce.latitud!, cruce.longitud!]}
-                  icon={getTrafficLightIcon(cruce.administradorId, currentZoom)}
-                >
-                  <Popup maxWidth={300}>
-                    <div style={{ minWidth: '250px', fontSize: '13px' }}>
-                      <h6 className="mb-2 fw-bold" style={{ fontSize: '15px', color: '#0056b3' }}>
-                        <i className="fas fa-traffic-light me-2"></i>
-                        {cruce.nombre || 'Sin nombre'}
-                      </h6>
-                      <table className="table table-sm table-borderless mb-2">
-                        <tbody>
-                          <tr>
-                            <td className="text-muted" style={{ width: '45%' }}>
-                              <strong>Código:</strong>
-                            </td>
-                            <td>{cruce.codigo || 'N/A'}</td>
-                          </tr>
-                          <tr>
-                            <td className="text-muted">
-                              <strong>Distrito:</strong>
-                            </td>
-                            <td>{cruce.ubigeo?.distrito || 'N/A'}</td>
-                          </tr>
-                          <tr>
-                            <td className="text-muted">
-                              <strong>Gestión:</strong>
-                            </td>
-                            <td>{getTipoNombre(cruce.tipoGestion)}</td>
-                          </tr>
-                          <tr>
-                            <td className="text-muted">
-                              <strong>Comunicación:</strong>
-                            </td>
-                            <td>{getTipoNombre(cruce.tipoComunicacion)}</td>
-                          </tr>
-                          <tr>
-                            <td className="text-muted">
-                              <strong>Administrador:</strong>
-                            </td>
-                            <td>{cruce.administrador?.nombre || 'N/A'}</td>
-                          </tr>
-                        </tbody>
-                      </table>
-                      <button
-                        className="btn btn-sm btn-primary w-100"
-                        onClick={() => {
-                          setSelectedCruceId(cruce.id);
-                          setDetailModalOpen(true);
-                        }}
-                        style={{ fontSize: '12px' }}
-                      >
-                        <i className="fas fa-eye me-1"></i>
-                        Ver Detalle
-                      </button>
-                    </div>
-                  </Popup>
-                </Marker>
-              ))}
+              {!loadingData && filteredCruces.map((cruce) => {
+                const lat = Number(cruce.latitud);
+                const lng = Number(cruce.longitud);
+                if (!lat || !lng || isNaN(lat) || isNaN(lng)) return null;
+
+                return (
+                  <Marker
+                    key={cruce.id}
+                    position={[lat, lng]}
+                    icon={getTrafficLightIcon(cruce.administradorId, currentZoom)}
+                  >
+                    <Popup maxWidth={300}>
+                      <div style={{ minWidth: '250px', fontSize: '13px' }}>
+                        <h6 className="mb-2 fw-bold" style={{ fontSize: '15px', color: '#0056b3' }}>
+                          <i className="fa-solid fa-traffic-light me-2"></i>
+                          {cruce.nombre || 'Sin nombre'}
+                        </h6>
+                        <table className="table table-sm table-borderless mb-2">
+                          <tbody>
+                            <tr>
+                              <td className="text-muted" style={{ width: '45%' }}>
+                                <strong>Código:</strong>
+                              </td>
+                              <td>{cruce.codigo || 'N/A'}</td>
+                            </tr>
+                            <tr>
+                              <td className="text-muted">
+                                <strong>Distrito:</strong>
+                              </td>
+                              <td>{cruce.ubigeo?.distrito || 'N/A'}</td>
+                            </tr>
+                            <tr>
+                              <td className="text-muted">
+                                <strong>Gestión:</strong>
+                              </td>
+                              <td>{getTipoNombre(cruce.tipoGestion)}</td>
+                            </tr>
+                            <tr>
+                              <td className="text-muted">
+                                <strong>Comunicación:</strong>
+                              </td>
+                              <td>{getTipoNombre(cruce.tipoComunicacion)}</td>
+                            </tr>
+                            <tr>
+                              <td className="text-muted">
+                                <strong>Administrador:</strong>
+                              </td>
+                              <td>{cruce.administrador?.nombre || 'N/A'}</td>
+                            </tr>
+                          </tbody>
+                        </table>
+                        <button
+                          className="btn btn-sm btn-primary w-100"
+                          onClick={() => {
+                            setSelectedCruceId(cruce.id);
+                            setDetailModalOpen(true);
+                          }}
+                          style={{ fontSize: '12px' }}
+                        >
+                          <i className="fa-solid fa-eye me-1"></i>
+                          Ver Detalle
+                        </button>
+                      </div>
+                    </Popup>
+                  </Marker>
+                );
+              })}
             </MapContainer>
           </div>
         </div>
@@ -550,8 +546,8 @@ export function CrucesMap() {
             <div className="modal-content">
               <div className="modal-header bg-primary text-white">
                 <h5 className="modal-title">
-                  <i className="fas fa-eye me-2"></i>
-                  Ver Cruce
+                  <i className="fa-solid fa-eye me-2"></i>
+                  Ver Intersección
                 </h5>
                 <button type="button" className="btn-close btn-close-white" onClick={() => setDetailModalOpen(false)}></button>
               </div>

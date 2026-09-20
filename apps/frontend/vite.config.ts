@@ -16,15 +16,10 @@ export default defineConfig({
     rollupOptions: {
       output: {
         manualChunks: {
-          // Bibliotecas de React
           'react-vendor': ['react', 'react-dom', 'react-router-dom'],
-          // Bibliotecas de UI
           'ui-vendor': ['bootstrap', 'react-select'],
-          // Bibliotecas de mapas
           'map-vendor': ['leaflet'],
-          // Bibliotecas de reportes
-          'reports-vendor': ['html2canvas', 'jspdf'],
-          // Bibliotecas de utilidades
+          'reports-vendor': ['jspdf', 'jspdf-autotable'],
           'utils-vendor': ['axios', 'date-fns', 'zustand'],
         },
       },
@@ -34,19 +29,14 @@ export default defineConfig({
   server: {
     host: '0.0.0.0',
     port: 5173,
-    allowedHosts: [
-      'apps.movingenia.com',
-      'localhost',
-      '192.168.18.230',
-      '34.66.18.138'
-    ],
+    allowedHosts: true,
     proxy: {
       '/api': {
-        target: 'http://192.168.18.230:3001',
+        target: 'http://backend:3000',
         changeOrigin: true,
       },
       '/socket.io': {
-        target: 'http://192.168.18.230:3001',
+        target: 'http://backend:3000',
         ws: true,
       },
     },

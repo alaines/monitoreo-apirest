@@ -4,12 +4,16 @@ import { useNotificationsStore } from '../stores/notificationsStore';
 import { notificationsService, Notification } from '../services/notifications.service';
 
 export function useNotifications() {
-  const { token } = useAuthStore();
+  const { token: storeToken } = useAuthStore();
+  const effectiveToken = storeToken || (typeof window !== 'undefined' ? localStorage.getItem('accessToken') : null);
+
   const {
     notifications,
+    criticalAlerts,
     unreadCount,
     isConnected,
     setNotifications,
+    setCriticalAlerts,
     addNotification,
     markAsRead: markAsReadStore,
     markAllAsRead: markAllAsReadStore,
@@ -19,19 +23,39 @@ export function useNotifications() {
     showToast,
   } = useNotificationsStore();
 
-  const socketRef = useRef(notificationsService.getSocket());
   const pingIntervalRef = useRef<NodeJS.Timeout | null>(null);
+
+  const loadInitialData = useCallback(async () => {
+    try {
+      const [notifs, count, critical] = await Promise.all([
+        notificationsService.getAll(50),
+        notificationsService.getUnreadCount(),
+        notificationsService.getCriticalAlerts(20),
+      ]);
+      setNotifications(Array.isArray(notifs) ? notifs : []);
+      setUnreadCount(typeof count === 'number' ? count : 0);
+      setCriticalAlerts(Array.isArray(critical) ? critical : []);
+    } catch (error) {
+      console.error('Error loading notifications:', error);
+    }
+  }, [setNotifications, setUnreadCount, setCriticalAlerts]);
+
+  // Cargar datos iniciales al montar si hay token
+  useEffect(() => {
+    if (effectiveToken) {
+      loadInitialData();
+    }
+  }, [effectiveToken, loadInitialData]);
 
   // Conectar WebSocket
   useEffect(() => {
-    if (!token) {
+    if (!effectiveToken) {
       notificationsService.disconnect();
       setConnected(false);
       return;
     }
 
-    const socket = notificationsService.connect(token);
-    socketRef.current = socket;
+    const socket = notificationsService.connect(effectiveToken);
 
     socket.on('connect', () => {
       setConnected(true);
@@ -46,53 +70,52 @@ export function useNotifications() {
       console.log('📬 Nueva notificación recibida:', notification);
       addNotification(notification);
       showToast(notification);
-      
-      // Reproducir sonido de notificación
       playNotificationSound();
+    });
+
+    socket.on('unreadNotifications', (data: { count: number; notifications: Notification[] }) => {
+      if (data && Array.isArray(data.notifications)) {
+        setNotifications(data.notifications);
+        setUnreadCount(data.count ?? data.notifications.length);
+      }
     });
 
     socket.on('incidentCreated', (incident: any) => {
       console.log('🆕 Nueva incidencia creada:', incident);
-      // Emitir evento global para que los componentes se actualicen
       window.dispatchEvent(new CustomEvent('incidentCreated', { detail: incident }));
+      loadInitialData();
     });
 
     socket.on('incidentUpdated', (incident: any) => {
       console.log('🔄 Incidencia actualizada:', incident);
-      // Emitir evento global para que los componentes se actualicen
       window.dispatchEvent(new CustomEvent('incidentUpdated', { detail: incident }));
+      loadInitialData();
     });
 
     socket.on('unreadCount', (data: { count: number }) => {
-      setUnreadCount(data.count);
+      if (data && typeof data.count === 'number') {
+        setUnreadCount(data.count);
+      }
     });
 
-    // Ping cada 30 segundos para mantener la conexión
+    // Ping cada 25 segundos para mantener la conexión
     pingIntervalRef.current = setInterval(() => {
       notificationsService.ping();
-    }, 30000);
+    }, 25000);
 
     return () => {
       if (pingIntervalRef.current) {
         clearInterval(pingIntervalRef.current);
       }
-      notificationsService.disconnect();
-      setConnected(false);
+      socket.off('connect');
+      socket.off('disconnect');
+      socket.off('notification');
+      socket.off('unreadNotifications');
+      socket.off('incidentCreated');
+      socket.off('incidentUpdated');
+      socket.off('unreadCount');
     };
-  }, [token]);
-
-  const loadInitialData = useCallback(async () => {
-    try {
-      const [notifs, count] = await Promise.all([
-        notificationsService.getAll(50),
-        notificationsService.getUnreadCount(),
-      ]);
-      setNotifications(notifs);
-      setUnreadCount(count);
-    } catch (error) {
-      console.error('Error loading notifications:', error);
-    }
-  }, []);
+  }, [effectiveToken, addNotification, loadInitialData, setConnected, setNotifications, setUnreadCount, showToast]);
 
   const markAsRead = useCallback(async (id: number) => {
     try {
@@ -125,14 +148,14 @@ export function useNotifications() {
     try {
       await notificationsService.deleteAll();
       setNotifications([]);
+      setCriticalAlerts([]);
       setUnreadCount(0);
     } catch (error) {
       console.error('Error deleting all notifications:', error);
     }
-  }, [setNotifications, setUnreadCount]);
+  }, [setNotifications, setCriticalAlerts, setUnreadCount]);
 
   const playNotificationSound = () => {
-    // Sonido simple usando Web Audio API
     try {
       const audioContext = new (window.AudioContext || (window as any).webkitAudioContext)();
       const oscillator = audioContext.createOscillator();
@@ -144,18 +167,19 @@ export function useNotifications() {
       oscillator.frequency.value = 800;
       oscillator.type = 'sine';
 
-      gainNode.gain.setValueAtTime(0.3, audioContext.currentTime);
-      gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.3);
+      gainNode.gain.setValueAtTime(0.2, audioContext.currentTime);
+      gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.25);
 
       oscillator.start(audioContext.currentTime);
-      oscillator.stop(audioContext.currentTime + 0.3);
+      oscillator.stop(audioContext.currentTime + 0.25);
     } catch (error) {
-      console.warn('Could not play notification sound:', error);
+      // Ignorar si el audio está bloqueado por el navegador
     }
   };
 
   return {
     notifications,
+    criticalAlerts,
     unreadCount,
     isConnected,
     markAsRead,

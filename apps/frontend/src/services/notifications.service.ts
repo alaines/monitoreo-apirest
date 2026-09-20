@@ -1,8 +1,6 @@
 import { api } from '../lib/api';
 import { io, Socket } from 'socket.io-client';
 
-const API_URL = import.meta.env.VITE_API_URL || 'http://192.168.18.230:3001/api';
-
 export interface Notification {
   id: number;
   userId: number;
@@ -19,23 +17,61 @@ export interface UnreadCount {
   count: number;
 }
 
+function getWsBaseUrl(): string {
+  if (import.meta.env.VITE_WS_URL) {
+    return import.meta.env.VITE_WS_URL;
+  }
+  if (typeof window !== 'undefined') {
+    const isLocalhost = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
+    if (isLocalhost) {
+      return 'http://localhost:3000';
+    }
+    return `${window.location.protocol}//${window.location.hostname}:3000`;
+  }
+  return 'http://localhost:3000';
+}
+
 class NotificationsService {
   private socket: Socket | null = null;
 
-  async getAll(limit?: number): Promise<Notification[]> {
-    const params = limit ? { limit } : {};
-    const response = await api.get('/notifications', { params });
-    return response.data;
+  async getAll(limit: number = 50): Promise<Notification[]> {
+    try {
+      const response = await api.get('/notifications', { params: { limit } });
+      return response.data || [];
+    } catch (e) {
+      console.error('Error fetching all notifications:', e);
+      return [];
+    }
   }
 
   async getUnread(): Promise<Notification[]> {
-    const response = await api.get('/notifications/unread');
-    return response.data;
+    try {
+      const response = await api.get('/notifications/unread');
+      return response.data || [];
+    } catch (e) {
+      console.error('Error fetching unread notifications:', e);
+      return [];
+    }
+  }
+
+  async getCriticalAlerts(limit: number = 20): Promise<Notification[]> {
+    try {
+      const response = await api.get('/notifications/critical-alerts', { params: { limit } });
+      return response.data || [];
+    } catch (e) {
+      console.error('Error fetching critical alerts:', e);
+      return [];
+    }
   }
 
   async getUnreadCount(): Promise<number> {
-    const response = await api.get<UnreadCount>('/notifications/unread/count');
-    return response.data.count;
+    try {
+      const response = await api.get<UnreadCount>('/notifications/unread/count');
+      return response.data?.count ?? 0;
+    } catch (e) {
+      console.error('Error fetching unread count:', e);
+      return 0;
+    }
   }
 
   async markAsRead(id: number): Promise<Notification> {
@@ -61,19 +97,24 @@ class NotificationsService {
       return this.socket;
     }
 
-    const WS_URL = import.meta.env.VITE_WS_URL || 'http://192.168.18.230:3001';
+    if (this.socket) {
+      this.socket.disconnect();
+      this.socket = null;
+    }
+
+    const WS_URL = getWsBaseUrl();
     
     this.socket = io(`${WS_URL}/notifications`, {
       auth: { token },
       transports: ['websocket', 'polling'],
       reconnection: true,
       reconnectionDelay: 1000,
-      reconnectionAttempts: 5,
+      reconnectionAttempts: 15,
       timeout: 10000,
     });
 
     this.socket.on('connect', () => {
-      console.log('✅ Connected to notifications WebSocket');
+      console.log('✅ Connected to notifications WebSocket on', `${WS_URL}/notifications`);
     });
 
     this.socket.on('disconnect', (reason) => {
@@ -81,10 +122,7 @@ class NotificationsService {
     });
 
     this.socket.on('connect_error', (error) => {
-      // Solo mostrar error si es relevante (no timeout inicial)
-      if (error.message !== 'websocket error' && error.message !== 'xhr poll error') {
-        console.warn('WebSocket connection error:', error.message);
-      }
+      console.warn('WebSocket connection attempt error:', error.message);
     });
 
     return this.socket;

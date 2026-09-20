@@ -1,7 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import Select from 'react-select';
+import { toast } from 'react-hot-toast';
 import { areasService, Area } from '../../../services/admin.service';
 import { customSelectStylesSmall } from '../../../styles/react-select-custom';
+import { PageHeader } from '../../../components/ui/PageHeader';
 
 type SortField = 'id' | 'codigo' | 'nombre' | 'estado';
 type SortOrder = 'asc' | 'desc';
@@ -50,7 +52,7 @@ const AreasManagement: React.FC = () => {
       setAllAreas(data);
     } catch (error) {
       console.error('Error al cargar áreas:', error);
-      alert('Error al cargar áreas');
+      toast.error('Error al cargar áreas');
     } finally {
       setLoading(false);
     }
@@ -130,10 +132,10 @@ const AreasManagement: React.FC = () => {
   };
 
   const getSortIcon = (field: SortField) => {
-    if (sortField !== field) return <i className="fas fa-sort text-muted ms-1"></i>;
+    if (sortField !== field) return <i className="fa-solid fa-sort text-muted ms-1"></i>;
     return sortOrder === 'asc'
-      ? <i className="fas fa-sort-up ms-1"></i>
-      : <i className="fas fa-sort-down ms-1"></i>;
+      ? <i className="fa-solid fa-sort-up text-primary ms-1"></i>
+      : <i className="fa-solid fa-sort-down text-primary ms-1"></i>;
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -142,16 +144,18 @@ const AreasManagement: React.FC = () => {
     try {
       if (editingArea) {
         await areasService.update(editingArea.id, formData);
+        toast.success('Área actualizada exitosamente');
       } else {
         await areasService.create(formData);
+        toast.success('Área registrada exitosamente');
       }
       
       setShowModal(false);
       resetForm();
       loadData();
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error al guardar área:', error);
-      alert('Error al guardar área');
+      toast.error(error.response?.data?.message || 'Error al guardar área');
     }
   };
 
@@ -166,14 +170,15 @@ const AreasManagement: React.FC = () => {
   };
 
   const handleDelete = async (id: number) => {
-    if (!confirm('¿Está seguro de desactivar esta área?')) return;
+    if (!window.confirm('¿Está seguro de desactivar esta área?')) return;
     
     try {
       await areasService.delete(id);
+      toast.success('Área desactivada exitosamente');
       loadData();
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error al eliminar área:', error);
-      alert('Error al eliminar área');
+      toast.error(error.response?.data?.message || 'Error al eliminar área');
     }
   };
 
@@ -188,55 +193,63 @@ const AreasManagement: React.FC = () => {
   };
 
   return (
-    <div className="container-fluid py-4">
-      <div className="d-flex justify-content-between align-items-center mb-4">
-        <h2>
-          <i className="fas fa-building me-2"></i>
-          Gestión de Áreas
-        </h2>
-        <button 
-          className="btn btn-primary"
-          onClick={() => setShowModal(true)}
-        >
-          <i className="fas fa-plus me-2"></i>
-          Nueva Área
-        </button>
-      </div>
+    <div className="container-fluid p-3">
+      <PageHeader
+        icon="fa-solid fa-building"
+        title="Gestión de Áreas"
+        subtitle="Administración de unidades organizativas y dependencias del sistema"
+        actions={
+          <div className="d-flex gap-2">
+            <button
+              className={`btn btn-sm ${showFilters ? 'btn-secondary' : 'btn-outline-secondary'}`}
+              onClick={() => setShowFilters(!showFilters)}
+            >
+              <i className="fa-solid fa-filter me-1"></i>
+              {showFilters ? 'Ocultar Filtros' : 'Filtros'}
+            </button>
+            <button 
+              className="btn btn-sm btn-primary"
+              onClick={() => setShowModal(true)}
+            >
+              <i className="fa-solid fa-plus me-1"></i>
+              Nueva Área
+            </button>
+          </div>
+        }
+      />
 
       {loading ? (
-        <div className="text-center py-5">
-          <div className="spinner-border" role="status">
+        <div className="card border shadow-sm p-5 text-center">
+          <div className="spinner-border text-primary mx-auto mb-2" role="status">
             <span className="visually-hidden">Cargando...</span>
           </div>
+          <small className="text-muted">Cargando áreas...</small>
         </div>
       ) : (
         <>
           {/* Filtros */}
-          <div className="card border-0 shadow-sm mb-3">
-            <div className="card-header bg-white border-bottom">
-              <button
-                className="btn btn-sm btn-outline-secondary"
-                onClick={() => setShowFilters(!showFilters)}
-              >
-                <i className="fas fa-filter me-2"></i>
-                {showFilters ? 'Ocultar Filtros' : 'Mostrar Filtros'}
-              </button>
-            </div>
-            {showFilters && (
-              <div className="card-body">
+          {showFilters && (
+            <div className="card border shadow-sm mb-3">
+              <div className="card-header bg-white border-bottom py-2">
+                <h6 className="card-title mb-0 fw-semibold text-dark" style={{ fontSize: '14px' }}>
+                  <i className="fa-solid fa-sliders me-2 text-primary"></i>
+                  Filtros de Áreas
+                </h6>
+              </div>
+              <div className="card-body py-3">
                 <div className="row g-2">
                   <div className="col-md-6">
-                    <label className="form-label small">Buscar</label>
+                    <label className="form-label small fw-bold text-muted mb-1">Buscar</label>
                     <input
                       type="text"
-                      className="form-control custom-input-sm"
-                      placeholder="Nombre o código..."
+                      className="form-control form-control-sm"
+                      placeholder="Nombre o código de área..."
                       value={filters.search}
                       onChange={(e) => handleFilterChange('search', e.target.value)}
                     />
                   </div>
                   <div className="col-md-4">
-                    <label className="form-label small">Estado</label>
+                    <label className="form-label small fw-bold text-muted mb-1">Estado</label>
                     <Select
                       options={[
                         { value: '', label: 'Todos' },
@@ -258,134 +271,146 @@ const AreasManagement: React.FC = () => {
                       }}
                       title="Limpiar filtros"
                     >
-                      <i className="fas fa-eraser me-1"></i>
+                      <i className="fa-solid fa-eraser me-1"></i>
                       Limpiar
                     </button>
                   </div>
                 </div>
               </div>
-            )}
-          </div>
+            </div>
+          )}
 
-          <div className="card">
-            <div className="card-body">
+          <div className="card border shadow-sm">
+            <div className="card-header bg-white border-bottom py-2 d-flex justify-content-between align-items-center">
+              <h6 className="card-title mb-0 fw-semibold text-dark" style={{ fontSize: '14px' }}>
+                <i className="fa-solid fa-list me-2 text-primary"></i>
+                Listado de Áreas ({total} registros)
+              </h6>
+              <div className="d-flex align-items-center gap-2">
+                <span className="small text-muted">Mostrar:</span>
+                <div style={{ width: '80px' }}>
+                  <Select
+                    options={[
+                      { value: 10, label: '10' },
+                      { value: 25, label: '25' },
+                      { value: 50, label: '50' },
+                      { value: 100, label: '100' }
+                    ]}
+                    value={{ value: limit, label: String(limit) }}
+                    onChange={(option) => { setLimit(Number(option?.value || 10)); setPage(1); }}
+                    styles={customSelectStylesSmall}
+                    isSearchable={false}
+                  />
+                </div>
+              </div>
+            </div>
+            <div className="card-body p-0">
               <div className="table-responsive">
-                <table className="table table-hover">
-                  <thead>
+                <table className="table table-hover table-striped align-middle mb-0">
+                  <thead className="table-light text-uppercase" style={{ fontSize: '12px' }}>
                     <tr>
-                      <th onClick={() => handleSort('id')} style={{ cursor: 'pointer' }}>
+                      <th style={{ width: '80px', cursor: 'pointer' }} onClick={() => handleSort('id')}>
                         ID {getSortIcon('id')}
                       </th>
-                      <th onClick={() => handleSort('codigo')} style={{ cursor: 'pointer' }}>
+                      <th style={{ width: '120px', cursor: 'pointer' }} onClick={() => handleSort('codigo')}>
                         Código {getSortIcon('codigo')}
                       </th>
-                      <th onClick={() => handleSort('nombre')} style={{ cursor: 'pointer' }}>
+                      <th style={{ cursor: 'pointer' }} onClick={() => handleSort('nombre')}>
                         Nombre {getSortIcon('nombre')}
                       </th>
-                      <th onClick={() => handleSort('estado')} style={{ cursor: 'pointer' }}>
+                      <th style={{ width: '120px', cursor: 'pointer' }} className="text-center" onClick={() => handleSort('estado')}>
                         Estado {getSortIcon('estado')}
                       </th>
-                      <th>Acciones</th>
+                      <th style={{ width: '100px' }} className="text-center">Acciones</th>
                     </tr>
                   </thead>
-                  <tbody>
-                    {areas.map(area => (
-                    <tr key={area.id}>
-                      <td>{area.id}</td>
-                      <td>{area.codigo || '-'}</td>
-                      <td>{area.nombre}</td>
-                      <td>
-                        <span className={`badge ${area.estado ? 'bg-success' : 'bg-secondary'}`}>
-                          {area.estado ? 'Activo' : 'Inactivo'}
-                        </span>
-                      </td>
-                      <td>
-                        <button
-                          className="btn btn-sm btn-outline-primary me-2"
-                          onClick={() => handleEdit(area)}
-                        >
-                          <i className="fas fa-edit"></i>
-                        </button>
-                        {area.estado && (
-                          <button
-                            className="btn btn-sm btn-outline-danger"
-                            onClick={() => handleDelete(area.id)}
-                          >
-                            <i className="fas fa-trash"></i>
-                          </button>
-                        )}
-                      </td>
-                    </tr>
-                  ))}
+                  <tbody style={{ fontSize: '13px' }}>
+                    {areas.length === 0 ? (
+                      <tr>
+                        <td colSpan={5} className="text-center py-4 text-muted">
+                          <i className="fa-solid fa-inbox fa-2x mb-2 d-block text-secondary"></i>
+                          No se encontraron registros
+                        </td>
+                      </tr>
+                    ) : (
+                      areas.map(area => (
+                        <tr key={area.id}>
+                          <td className="fw-semibold text-secondary">#{area.id}</td>
+                          <td><code className="small fw-semibold">{area.codigo || '—'}</code></td>
+                          <td className="fw-medium text-dark">{area.nombre}</td>
+                          <td className="text-center">
+                            <span className={`badge ${area.estado ? 'bg-success' : 'bg-secondary'}`}>
+                              {area.estado ? 'Activo' : 'Inactivo'}
+                            </span>
+                          </td>
+                          <td className="text-center">
+                            <div className="btn-group btn-group-sm">
+                              <button
+                                className="btn btn-outline-primary btn-sm py-1 px-2"
+                                onClick={() => handleEdit(area)}
+                                title="Editar"
+                              >
+                                <i className="fa-solid fa-pen-to-square"></i>
+                              </button>
+                              {area.estado && (
+                                <button
+                                  className="btn btn-outline-danger btn-sm py-1 px-2"
+                                  onClick={() => handleDelete(area.id)}
+                                  title="Desactivar"
+                                >
+                                  <i className="fa-solid fa-trash-can"></i>
+                                </button>
+                              )}
+                            </div>
+                          </td>
+                        </tr>
+                      ))
+                    )}
                   </tbody>
                 </table>
               </div>
-
-              {/* Paginación */}
-              {totalPages > 1 && (
-                <div className="d-flex justify-content-between align-items-center mt-3">
-                  <div>
-                    <span className="text-muted">
-                      Mostrando {(page - 1) * limit + 1} - {Math.min(page * limit, total)} de {total} áreas
-                    </span>
-                  </div>
-                  <div className="d-flex gap-2 align-items-center">
-                    <Select
-                      options={[
-                        { value: 10, label: '10 por página' },
-                        { value: 25, label: '25 por página' },
-                        { value: 50, label: '50 por página' },
-                        { value: 100, label: '100 por página' }
-                      ]}
-                      value={{ value: limit, label: `${limit} por página` }}
-                      onChange={(option) => { setLimit(Number(option?.value || 10)); setPage(1); }}
-                      styles={customSelectStylesSmall}
-                    />
-                    <nav>
-                      <ul className="pagination pagination-sm mb-0">
-                        <li className={`page-item ${page === 1 ? 'disabled' : ''}`}>
-                          <button
-                            className="page-link"
-                            onClick={() => setPage(page - 1)}
-                            disabled={page === 1}
-                          >
-                            Anterior
-                          </button>
-                        </li>
-                        {Array.from({ length: Math.min(totalPages, 5) }, (_, i) => {
-                          let pageNum;
-                          if (totalPages <= 5) {
-                            pageNum = i + 1;
-                          } else if (page <= 3) {
-                            pageNum = i + 1;
-                          } else if (page >= totalPages - 2) {
-                            pageNum = totalPages - 4 + i;
-                          } else {
-                            pageNum = page - 2 + i;
-                          }
-                          return (
-                            <li key={pageNum} className={`page-item ${page === pageNum ? 'active' : ''}`}>
-                              <button className="page-link" onClick={() => setPage(pageNum)}>
-                                {pageNum}
-                              </button>
-                            </li>
-                          );
-                        })}
-                        <li className={`page-item ${page === totalPages ? 'disabled' : ''}`}>
-                          <button
-                            className="page-link"
-                            onClick={() => setPage(page + 1)}
-                            disabled={page === totalPages}
-                          >
-                            Siguiente
-                          </button>
-                        </li>
-                      </ul>
-                    </nav>
-                  </div>
-                </div>
-              )}
             </div>
+
+            {totalPages > 1 && (
+              <div className="card-footer bg-white border-top py-2 d-flex justify-content-between align-items-center">
+                <span className="small text-muted">
+                  Página {page} de {totalPages} ({total} registros totales)
+                </span>
+                <nav>
+                  <ul className="pagination pagination-sm mb-0">
+                    <li className={`page-item ${page === 1 ? 'disabled' : ''}`}>
+                      <button className="page-link" onClick={() => setPage(page - 1)}>
+                        <i className="fa-solid fa-chevron-left"></i>
+                      </button>
+                    </li>
+                    {[...Array(totalPages)].map((_, i) => {
+                      const pageNum = i + 1;
+                      if (
+                        pageNum === 1 ||
+                        pageNum === totalPages ||
+                        (pageNum >= page - 1 && pageNum <= page + 1)
+                      ) {
+                        return (
+                          <li key={pageNum} className={`page-item ${page === pageNum ? 'active' : ''}`}>
+                            <button className="page-link" onClick={() => setPage(pageNum)}>
+                              {pageNum}
+                            </button>
+                          </li>
+                        );
+                      } else if (pageNum === page - 2 || pageNum === page + 2) {
+                        return <li key={pageNum} className="page-item disabled"><span className="page-link">...</span></li>;
+                      }
+                      return null;
+                    })}
+                    <li className={`page-item ${page === totalPages ? 'disabled' : ''}`}>
+                      <button className="page-link" onClick={() => setPage(page + 1)}>
+                        <i className="fa-solid fa-chevron-right"></i>
+                      </button>
+                    </li>
+                  </ul>
+                </nav>
+              </div>
+            )}
           </div>
         </>
       )}

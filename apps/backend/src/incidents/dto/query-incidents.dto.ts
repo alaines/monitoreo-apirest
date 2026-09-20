@@ -17,11 +17,9 @@ export class QueryIncidentsDto {
   @IsOptional()
   limit?: number = 10;
 
-  @ApiPropertyOptional({ description: 'ID del estado' })
-  @Type(() => Number)
-  @IsInt()
+  @ApiPropertyOptional({ description: 'ID del estado o IDs separados por coma (ej. 1,2,5)' })
   @IsOptional()
-  estadoId?: number;
+  estadoId?: number | string;
 
   @ApiPropertyOptional({ description: 'ID de la incidencia (tipo)' })
   @Type(() => Number)
@@ -65,8 +63,39 @@ export class QueryIncidentsDto {
   @IsOptional()
   month?: number;
 
+  @ApiPropertyOptional({ description: 'Mes del ticket (1-12)' })
+  @Type(() => Number)
+  @IsInt()
+  @IsOptional()
+  mes?: number;
+
+  @ApiPropertyOptional({ description: 'Característica de la incidencia (I, T, etc.)' })
+  @IsString()
+  @IsOptional()
+  caracteristica?: string;
+
+  @ApiPropertyOptional({ description: 'ID de la prioridad' })
+  @Type(() => Number)
+  @IsInt()
+  @IsOptional()
+  prioridadId?: number;
+
+  @ApiPropertyOptional({ description: 'Incluir todos los estados de incidencias' })
+  @IsOptional()
+  allStates?: boolean;
+
   @ApiPropertyOptional({ description: 'Búsqueda en descripción' })
   @IsString()
   @IsOptional()
   search?: string;
+
+  @ApiPropertyOptional({ description: 'Fecha desde (YYYY-MM-DD)' })
+  @IsString()
+  @IsOptional()
+  fechaDesde?: string;
+
+  @ApiPropertyOptional({ description: 'Fecha hasta (YYYY-MM-DD)' })
+  @IsString()
+  @IsOptional()
+  fechaHasta?: string;
 }

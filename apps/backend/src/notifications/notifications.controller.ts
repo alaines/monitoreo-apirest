@@ -16,6 +16,8 @@ import { NotificationsService, NotificationType } from './notifications.service'
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { PrismaService } from '../prisma/prisma.service';
 
+import { SendTestNotificationDto } from './dto/test-notification.dto';
+
 @ApiTags('notifications')
 @ApiBearerAuth()
 @UseGuards(JwtAuthGuard)
@@ -28,9 +30,20 @@ export class NotificationsController {
   @ApiResponse({ status: 200, description: 'Notificaciones obtenidas exitosamente' })
   async findAll(
     @Request() req: any,
-    @Query('limit', new ParseIntPipe({ optional: true })) limit?: number,
+    @Query('limit') limit?: string,
   ) {
-    return this.notificationsService.findAllByUser(req.user.id, limit);
+    const limitNum = limit ? parseInt(limit, 10) : 50;
+    return this.notificationsService.findAllByUser(req.user.id, isNaN(limitNum) ? 50 : limitNum);
+  }
+
+  @Get('critical-alerts')
+  @ApiOperation({ summary: 'Obtener alertas de tickets críticos activos (IDs 22, 3, 64, 65, 66)' })
+  @ApiResponse({ status: 200, description: 'Alertas críticas obtenidas exitosamente' })
+  async getCriticalAlerts(
+    @Query('limit') limit?: string,
+  ) {
+    const limitNum = limit ? parseInt(limit, 10) : 20;
+    return this.notificationsService.getActiveCriticalAlerts(isNaN(limitNum) ? 20 : limitNum);
   }
 
   @Get('unread')
@@ -80,10 +93,8 @@ export class NotificationsController {
   @Post('test')
   @ApiOperation({ summary: 'Enviar notificación de prueba (solo desarrollo)' })
   @ApiResponse({ status: 201, description: 'Notificación de prueba enviada' })
-  async sendTestNotification(@Request() req: any, @Body() body: { userId?: number; userIds?: number[]; all?: boolean; type?: string; title?: string; message?: string }) {
+  async sendTestNotification(@Request() req: any, @Body() body: SendTestNotificationDto) {
     const { userId, userIds, all, type, title, message } = body;
-
-    if (!type || !title || !message) throw new BadRequestException('type, title and message are required');
 
     if (userId) {
       return this.notificationsService.create({ userId, type, title, message });
@@ -93,7 +104,7 @@ export class NotificationsController {
       return this.notificationsService.createMultiple(userIds, { type, title, message });
     }
 
-    if (all) {
+    if (all || (!userId && (!userIds || userIds.length === 0))) {
       const users = await this.prisma.user.findMany({ where: { estado: true }, select: { id: true } });
       const ids = users.map((u) => u.id);
       return this.notificationsService.createMultiple(ids, { type, title, message });

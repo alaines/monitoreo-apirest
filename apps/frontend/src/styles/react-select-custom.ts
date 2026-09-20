@@ -26,7 +26,11 @@ export const customSelectStyles: StylesConfig = {
   }),
   menu: (base) => ({
     ...base,
-    zIndex: 1050
+    zIndex: 99999
+  }),
+  menuPortal: (base) => ({
+    ...base,
+    zIndex: 99999
   }),
   multiValue: (base) => ({
     ...base,
@@ -52,6 +56,10 @@ export const customSelectStylesSmall: StylesConfig = {
   control: (base, state) => ({
     ...(customSelectStyles.control as any)(base, state),
     minHeight: '31px',
-    fontSize: '14px'
+    fontSize: '13px'
+  }),
+  menuPortal: (base) => ({
+    ...base,
+    zIndex: 99999
   })
 };

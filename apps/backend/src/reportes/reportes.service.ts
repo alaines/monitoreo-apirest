@@ -271,7 +271,11 @@ export class ReportesService {
 
   // Nuevo método para reporte gráfico consolidado
   async getReporteGrafico(filtros: ReporteIncidenciasDto) {
-    const where: any = {};
+    const where: any = {
+      incidencia: {
+        caracteristica: 'I',
+      },
+    };
 
     // Aplicar filtros de fecha
     if (filtros.periodo) {
@@ -331,10 +335,11 @@ export class ReportesService {
       },
     });
 
-    // Obtener todos los tipos de incidencias únicos que son hijos de "PROBLEMA - CRUCE"
+    // Obtener todos los tipos de incidencias únicos que son hijos de "PROBLEMA - CRUCE" y con característica "I"
     const tiposIncidencias = await this.prisma.incidencia.findMany({
       where: { 
         estado: true,
+        caracteristica: 'I',
         parentId: problemaCruceParent?.id || null,
       },
       orderBy: { tipo: 'asc' },
@@ -389,8 +394,26 @@ export class ReportesService {
     }));
 
     // Incidencias por periodo (adaptativo según tipo de periodo)
-    const evolucionTemporal: Record<string, number> = {};
-    
+    const evolucionTemporalTotal: Record<string, number> = {};
+    const conteoTipos: Record<string, number> = {};
+    const evolucionPorTipo: Record<string, Record<string, number>> = {};
+
+    // 1. Contar ocurrencias por tipo de incidencia para encontrar los 4 más reportados
+    tickets.forEach(ticket => {
+      const tipoNombre = ticket.incidencia?.tipo || 'OTROS';
+      conteoTipos[tipoNombre] = (conteoTipos[tipoNombre] || 0) + 1;
+    });
+
+    const top4Tipos = Object.entries(conteoTipos)
+      .sort((a, b) => b[1] - a[1])
+      .slice(0, 4)
+      .map(([tipo]) => tipo);
+
+    top4Tipos.forEach(tipo => {
+      evolucionPorTipo[tipo] = {};
+    });
+
+    // 2. Agrupar por clave temporal y por tipo
     tickets.forEach(ticket => {
       if (ticket.createdAt) {
         const fecha = new Date(ticket.createdAt);
@@ -410,47 +433,57 @@ export class ReportesService {
           case PeriodoReporte.ANIO:
             // Por meses del año (Enero, Febrero, ...)
             clave = fecha.toLocaleString('es-ES', { month: 'long' });
+            clave = clave.charAt(0).toUpperCase() + clave.slice(1);
             break;
           
           default:
             clave = fecha.toLocaleString('es-ES', { month: 'long', year: 'numeric' });
         }
         
-        evolucionTemporal[clave] = (evolucionTemporal[clave] || 0) + 1;
+        evolucionTemporalTotal[clave] = (evolucionTemporalTotal[clave] || 0) + 1;
+
+        const tipoNombre = ticket.incidencia?.tipo || 'OTROS';
+        if (evolucionPorTipo[tipoNombre]) {
+          evolucionPorTipo[tipoNombre][clave] = (evolucionPorTipo[tipoNombre][clave] || 0) + 1;
+        }
       }
     });
 
     // Ordenar las claves según el periodo
-    let datosEvolucion: { mes: string; cantidad: number }[];
+    let categoriasEvolucion: string[] = [];
     
     if (filtros.periodo === PeriodoReporte.DIA) {
-      // Ordenar por hora (00:00 a 23:00)
-      const horas = Array.from({ length: 24 }, (_, i) => `${i.toString().padStart(2, '0')}:00`);
-      datosEvolucion = horas.map(hora => ({
-        mes: hora,
-        cantidad: evolucionTemporal[hora] || 0,
-      }));
+      categoriasEvolucion = Array.from({ length: 24 }, (_, i) => `${i.toString().padStart(2, '0')}:00`);
     } else if (filtros.periodo === PeriodoReporte.MES) {
-      // Ordenar por día del mes (01 a 31)
-      const dias = Array.from({ length: 31 }, (_, i) => (i + 1).toString().padStart(2, '0'));
-      datosEvolucion = dias.map(dia => ({
-        mes: dia,
-        cantidad: evolucionTemporal[dia] || 0,
-      }));
+      const diasEnMes = (filtros.mes && [4, 6, 9, 11].includes(Number(filtros.mes))) 
+        ? 30 
+        : (filtros.mes && Number(filtros.mes) === 2 ? 29 : 31);
+      categoriasEvolucion = Array.from({ length: diasEnMes }, (_, i) => (i + 1).toString().padStart(2, '0'));
     } else if (filtros.periodo === PeriodoReporte.ANIO) {
-      // Ordenar por meses del año
-      const meses = ['enero', 'febrero', 'marzo', 'abril', 'mayo', 'junio', 
-                     'julio', 'agosto', 'septiembre', 'octubre', 'noviembre', 'diciembre'];
-      datosEvolucion = meses.map(mes => ({
-        mes: mes.charAt(0).toUpperCase() + mes.slice(1),
-        cantidad: evolucionTemporal[mes] || 0,
-      }));
+      const meses = ['Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio', 
+                     'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'];
+      categoriasEvolucion = meses;
     } else {
-      // Personalizado o por defecto
-      datosEvolucion = Object.entries(evolucionTemporal)
-        .map(([mes, cantidad]) => ({ mes, cantidad }))
-        .sort((a, b) => a.mes.localeCompare(b.mes));
+      categoriasEvolucion = Object.keys(evolucionTemporalTotal).sort();
     }
+
+    // Datos de evolución simple para retrocompatibilidad
+    const datosEvolucion = categoriasEvolucion.map(cat => ({
+      mes: cat,
+      cantidad: evolucionTemporalTotal[cat] || 0,
+    }));
+
+    // Series completas para el gráfico: Total + 4 tipos principales
+    const seriesEvolucion = [
+      {
+        name: 'Total Incidencias',
+        data: categoriasEvolucion.map(cat => evolucionTemporalTotal[cat] || 0),
+      },
+      ...top4Tipos.map(tipo => ({
+        name: tipo,
+        data: categoriasEvolucion.map(cat => evolucionPorTipo[tipo]?.[cat] || 0),
+      })),
+    ];
 
     // Incidencias por estado
     const incidenciasPorEstado: Record<string, number> = {};
@@ -519,6 +552,11 @@ export class ReportesService {
         porTipo: incidenciasPorTipo,
         porCruce: incidenciasPorCruce.slice(0, 10), // Top 10 cruces
         porMes: datosEvolucion,
+        evolucion: {
+          categorias: categoriasEvolucion,
+          series: seriesEvolucion,
+          topTipos: top4Tipos,
+        },
         porEstado: datosPorEstado,
         top5Averias: top5Averias,
       },
@@ -526,88 +564,176 @@ export class ReportesService {
     };
   }
 
-  // Generar Excel consolidado tipo pivot (basado en reporte_grafico.xlsx)
+  // Generar Excel consolidado tipo pivot con encabezados descriptivos y formato profesional
   async generarExcelGrafico(filtros: ReporteIncidenciasDto) {
     const datos = await this.getReporteGrafico(filtros);
     const workbook = new ExcelJS.Workbook();
     
-    // Hoja 1: Datos Consolidados
-    const hojaConsolidada = workbook.addWorksheet('Consolidado');
-    
-    // Definir columnas dinámicas
-    const columnas: any[] = [
-      { header: 'CRUCE', key: 'cruce', width: 30 },
-      { header: 'ADMINISTRADOR', key: 'administrador', width: 25 },
-    ];
-    
-    // Agregar columna por cada tipo de incidencia
-    datos.tiposIncidencias.forEach((tipo: string) => {
-      columnas.push({ header: tipo.toUpperCase(), key: tipo, width: 15 });
-    });
-    
-    columnas.push({ header: 'TOTAL', key: 'total', width: 12 });
-    
-    hojaConsolidada.columns = columnas;
-    
-    // Estilos de encabezado
-    hojaConsolidada.getRow(1).font = { bold: true };
-    hojaConsolidada.getRow(1).fill = {
-      type: 'pattern',
-      pattern: 'solid',
-      fgColor: { argb: 'FF4472C4' },
-    };
-    hojaConsolidada.getRow(1).font = { bold: true, color: { argb: 'FFFFFFFF' } };
-    
-    // Agregar datos
-    datos.consolidado.forEach((item: any) => {
-      const row: any = {
-        cruce: item.cruce,
-        administrador: item.administrador,
-        total: item.total,
+    // Período formateado en texto
+    const meses = ['Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio', 'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'];
+    let periodoTexto = '';
+    if (filtros.periodo === 'MES') {
+      const nombreMes = meses[(filtros.mes || 1) - 1] || '';
+      periodoTexto = `${nombreMes} ${filtros.anio || new Date().getFullYear()}`;
+    } else if (filtros.periodo === 'ANIO') {
+      periodoTexto = `Año ${filtros.anio || new Date().getFullYear()}`;
+    } else if (filtros.periodo === 'DIA') {
+      periodoTexto = `${filtros.dia}/${filtros.mes}/${filtros.anio}`;
+    } else if (filtros.fechaInicio && filtros.fechaFin) {
+      periodoTexto = `${filtros.fechaInicio} al ${filtros.fechaFin}`;
+    } else {
+      periodoTexto = `Todos los registros`;
+    }
+    const fechaEmision = new Date().toLocaleString('es-PE');
+
+    // =========================================================================
+    // HOJA 1: RESUMEN CONSOLIDADO
+    // =========================================================================
+    const hojaConsolidada = workbook.addWorksheet('Resumen Consolidado');
+    const totalCols1 = 2 + datos.tiposIncidencias.length + 1; // Cruce, Administrador, Tipos..., Total
+
+    // Fila 1: Título Principal
+    hojaConsolidada.mergeCells(1, 1, 1, totalCols1);
+    const r1 = hojaConsolidada.getCell(1, 1);
+    r1.value = 'SISTEMA DE MONITOREO DE SEMÁFOROS - PROTRÁNSITO';
+    r1.font = { name: 'Arial', size: 13, bold: true, color: { argb: 'FFFFFFFF' } };
+    r1.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FF1D546D' } };
+    r1.alignment = { vertical: 'middle', horizontal: 'center' };
+    hojaConsolidada.getRow(1).height = 26;
+
+    // Fila 2: Subtítulo
+    hojaConsolidada.mergeCells(2, 1, 2, totalCols1);
+    const r2 = hojaConsolidada.getCell(2, 1);
+    r2.value = 'Reporte Estadístico Consolidado de Incidencias y Averías';
+    r2.font = { name: 'Arial', size: 10.5, bold: true, color: { argb: 'FFFFFFFF' } };
+    r2.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FF5F9598' } };
+    r2.alignment = { vertical: 'middle', horizontal: 'center' };
+    hojaConsolidada.getRow(2).height = 20;
+
+    // Fila 3: Metadatos (Período, Fecha, Totales)
+    hojaConsolidada.mergeCells(3, 1, 3, totalCols1);
+    const r3 = hojaConsolidada.getCell(3, 1);
+    r3.value = `Período de Análisis: ${periodoTexto}   |   Fecha de Emisión: ${fechaEmision}   |   Total Incidencias: ${datos.resumen.totalIncidencias}   |   Cruces Afectados: ${datos.resumen.totalCruces}`;
+    r3.font = { name: 'Arial', size: 9.5, italic: true, color: { argb: 'FF334155' } };
+    r3.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFF1F5F9' } };
+    r3.alignment = { vertical: 'middle', horizontal: 'center' };
+    hojaConsolidada.getRow(3).height = 18;
+
+    // Fila 4: Espaciador
+    hojaConsolidada.getRow(4).height = 8;
+
+    // Fila 5: Encabezados de Columnas
+    const headers1 = ['CRUCE / INTERSECCIÓN', 'ADMINISTRADOR', ...datos.tiposIncidencias.map((t: string) => t.toUpperCase()), 'TOTAL'];
+    const rowHeader1 = hojaConsolidada.getRow(5);
+    rowHeader1.values = headers1;
+    rowHeader1.height = 24;
+    rowHeader1.eachCell((cell) => {
+      cell.font = { name: 'Arial', size: 9.5, bold: true, color: { argb: 'FFFFFFFF' } };
+      cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FF1D546D' } };
+      cell.alignment = { vertical: 'middle', horizontal: 'center', wrapText: true };
+      cell.border = {
+        top: { style: 'thin', color: { argb: 'FFCBD5E1' } },
+        left: { style: 'thin', color: { argb: 'FFCBD5E1' } },
+        bottom: { style: 'thin', color: { argb: 'FFCBD5E1' } },
+        right: { style: 'thin', color: { argb: 'FFCBD5E1' } },
       };
-      
-      // Llenar cantidades por tipo
-      datos.tiposIncidencias.forEach((tipo: string) => {
-        row[tipo] = item.tipos[tipo] || 0;
+    });
+
+    // Filas de Datos
+    let currentRowNum1 = 6;
+    datos.consolidado.forEach((item: any, idx: number) => {
+      const rowValues = [
+        item.cruce,
+        item.administrador,
+        ...datos.tiposIncidencias.map((tipo: string) => item.tipos[tipo] || 0),
+        item.total,
+      ];
+      const row = hojaConsolidada.getRow(currentRowNum1);
+      row.values = rowValues;
+      row.height = 18;
+
+      const isEven = idx % 2 === 0;
+      row.eachCell((cell, colNumber) => {
+        cell.font = { name: 'Arial', size: 9, color: { argb: 'FF1E293B' } };
+        cell.fill = {
+          type: 'pattern',
+          pattern: 'solid',
+          fgColor: { argb: isEven ? 'FFFFFFFF' : 'FFF8FAFC' },
+        };
+        cell.border = {
+          top: { style: 'thin', color: { argb: 'FFE2E8F0' } },
+          left: { style: 'thin', color: { argb: 'FFE2E8F0' } },
+          bottom: { style: 'thin', color: { argb: 'FFE2E8F0' } },
+          right: { style: 'thin', color: { argb: 'FFE2E8F0' } },
+        };
+
+        if (colNumber === 1 || colNumber === 2) {
+          cell.alignment = { vertical: 'middle', horizontal: 'left' };
+        } else {
+          cell.alignment = { vertical: 'middle', horizontal: 'center' };
+          if (colNumber === totalCols1) {
+            cell.font = { name: 'Arial', size: 9, bold: true, color: { argb: 'FF1D546D' } };
+          }
+        }
       });
-      
-      hojaConsolidada.addRow(row);
+
+      currentRowNum1++;
     });
-    
-    // Fila de totales
-    const rowTotal: any = {
-      cruce: 'TOTAL GENERAL',
-      administrador: '',
-      total: datos.resumen.totalIncidencias,
-    };
-    
-    datos.tiposIncidencias.forEach((tipo: string) => {
-      rowTotal[tipo] = datos.graficos.porTipo.find((t: any) => t.tipo === tipo)?.cantidad || 0;
+
+    // Fila de Totales
+    const totalsValues1 = [
+      'TOTAL GENERAL',
+      '',
+      ...datos.tiposIncidencias.map((tipo: string) => datos.graficos.porTipo.find((t: any) => t.tipo === tipo)?.cantidad || 0),
+      datos.resumen.totalIncidencias,
+    ];
+    const totalRow1 = hojaConsolidada.getRow(currentRowNum1);
+    totalRow1.values = totalsValues1;
+    totalRow1.height = 22;
+    totalRow1.eachCell((cell, colNumber) => {
+      cell.font = { name: 'Arial', size: 9.5, bold: true, color: { argb: 'FF0F172A' } };
+      cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFE2E8F0' } };
+      cell.border = {
+        top: { style: 'medium', color: { argb: 'FF94A3B8' } },
+        left: { style: 'thin', color: { argb: 'FFCBD5E1' } },
+        bottom: { style: 'double', color: { argb: 'FF475569' } },
+        right: { style: 'thin', color: { argb: 'FFCBD5E1' } },
+      };
+      cell.alignment = { vertical: 'middle', horizontal: colNumber <= 2 ? 'left' : 'center' };
     });
-    
-    const totalRow = hojaConsolidada.addRow(rowTotal);
-    totalRow.font = { bold: true };
-    totalRow.fill = {
-      type: 'pattern',
-      pattern: 'solid',
-      fgColor: { argb: 'FFE7E6E6' },
+
+    // Ancho de columnas Hoja 1
+    hojaConsolidada.getColumn(1).width = 38;
+    hojaConsolidada.getColumn(2).width = 25;
+    for (let i = 0; i < datos.tiposIncidencias.length; i++) {
+      const tipoName = datos.tiposIncidencias[i];
+      hojaConsolidada.getColumn(3 + i).width = Math.max(14, tipoName.length + 3);
+    }
+    hojaConsolidada.getColumn(totalCols1).width = 14;
+
+    // =========================================================================
+    // HOJA 2: LISTADO DETALLADO
+    // =========================================================================
+    const whereTickets: any = {
+      incidencia: {
+        caracteristica: 'I',
+      },
     };
-    
-    // Hoja 2: Listado Detallado
-    const where: any = {};
     if (filtros.periodo) {
       const fechas = this.calcularRangoFechas(filtros);
-      where.createdAt = { gte: fechas.inicio, lte: fechas.fin };
+      whereTickets.createdAt = { gte: fechas.inicio, lte: fechas.fin };
+    } else if (filtros.fechaInicio && filtros.fechaFin) {
+      whereTickets.createdAt = { gte: new Date(filtros.fechaInicio), lte: new Date(filtros.fechaFin) };
     }
-    if (filtros.tipoIncidencia) where.incidenciaId = filtros.tipoIncidencia;
-    if (filtros.estadoId) where.estadoId = filtros.estadoId;
-    if (filtros.cruceId) where.cruceId = filtros.cruceId;
+    if (filtros.tipoIncidencia) whereTickets.incidenciaId = filtros.tipoIncidencia;
+    if (filtros.estadoId) whereTickets.estadoId = filtros.estadoId;
+    if (filtros.cruceId) whereTickets.cruceId = filtros.cruceId;
     if (filtros.administradorId) {
-      where.cruce = { administradorId: filtros.administradorId };
+      whereTickets.cruce = { administradorId: filtros.administradorId };
     }
-    
+
     const tickets = await this.prisma.ticket.findMany({
-      where,
+      where: whereTickets,
       include: {
         cruce: { include: { administrador: true } },
         incidencia: true,
@@ -615,44 +741,115 @@ export class ReportesService {
       },
       orderBy: { createdAt: 'desc' },
     });
-    
+
     const hojaDetalle = workbook.addWorksheet('Listado Detallado');
-    hojaDetalle.columns = [
-      { header: 'Nro', key: 'nro', width: 8 },
-      { header: 'FECHA Y HORA', key: 'fecha', width: 20 },
-      { header: 'TIPO', key: 'tipo', width: 25 },
-      { header: 'CRUCE', key: 'cruce', width: 30 },
-      { header: 'ASIGNADO A', key: 'asignado', width: 25 },
-      { header: 'DETALLE', key: 'detalle', width: 40 },
-      { header: 'ESTADO', key: 'estado', width: 20 },
-      { header: 'DÍA', key: 'dia', width: 12 },
-      { header: 'MES', key: 'mes', width: 15 },
-    ];
-    
-    hojaDetalle.getRow(1).font = { bold: true };
-    hojaDetalle.getRow(1).fill = {
-      type: 'pattern',
-      pattern: 'solid',
-      fgColor: { argb: 'FF4472C4' },
-    };
-    hojaDetalle.getRow(1).font = { bold: true, color: { argb: 'FFFFFFFF' } };
-    
+    const totalCols2 = 9;
+
+    // Fila 1: Título Principal
+    hojaDetalle.mergeCells(1, 1, 1, totalCols2);
+    const d1 = hojaDetalle.getCell(1, 1);
+    d1.value = 'SISTEMA DE MONITOREO DE SEMÁFOROS - PROTRÁNSITO';
+    d1.font = { name: 'Arial', size: 13, bold: true, color: { argb: 'FFFFFFFF' } };
+    d1.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FF1D546D' } };
+    d1.alignment = { vertical: 'middle', horizontal: 'center' };
+    hojaDetalle.getRow(1).height = 26;
+
+    // Fila 2: Subtítulo
+    hojaDetalle.mergeCells(2, 1, 2, totalCols2);
+    const d2 = hojaDetalle.getCell(2, 1);
+    d2.value = 'Listado Detallado de Incidencias Registradas';
+    d2.font = { name: 'Arial', size: 10.5, bold: true, color: { argb: 'FFFFFFFF' } };
+    d2.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FF5F9598' } };
+    d2.alignment = { vertical: 'middle', horizontal: 'center' };
+    hojaDetalle.getRow(2).height = 20;
+
+    // Fila 3: Metadatos
+    hojaDetalle.mergeCells(3, 1, 3, totalCols2);
+    const d3 = hojaDetalle.getCell(3, 1);
+    d3.value = `Período de Análisis: ${periodoTexto}   |   Fecha de Emisión: ${fechaEmision}   |   Total Registros: ${tickets.length}`;
+    d3.font = { name: 'Arial', size: 9.5, italic: true, color: { argb: 'FF334155' } };
+    d3.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFF1F5F9' } };
+    d3.alignment = { vertical: 'middle', horizontal: 'center' };
+    hojaDetalle.getRow(3).height = 18;
+
+    // Fila 4: Espaciador
+    hojaDetalle.getRow(4).height = 8;
+
+    // Fila 5: Encabezados de Columnas
+    const headers2 = ['N°', 'FECHA Y HORA', 'TIPO DE INCIDENCIA', 'CRUCE / INTERSECCIÓN', 'ADMINISTRADOR', 'DETALLE / DESCRIPCIÓN', 'ESTADO', 'DÍA', 'MES'];
+    const rowHeader2 = hojaDetalle.getRow(5);
+    rowHeader2.values = headers2;
+    rowHeader2.height = 24;
+    rowHeader2.eachCell((cell) => {
+      cell.font = { name: 'Arial', size: 9.5, bold: true, color: { argb: 'FFFFFFFF' } };
+      cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FF1D546D' } };
+      cell.alignment = { vertical: 'middle', horizontal: 'center' };
+      cell.border = {
+        top: { style: 'thin', color: { argb: 'FFCBD5E1' } },
+        left: { style: 'thin', color: { argb: 'FFCBD5E1' } },
+        bottom: { style: 'thin', color: { argb: 'FFCBD5E1' } },
+        right: { style: 'thin', color: { argb: 'FFCBD5E1' } },
+      };
+    });
+
+    // Filas de Datos
+    let currentRowNum2 = 6;
     tickets.forEach((ticket, index) => {
       const fecha = ticket.createdAt ? new Date(ticket.createdAt) : new Date();
-      hojaDetalle.addRow({
-        nro: index + 1,
-        fecha: fecha.toLocaleString('es-ES'),
-        tipo: ticket.incidencia?.tipo || 'N/A',
-        cruce: ticket.cruce?.nombre || 'N/A',
-        asignado: ticket.cruce?.administrador?.nombre || 'N/A',
-        detalle: ticket.descripcion || '',
-        estado: ticket.estado?.nombre || 'N/A',
-        dia: fecha.toLocaleDateString('es-ES', { weekday: 'long' }).toUpperCase(),
-        mes: fecha.toLocaleDateString('es-ES', { month: 'long' }).toUpperCase(),
+      const rowValues = [
+        index + 1,
+        fecha.toLocaleString('es-PE'),
+        ticket.incidencia?.tipo || 'N/A',
+        ticket.cruce?.nombre || 'N/A',
+        ticket.cruce?.administrador?.nombre || 'N/A',
+        ticket.descripcion || '',
+        ticket.estado?.nombre || 'N/A',
+        fecha.toLocaleDateString('es-PE', { weekday: 'long' }).toUpperCase(),
+        fecha.toLocaleDateString('es-PE', { month: 'long' }).toUpperCase(),
+      ];
+
+      const row = hojaDetalle.getRow(currentRowNum2);
+      row.values = rowValues;
+      row.height = 18;
+
+      const isEven = index % 2 === 0;
+      row.eachCell((cell, colNumber) => {
+        cell.font = { name: 'Arial', size: 9, color: { argb: 'FF1E293B' } };
+        cell.fill = {
+          type: 'pattern',
+          pattern: 'solid',
+          fgColor: { argb: isEven ? 'FFFFFFFF' : 'FFF8FAFC' },
+        };
+        cell.border = {
+          top: { style: 'thin', color: { argb: 'FFE2E8F0' } },
+          left: { style: 'thin', color: { argb: 'FFE2E8F0' } },
+          bottom: { style: 'thin', color: { argb: 'FFE2E8F0' } },
+          right: { style: 'thin', color: { argb: 'FFE2E8F0' } },
+        };
+
+        if (colNumber === 1 || colNumber === 7 || colNumber === 8 || colNumber === 9) {
+          cell.alignment = { vertical: 'middle', horizontal: 'center' };
+        } else {
+          cell.alignment = { vertical: 'middle', horizontal: 'left' };
+        }
       });
+
+      currentRowNum2++;
     });
-    
-    return await workbook.xlsx.writeBuffer();
+
+    // Anchos de columna Hoja 2
+    hojaDetalle.getColumn(1).width = 7;
+    hojaDetalle.getColumn(2).width = 20;
+    hojaDetalle.getColumn(3).width = 26;
+    hojaDetalle.getColumn(4).width = 35;
+    hojaDetalle.getColumn(5).width = 24;
+    hojaDetalle.getColumn(6).width = 40;
+    hojaDetalle.getColumn(7).width = 16;
+    hojaDetalle.getColumn(8).width = 14;
+    hojaDetalle.getColumn(9).width = 15;
+
+    const buffer = await workbook.xlsx.writeBuffer();
+    return Buffer.from(buffer);
   }
 }
 

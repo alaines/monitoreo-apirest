@@ -1,21 +1,22 @@
-# Sistema de Monitoreo de Semaforos e Incidencias
+# Sistema de Monitoreo de Semáforos e Incidencias
 
-[![Version](https://img.shields.io/badge/version-1.1.3-blue.svg)](./CHANGELOG.md)
+[![Version](https://img.shields.io/badge/version-1.2.0-blue.svg)](./CHANGELOG.md)
 [![License](https://img.shields.io/badge/license-MIT-green.svg)](./LICENSE)
 
-Sistema integral de gestion y monitoreo de cruces semaforizados e incidencias de trafico en tiempo real. Monorepo fullstack desarrollado con NestJS, React, PostgreSQL y PostGIS.
+Sistema integral de gestión y monitoreo de intersecciones semaforizadas e incidencias de tráfico en tiempo real. Monorepo fullstack desarrollado con NestJS, React, PostgreSQL y PostGIS.
 
 ## Autor
 
 Aland Laines Calonge
 
-## Documentación de Instalación
+## Documentación del Proyecto
 
 - **[Guía de Instalación Completa](docs/INSTALLATION.md)** - Instalación detallada para desarrollo y producción
-- **[Guía Rápida](docs/guides/GUIA-RAPIDA.md)** - Inicio rápido para desarrollo
-- **[Configuración de Servidor](docs/architecture/SERVER-CONFIG.md)** - Configuración técnica de servidores
+- **[Arquitectura y Despliegue](docs/DEPLOYMENT.md)** - Guía de despliegue y configuración de servicios
+- **[Design System](docs/DESIGN_SYSTEM.md)** - Guía de estilos y componentes UI (Bootstrap 5 + FontAwesome 6)
+- **[Reglas del Proyecto](docs/PROJECT_RULES.md)** - Estándares de desarrollo y reglas obligatorias
 - **[CHANGELOG](CHANGELOG.md)** - Historial de cambios y versiones
-- **[Versionado](docs/guides/VERSIONING.md)** - Guía de versionado y releases
+- **[Guía de Configuración de Red](docs/NETWORK-CONFIG.md)** - Configuración de IPs y servidores
 
 ## Instalación Rápida
 
@@ -134,13 +135,13 @@ Aplicacion web profesional para la gestion, seguimiento y analisis de cruces sem
 - Notificaciones en tiempo real para incidencias criticas
 
 ### Mapas Interactivos
-- Mapa de cruces con marcadores diferenciados por administrador
-- Mapa de incidencias con codigo de colores segun prioridad
-- Filtros geograficos avanzados (tipo gestion, comunicacion, administrador)
-- Capas personalizables (OpenStreetMap, Satelite, Topografico)
-- Popups informativos con datos contextuales y enlaces a detalles
-- Iconos personalizados tipo pin con semaforos internos
-- Vista responsiva adaptada a diferentes resoluciones
+- **Clustering Visual Jerárquico por Severidad**: Agrupación inteligente con `leaflet.markercluster` y jerarquía de colores (Rojo para crítico, Ámbar para medio, Azul marino para normal/bajo)
+- **Desagrupación Dinámica por Zoom**: Transiciones suaves entre burbujas consolidadas y marcadores individuales
+- **Marcadores Individuales Temáticos**: Triángulo de advertencia rojo (`fa-triangle-exclamation`) para incidentes críticos y semáforo azul (`fa-traffic-light`) para operativos
+- **Popups Interactivos Bootstrap 5**: Ficha técnica con código de cruce, vías, distrito, severidad, estado y botón de gestión rápida
+- **Filtrado Dinámico en Tiempo Real**: Filtrado SQL optimizado por año, mes (con selección actual por defecto) y administrador
+- **Filtro Estricto de Incidencias Activas**: Exclusión de tickets resueltos y cancelados en el mapa de monitoreo en vivo
+- Capas cartográficas de OpenStreetMap optimizadas para visualización urbana rápida
 
 ### Dashboard Analitico
 - Estadisticas en tiempo real de incidencias

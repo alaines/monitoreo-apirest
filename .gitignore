@@ -29,15 +29,18 @@ yarn-error.log*
 lerna-debug.log*
 .pnpm-debug.log*
 
-# IDE
+# IDE & Agents
 .vscode/*
 !.vscode/extensions.json
 !.vscode/settings.json
 .idea/
+.agents/
+.antigravity/
 *.swp
 *.swo
 *~
 .DS_Store
+*.tsbuildinfo
 
 # Prisma
 prisma/migrations/
@@ -55,6 +58,8 @@ prisma/migrations/
 # Backups
 *.backup
 *.bak
+backups/
+*.sql
 
 # OS
 Thumbs.db

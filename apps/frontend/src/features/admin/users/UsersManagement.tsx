@@ -1,8 +1,10 @@
 import { useState, useEffect } from 'react';
 import Select from 'react-select';
+import toast from 'react-hot-toast';
 import { usersService, gruposService, areasService, catalogosPersonasService, type User, type Grupo, type Area, type CreateUserDto, type UpdateUserDto, type TipoDoc, type EstadoCivil } from '../../../services/admin.service';
 import { customSelectStyles, customSelectStylesSmall } from '../../../styles/react-select-custom';
 import { useAuthStore } from '../../auth/authStore';
+import { PageHeader } from '../../../components/ui/PageHeader';
 
 type SortField = 'usuario' | 'nombreCompleto' | 'email' | 'grupo' | 'estado';
 type SortOrder = 'asc' | 'desc';
@@ -191,10 +193,10 @@ export function UsersManagement() {
   };
 
   const getSortIcon = (field: SortField) => {
-    if (sortField !== field) return <i className="fas fa-sort text-muted ms-1"></i>;
+    if (sortField !== field) return <i className="fa-solid fa-sort text-muted ms-1"></i>;
     return sortOrder === 'asc'
-      ? <i className="fas fa-sort-up ms-1"></i>
-      : <i className="fas fa-sort-down ms-1"></i>;
+      ? <i className="fa-solid fa-sort-up text-primary ms-1"></i>
+      : <i className="fa-solid fa-sort-down text-primary ms-1"></i>;
   };
 
   const sortedUsers = [...users].sort((a, b) => {
@@ -311,13 +313,17 @@ export function UsersManagement() {
           updateData.password = formData.password;
         }
         await usersService.update(editingUser.id, updateData);
+        toast.success('Usuario actualizado exitosamente');
       } else {
         await usersService.create(formData);
+        toast.success('Usuario creado exitosamente');
       }
       await loadData();
       handleCloseModal();
     } catch (error: any) {
-      setErrors(error.response?.data?.message || 'Error al guardar usuario');
+      const msg = error.response?.data?.message || 'Error al guardar usuario';
+      setErrors(msg);
+      toast.error(msg);
     }
   };
 
@@ -326,10 +332,13 @@ export function UsersManagement() {
 
     try {
       await usersService.delete(user.id);
+      toast.success('Usuario eliminado exitosamente');
       await loadData();
     } catch (error: any) {
       console.error('Error eliminando usuario:', error);
-      setErrors(error.response?.data?.message || 'Error al eliminar usuario');
+      const msg = error.response?.data?.message || 'Error al eliminar usuario';
+      setErrors(msg);
+      toast.error(msg);
     }
   };
 
@@ -339,9 +348,12 @@ export function UsersManagement() {
 
     try {
       await usersService.toggleEstado(user.id);
+      toast.success(user.estado ? 'Usuario desactivado exitosamente' : 'Usuario activado exitosamente');
       await loadData();
     } catch (error: any) {
-      setErrors(error.response?.data?.message || `Error al ${action} usuario`);
+      const msg = error.response?.data?.message || `Error al ${action} usuario`;
+      setErrors(msg);
+      toast.error(msg);
     }
   };
 
@@ -356,51 +368,59 @@ export function UsersManagement() {
   }
 
   return (
-    <div className="container-fluid p-4">
-      <div className="d-flex justify-content-between align-items-center mb-4">
-        <h2 className="mb-0">
-          <i className="fas fa-users me-2"></i>
-          Gestión de Usuarios
-        </h2>
-        <button className="btn btn-primary" onClick={() => handleOpenModal()}>
-          <i className="fas fa-plus me-2"></i>
-          Nuevo Usuario
-        </button>
-      </div>
+    <div className="container-fluid p-3">
+      <PageHeader
+        icon="fa-solid fa-users-gear"
+        title="Gestión de Usuarios"
+        subtitle="Control de acceso, administración de cuentas, perfiles y permisos del sistema"
+        actions={
+          <div className="d-flex gap-2">
+            <button
+              className={`btn btn-sm ${showFilters ? 'btn-secondary' : 'btn-outline-secondary'}`}
+              onClick={() => setShowFilters(!showFilters)}
+            >
+              <i className="fa-solid fa-filter me-1"></i>
+              {showFilters ? 'Ocultar Filtros' : 'Filtros'}
+            </button>
+            <button className="btn btn-sm btn-primary" onClick={() => handleOpenModal()}>
+              <i className="fa-solid fa-plus me-1"></i>
+              Nuevo Usuario
+            </button>
+          </div>
+        }
+      />
 
       {errors && (
-        <div className="alert alert-danger alert-dismissible fade show" role="alert">
+        <div className="alert alert-danger alert-dismissible fade show py-2" role="alert">
+          <i className="fa-solid fa-triangle-exclamation me-2"></i>
           {errors}
-          <button type="button" className="btn-close" onClick={() => setErrors('')}></button>
+          <button type="button" className="btn-close btn-sm" onClick={() => setErrors('')}></button>
         </div>
       )}
 
       {/* Filtros */}
-      <div className="card border-0 shadow-sm mb-3">
-        <div className="card-header bg-white border-bottom">
-          <button
-            className="btn btn-sm btn-outline-secondary"
-            onClick={() => setShowFilters(!showFilters)}
-          >
-            <i className="fas fa-filter me-2"></i>
-            {showFilters ? 'Ocultar Filtros' : 'Mostrar Filtros'}
-          </button>
-        </div>
-        {showFilters && (
-          <div className="card-body">
+      {showFilters && (
+        <div className="card border shadow-sm mb-3">
+          <div className="card-header bg-white border-bottom py-2">
+            <h6 className="card-title mb-0 fw-semibold text-dark" style={{ fontSize: '14px' }}>
+              <i className="fa-solid fa-sliders me-2 text-primary"></i>
+              Filtros de Usuarios
+            </h6>
+          </div>
+          <div className="card-body py-3">
             <div className="row g-2">
               <div className="col-md-4">
-                <label className="form-label small">Buscar</label>
+                <label className="form-label small fw-bold text-muted mb-1">Buscar</label>
                 <input
                   type="text"
-                  className="form-control custom-input-sm"
+                  className="form-control form-control-sm"
                   placeholder="Usuario, nombre o email..."
                   value={searchInput}
                   onChange={(e) => setSearchInput(e.target.value)}
                 />
               </div>
               <div className="col-md-3">
-                <label className="form-label small">Grupo</label>
+                <label className="form-label small fw-bold text-muted mb-1">Grupo</label>
                 <Select
                   options={[
                     { value: '', label: 'Todos' },
@@ -413,7 +433,7 @@ export function UsersManagement() {
                 />
               </div>
               <div className="col-md-3">
-                <label className="form-label small">Estado</label>
+                <label className="form-label small fw-bold text-muted mb-1">Estado</label>
                 <Select
                   options={[
                     { value: '', label: 'Todos' },
@@ -436,143 +456,181 @@ export function UsersManagement() {
                   }}
                   title="Limpiar filtros"
                 >
-                  <i className="fas fa-eraser me-1"></i>
+                  <i className="fa-solid fa-eraser me-1"></i>
                   Limpiar
                 </button>
               </div>
             </div>
           </div>
-        )}
-      </div>
+        </div>
+      )}
 
-      <div className="card">
-        <div className="card-body">
+      <div className="card border shadow-sm">
+        <div className="card-header bg-white border-bottom py-2 d-flex justify-content-between align-items-center">
+          <h6 className="card-title mb-0 fw-semibold text-dark" style={{ fontSize: '14px' }}>
+            <i className="fa-solid fa-list me-2 text-primary"></i>
+            Listado de Usuarios ({total} registros)
+          </h6>
+          <div className="d-flex align-items-center gap-2">
+            <span className="small text-muted">Mostrar:</span>
+            <div style={{ width: '80px' }}>
+              <Select
+                options={[
+                  { value: 10, label: '10' },
+                  { value: 25, label: '25' },
+                  { value: 50, label: '50' },
+                  { value: 100, label: '100' }
+                ]}
+                value={{ value: limit, label: String(limit) }}
+                onChange={(option) => { setLimit(Number(option?.value || 10)); setPage(1); }}
+                styles={customSelectStylesSmall}
+                isSearchable={false}
+              />
+            </div>
+          </div>
+        </div>
+        <div className="card-body p-0">
           <div className="table-responsive">
-            <table className="table table-hover">
-              <thead>
+            <table className="table table-hover table-striped align-middle mb-0">
+              <thead className="table-light text-uppercase" style={{ fontSize: '12px' }}>
                 <tr>
-                  <th onClick={() => handleSort('usuario')} style={{ cursor: 'pointer' }}>
+                  <th style={{ width: '130px', cursor: 'pointer' }} onClick={() => handleSort('usuario')}>
                     Usuario {getSortIcon('usuario')}
                   </th>
-                  <th onClick={() => handleSort('nombreCompleto')} style={{ cursor: 'pointer' }}>
+                  <th style={{ cursor: 'pointer' }} onClick={() => handleSort('nombreCompleto')}>
                     Nombre Completo {getSortIcon('nombreCompleto')}
                   </th>
-                  <th onClick={() => handleSort('email')} style={{ cursor: 'pointer' }}>
+                  <th style={{ cursor: 'pointer' }} onClick={() => handleSort('email')}>
                     Email {getSortIcon('email')}
                   </th>
-                  <th>Teléfono</th>
-                  <th onClick={() => handleSort('grupo')} style={{ cursor: 'pointer' }}>
+                  <th style={{ width: '120px' }}>Teléfono</th>
+                  <th style={{ width: '160px', cursor: 'pointer' }} onClick={() => handleSort('grupo')}>
                     Grupo {getSortIcon('grupo')}
                   </th>
-                  <th onClick={() => handleSort('estado')} style={{ cursor: 'pointer' }}>
+                  <th style={{ width: '110px', cursor: 'pointer' }} className="text-center" onClick={() => handleSort('estado')}>
                     Estado {getSortIcon('estado')}
                   </th>
-                  <th>Acciones</th>
+                  <th style={{ width: '110px' }} className="text-center">Acciones</th>
                 </tr>
               </thead>
-              <tbody>
-                {sortedUsers.map((user) => (
-                  <tr key={user.id}>
-                    <td><strong>{user.usuario}</strong></td>
-                    <td>{user.nombreCompleto}</td>
-                    <td>{user.email || '-'}</td>
-                    <td>{user.telefono || '-'}</td>
-                    <td>
-                      <span className="badge bg-info">
-                        {user.grupo?.nombre || 'Sin grupo'}
-                      </span>
-                    </td>
-                    <td>
-                      {user.estado ? (
-                        <span className="badge bg-success">Activo</span>
-                      ) : (
-                        <span className="badge bg-secondary">Inactivo</span>
-                      )}
-                    </td>
-                    <td>
-                      <button
-                        className="btn btn-sm btn-outline-primary me-1"
-                        onClick={() => handleOpenModal(user)}
-                        title="Editar"
-                      >
-                        <i className="fas fa-edit"></i>
-                      </button>
-                      <button
-                        className={`btn btn-sm ${user.estado ? 'btn-outline-warning' : 'btn-outline-success'} me-1`}
-                        onClick={() => handleToggleEstado(user)}
-                        title={user.estado ? 'Desactivar' : 'Activar'}
-                      >
-                        <i className={`fas ${user.estado ? 'fa-user-slash' : 'fa-user-check'}`}></i>
-                      </button>
-                      {isSuperAdmin && (
-                        <button
-                          className="btn btn-sm btn-outline-danger"
-                          onClick={() => handleDelete(user)}
-                          title="Eliminar permanentemente"
-                        >
-                          <i className="fas fa-trash"></i>
-                        </button>
-                      )}
+              <tbody style={{ fontSize: '13px' }}>
+                {sortedUsers.length === 0 ? (
+                  <tr>
+                    <td colSpan={7} className="text-center py-4 text-muted">
+                      <i className="fa-solid fa-inbox fa-2x mb-2 d-block text-secondary"></i>
+                      No se encontraron registros
                     </td>
                   </tr>
-                ))}
+                ) : (
+                  sortedUsers.map((user) => (
+                    <tr key={user.id}>
+                      <td className="fw-semibold text-dark">
+                        <i className="fa-solid fa-user me-1 text-secondary small"></i>
+                        {user.usuario}
+                      </td>
+                      <td className="fw-medium text-dark">{user.nombreCompleto || '—'}</td>
+                      <td>
+                        {user.email ? (
+                          <span className="text-secondary">
+                            <i className="fa-solid fa-envelope me-1 text-secondary small"></i>
+                            {user.email}
+                          </span>
+                        ) : '—'}
+                      </td>
+                      <td>
+                        {user.telefono ? (
+                          <span>
+                            <i className="fa-solid fa-phone me-1 text-secondary small"></i>
+                            {user.telefono}
+                          </span>
+                        ) : '—'}
+                      </td>
+                      <td>
+                        <span className="badge bg-light text-dark border">
+                          <i className="fa-solid fa-shield-halved me-1 text-primary"></i>
+                          {user.grupo?.nombre || 'Sin grupo'}
+                        </span>
+                      </td>
+                      <td className="text-center">
+                        <span className={`badge ${user.estado ? 'bg-success' : 'bg-secondary'}`}>
+                          {user.estado ? 'Activo' : 'Inactivo'}
+                        </span>
+                      </td>
+                      <td className="text-center">
+                        <div className="btn-group btn-group-sm">
+                          <button
+                            className="btn btn-outline-primary btn-sm py-1 px-2"
+                            onClick={() => handleOpenModal(user)}
+                            title="Editar"
+                          >
+                            <i className="fa-solid fa-pen-to-square"></i>
+                          </button>
+                          <button
+                            className={`btn ${user.estado ? 'btn-outline-danger' : 'btn-outline-success'} btn-sm py-1 px-2`}
+                            onClick={() => handleToggleEstado(user)}
+                            title={user.estado ? 'Desactivar' : 'Activar'}
+                          >
+                            <i className={`fa-solid ${user.estado ? 'fa-user-slash' : 'fa-user-check'}`}></i>
+                          </button>
+                          {isSuperAdmin && (
+                            <button
+                              className="btn btn-outline-danger btn-sm py-1 px-2"
+                              onClick={() => handleDelete(user)}
+                              title="Eliminar permanentemente"
+                            >
+                              <i className="fa-solid fa-trash-can"></i>
+                            </button>
+                          )}
+                        </div>
+                      </td>
+                    </tr>
+                  ))
+                )}
               </tbody>
             </table>
           </div>
+        </div>
 
-          {/* Paginación */}
-          {totalPages > 1 && (
-            <div className="d-flex justify-content-between align-items-center mt-3">
-              <div>
-                <span className="text-muted">
-                  Mostrando {(page - 1) * limit + 1} - {Math.min(page * limit, total)} de {total} usuarios
-                </span>
-              </div>
-              <div className="d-flex gap-2 align-items-center">
-                <Select
-                  options={[
-                    { value: 10, label: '10 por página' },
-                    { value: 25, label: '25 por página' },
-                    { value: 50, label: '50 por página' },
-                    { value: 100, label: '100 por página' }
-                  ]}
-                  value={{ value: limit, label: `${limit} por página` }}
-                  onChange={(option) => { setLimit(Number(option?.value || 10)); setPage(1); }}
-                  styles={customSelectStylesSmall}
-                />
-                <nav>
-                  <ul className="pagination pagination-sm mb-0">
-                    <li className={`page-item ${page === 1 ? 'disabled' : ''}`}>
-                      <button
-                        className="page-link"
-                        onClick={() => setPage(page - 1)}
-                        disabled={page === 1}
-                      >
-                        Anterior
-                      </button>
-                    </li>
-                    {Array.from({ length: totalPages }, (_, i) => i + 1).map((pageNum) => (
+        {totalPages > 1 && (
+          <div className="card-footer bg-white border-top py-2 d-flex justify-content-between align-items-center">
+            <span className="small text-muted">
+              Página {page} de {totalPages} ({total} registros totales)
+            </span>
+            <nav>
+              <ul className="pagination pagination-sm mb-0">
+                <li className={`page-item ${page === 1 ? 'disabled' : ''}`}>
+                  <button className="page-link" onClick={() => setPage(page - 1)}>
+                    <i className="fa-solid fa-chevron-left"></i>
+                  </button>
+                </li>
+                {[...Array(totalPages)].map((_, i) => {
+                  const pageNum = i + 1;
+                  if (
+                    pageNum === 1 ||
+                    pageNum === totalPages ||
+                    (pageNum >= page - 1 && pageNum <= page + 1)
+                  ) {
+                    return (
                       <li key={pageNum} className={`page-item ${page === pageNum ? 'active' : ''}`}>
                         <button className="page-link" onClick={() => setPage(pageNum)}>
                           {pageNum}
                         </button>
                       </li>
-                    ))}
-                    <li className={`page-item ${page === totalPages ? 'disabled' : ''}`}>
-                      <button
-                        className="page-link"
-                        onClick={() => setPage(page + 1)}
-                        disabled={page === totalPages}
-                      >
-                        Siguiente
-                      </button>
-                    </li>
-                  </ul>
-                </nav>
-              </div>
-            </div>
-          )}
-        </div>
+                    );
+                  } else if (pageNum === page - 2 || pageNum === page + 2) {
+                    return <li key={pageNum} className="page-item disabled"><span className="page-link">...</span></li>;
+                  }
+                  return null;
+                })}
+                <li className={`page-item ${page === totalPages ? 'disabled' : ''}`}>
+                  <button className="page-link" onClick={() => setPage(page + 1)}>
+                    <i className="fa-solid fa-chevron-right"></i>
+                  </button>
+                </li>
+              </ul>
+            </nav>
+          </div>
+        )}
       </div>
 
       {/* Modal */}

@@ -5,6 +5,30 @@ Todos los cambios notables de este proyecto serán documentados en este archivo.
 El formato está basado en [Keep a Changelog](https://keepachangelog.com/es-ES/1.0.0/),
 y este proyecto adhiere a [Semantic Versioning](https://semver.org/lang/es/).
 
+## [1.2.0] - 2026-09-19
+
+### Agregado (Added)
+- **Clustering Visual Jerárquico por Severidad en Mapa (Leaflet)**: Agrupación dinámica con `leaflet.markercluster` en el mapa del Centro de Control (`Inicio.tsx`).
+  - **Cluster Rojo (Crítico)**: Grupo con al menos una incidencia de alta prioridad, cruce apagado (`id: 66`) o siniestro.
+  - **Cluster Ámbar / Amarillo (Medio)**: Grupo con incidencias medias o en proceso.
+  - **Cluster Azul Marino (Normal / Bajo)**: Grupo con incidencias leves o estado operativo.
+  - **Marcadores Individuales**: Icono de triángulo de advertencia rojo (`fa-triangle-exclamation`) para incidentes críticos y semáforo azul (`fa-traffic-light`) para cruces normales.
+  - **Popups Bootstrap 5**: Tarjetas interactivas con código de cruce, vías, distrito, severidad, estado y botón de gestión rápida de incidencias.
+- **Filtro de Mes Dinámico en Mapa**: Selector de mes con opción "Todos" y selección automática del mes actual según fecha del sistema.
+- **Estructuración del Repositorio**: Centralización ordenada de documentación en carpeta `/docs`, scripts ejecutables en `/scripts` y archivos históricos en `/archive`.
+
+- **Filtros en Gestión de Incidencias**: Corrección de carga de catálogos (`loadCatalogs`), soporte para filtrado múltiple por estados (`estadoId`), rango de fechas (`fechaDesde`, `fechaHasta`), jerarquía padre/hijo en tipos de incidencias y renderizado con react-select portals.
+- **Filtro Estricto de Incidencias Activas en Mapa**: El endpoint `getMapMarkers` y la vista de inicio ahora filtran estrictamente por tickets activos (`1: ASIGNADO`, `2: EN PROCESO`, `5: REASIGNADO`), excluyendo tickets finalizados y cancelados que aparecían al seleccionar año/mes.
+- **Paginación en Gestión de Intersecciones**: Corrección del error al avanzar de página en el listado de cruces/intersecciones.
+- **Exportación PDF en Reporte Gráfico**: Inclusión de las gráficas estadísticas renderizadas en el documento exportado con el membrete institucional actualizado.
+- **Estandarización de Terminología**: Unificación del término "Intersección / Intersecciones" en todas las vistas del sistema.
+- **Ajuste de Vista Sin Scroll**: Dashboard de inicio ajustado al 100% del alto de pantalla sin desbordes verticales.
+
+### Mejorado (Changed)
+- **Reordenamiento de Menús**: Módulo de Intersecciones reubicado inmediatamente después de Incidencias en la barra lateral.
+- **Limpieza de Menús**: Removida la opción no implementada de "Conteo Mensual" y eliminado el menú contextual redundante en Intersecciones.
+- **Pie de Página Institucional**: Actualizado a "División de Monitoreo y Control - SGF - GMU".
+
 ## [1.1.6] - 2026-01-13
 
 ### Mejorado (Changed)

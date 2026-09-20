@@ -35,6 +35,11 @@ export interface ReporteGraficoResponse {
     porTipo: DatosGrafico[];
     porCruce: DatosGrafico[];
     porMes: DatosGrafico[];
+    evolucion?: {
+      categorias: string[];
+      series: Array<{ name: string; data: number[] }>;
+      topTipos: string[];
+    };
     porEstado: DatosGrafico[];
     top5Averias: DatosTop5Averias[];
   };

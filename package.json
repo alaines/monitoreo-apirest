@@ -1,6 +1,6 @@
 {
   "name": "monitoreo-apirest",
-  "version": "1.1.6",
+  "version": "1.2.0",
   "description": "Sistema de Gestión de Incidencias de Semáforos - Monorepo",
   "private": true,
   "workspaces": [
@@ -34,9 +34,9 @@
     "version:minor": "./scripts/version-bump.sh minor",
     "version:major": "./scripts/version-bump.sh major",
     "release": "./scripts/release.sh",
-    "reload-ip": "./restart-with-new-ip.sh",
-    "reload-ip:build-frontend": "./restart-with-new-ip.sh --build-frontend",
-    "reload-ip:restart-only": "./restart-with-new-ip.sh --restart-only"
+    "reload-ip": "./scripts/restart-with-new-ip.sh",
+    "reload-ip:build-frontend": "./scripts/restart-with-new-ip.sh --build-frontend",
+    "reload-ip:restart-only": "./scripts/restart-with-new-ip.sh --restart-only"
   },
   "keywords": [
     "monitoreo",

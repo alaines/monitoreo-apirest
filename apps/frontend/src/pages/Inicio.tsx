@@ -1,28 +1,40 @@
 import { useEffect, useState, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { MapContainer, TileLayer, Marker, Popup, useMap } from 'react-leaflet';
-import L from 'leaflet';
+import { MapContainer, TileLayer, useMap } from 'react-leaflet';
 import 'leaflet/dist/leaflet.css';
 import { useAuthStore } from '../features/auth/authStore';
 import { incidentsService, Incident } from '../services/incidents.service';
 import { administradoresService, Administrador } from '../services/administradores.service';
 import { IncidentDetail } from '../features/incidents/IncidentDetail';
+import { PageHeader } from '../components/ui/PageHeader';
+import { IncidentClusterLayer } from '../components/IncidentClusterLayer';
 
 const LIMA_CENTER: [number, number] = [-12.0464, -77.0428];
+
+const MESES = [
+  { value: 1, label: 'Enero' },
+  { value: 2, label: 'Febrero' },
+  { value: 3, label: 'Marzo' },
+  { value: 4, label: 'Abril' },
+  { value: 5, label: 'Mayo' },
+  { value: 6, label: 'Junio' },
+  { value: 7, label: 'Julio' },
+  { value: 8, label: 'Agosto' },
+  { value: 9, label: 'Septiembre' },
+  { value: 10, label: 'Octubre' },
+  { value: 11, label: 'Noviembre' },
+  { value: 12, label: 'Diciembre' },
+];
 
 // Componente para forzar redimensionamiento del mapa
 function MapResizer() {
   const map = useMap();
   
   useEffect(() => {
-    // Obtener el contenedor del mapa
     const container = map.getContainer().parentElement;
-    
     if (!container) return;
 
-    // Usar ResizeObserver para detectar cambios de tamaño
     const resizeObserver = new ResizeObserver(() => {
-      // Múltiples invalidaciones durante la transición para que sea fluido
       const times = [0, 50, 100, 150, 200, 250, 300, 350];
       times.forEach(delay => {
         setTimeout(() => {
@@ -33,6 +45,11 @@ function MapResizer() {
 
     resizeObserver.observe(container);
     
+    // Invalidate immediately on mount
+    setTimeout(() => {
+      map.invalidateSize();
+    }, 100);
+
     return () => {
       resizeObserver.disconnect();
     };
@@ -41,91 +58,17 @@ function MapResizer() {
   return null;
 }
 
-// Componente para actualizar iconos cuando cambia el zoom
-function MarkerManager({ incidents, onZoomChange }: { incidents: Incident[], onZoomChange: (zoom: number) => void }) {
-  const map = useMap();
-  
-  useEffect(() => {
-    const handleZoom = () => {
-      onZoomChange(map.getZoom());
-    };
-    
-    map.on('zoomend', handleZoom);
-    // Llamar una vez al inicio para establecer el zoom inicial
-    handleZoom();
-    
-    return () => {
-      map.off('zoomend', handleZoom);
-    };
-  }, [map, onZoomChange]);
-
-  return null;
-}
-
-// Función para obtener el icono del marcador según la prioridad y zoom
-const getMarkerIcon = (prioridadId?: number, zoom: number = 13) => {
-  let color = '#FFA500'; // Naranja por defecto (MEDIA o sin prioridad)
-  
-  if (prioridadId === 1) {
-    color = '#DC3545'; // Rojo para ALTA
-  } else if (prioridadId === 2) {
-    color = '#FFA500'; // Naranja para MEDIA
-  } else if (prioridadId === 3) {
-    color = '#28A745'; // Verde para BAJA
-  }
-
-  // Escalar el tamaño del icono basado en el zoom
-  // zoom < 10: iconos pequeños, zoom > 15: iconos grandes
-  const scale = Math.max(0.4, Math.min(1.2, (zoom - 8) / 8));
-  const size = Math.round(28 * scale);
-  const fontSize = Math.round(14 * scale);
-  const borderWidth = Math.max(2, Math.round(3 * scale));
-
-  return L.divIcon({
-    className: 'custom-marker',
-    html: `
-      <div style="
-        background-color: ${color};
-        width: ${size}px;
-        height: ${size}px;
-        border-radius: 50% 50% 50% 0;
-        transform: rotate(-45deg);
-        border: ${borderWidth}px solid white;
-        box-shadow: 0 2px 5px rgba(0,0,0,0.3);
-      ">
-        <div style="
-          width: 100%;
-          height: 100%;
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          transform: rotate(45deg);
-          color: white;
-          font-weight: bold;
-          font-size: ${fontSize}px;
-        ">!</div>
-      </div>
-    `,
-    iconSize: [size, size],
-    iconAnchor: [size / 2, size],
-    popupAnchor: [0, -size]
-  });
-};
-
 interface InicioStats {
-  // Totales
   totalIncidents: number;
   activeIncidents: number;
   openTickets: number;
   inProgressTickets: number;
   closedTickets: number;
   avgResolutionTime: number;
-  // Hoy
   todayActiveIncidents: number;
   todayOpenTickets: number;
   todayInProgressTickets: number;
   todayClosedTickets: number;
-  // Cruces apagados
   crucesApagadosCount: number;
 }
 
@@ -140,8 +83,9 @@ export function Inicio() {
   const [selectedIncidentId, setSelectedIncidentId] = useState<number | null>(null);
   const [selectedAdministrador, setSelectedAdministrador] = useState<number | null>(null);
   const currentYear = new Date().getFullYear();
+  const currentMonth = new Date().getMonth() + 1;
   const [selectedAnho, setSelectedAnho] = useState<number>(currentYear);
-  const [currentZoom, setCurrentZoom] = useState(13);
+  const [selectedMes, setSelectedMes] = useState<number | null>(currentMonth);
   const [availableYears, setAvailableYears] = useState<number[]>([]);
   const [administradores, setAdministradores] = useState<Administrador[]>([]);
   const hasLoadedRef = useRef(false);
@@ -152,7 +96,6 @@ export function Inicio() {
       return;
     }
     
-    // Solo cargar una vez
     if (!hasLoadedRef.current) {
       hasLoadedRef.current = true;
       loadInicioData();
@@ -161,24 +104,24 @@ export function Inicio() {
 
   // Recargar markers cuando cambian los filtros
   useEffect(() => {
-    if (hasLoadedRef.current && administradores.length > 0) {
-      loadActiveIncidents();
+    if (hasLoadedRef.current) {
+      loadActiveIncidents(selectedAnho, selectedMes, selectedAdministrador);
     }
-  }, [selectedAnho, selectedAdministrador]);
+  }, [selectedAnho, selectedMes, selectedAdministrador]);
 
   // Listen for real-time incident updates
   useEffect(() => {
     const handleIncidentCreated = () => {
       if (hasLoadedRef.current) {
         loadInicioData();
-        loadActiveIncidents();
+        loadActiveIncidents(selectedAnho, selectedMes, selectedAdministrador);
       }
     };
 
     const handleIncidentUpdated = () => {
       if (hasLoadedRef.current) {
         loadInicioData();
-        loadActiveIncidents();
+        loadActiveIncidents(selectedAnho, selectedMes, selectedAdministrador);
       }
     };
 
@@ -189,12 +132,10 @@ export function Inicio() {
       window.removeEventListener('incidentCreated', handleIncidentCreated);
       window.removeEventListener('incidentUpdated', handleIncidentUpdated);
     };
-  }, []);
+  }, [selectedAnho, selectedMes, selectedAdministrador]);
 
   const loadInicioData = async () => {
-    // No bloqueamos la UI con setLoading
     try {
-      // Obtener estadísticas generales del backend y años disponibles
       const [backendStats, yearsData, adminsData, crucesApagados] = await Promise.all([
         incidentsService.getStatistics(),
         incidentsService.getAvailableYears(),
@@ -202,36 +143,27 @@ export function Inicio() {
         incidentsService.getCrucesApagadosCount()
       ]);
       
-      // Calcular fecha de hoy en formato YYYY-MM-DD (hora local)
       const today = new Date();
       const todayStr = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`;
       
-      // Incidencias de hoy para las estadísticas diarias
       const todayIncidentsData = await incidentsService.getIncidents({ 
         page: 1, 
         limit: 1000,
       });
 
-      const allIncidents = todayIncidentsData.data;
-      
-      // Filtrar incidencias de hoy - comparar por fecha YYYY-MM-DD
-      // Las fechas de la BD vienen como UTC pero representan hora local de Perú
-      // Extraemos solo la parte de fecha (YYYY-MM-DD) del string ISO
+      const allIncidents = todayIncidentsData.data || [];
       const todayIncidents = allIncidents.filter((i: Incident) => {
-        // Extraer YYYY-MM-DD de la fecha ISO (ej: "2026-01-10T00:27:08.474Z" -> "2026-01-10")
-        const createdDateStr = i.createdAt.split('T')[0];
+        const createdDateStr = i.createdAt ? i.createdAt.split('T')[0] : '';
         return createdDateStr === todayStr;
       });
 
-      // Estadísticas de hoy
       const todayOpenTickets = todayIncidents.filter((t: Incident) => t.estadoId === 1).length;
       const todayInProgressTickets = todayIncidents.filter((t: Incident) => t.estadoId === 2).length;
       const todayClosedTickets = todayIncidents.filter((t: Incident) => t.estadoId === 3 || t.estadoId === 4).length;
 
-      // Calcular tiempo promedio de resolución (solo de las incidencias resueltas que tenemos)
       const resolvedIncidents = allIncidents.filter((t: Incident) => t.estadoId === 3 || t.estadoId === 4);
       const totalResolutionTime = resolvedIncidents.reduce((acc: number, inc: Incident) => {
-        if (inc.updatedAt) {
+        if (inc.updatedAt && inc.createdAt) {
           const created = new Date(inc.createdAt).getTime();
           const updated = new Date(inc.updatedAt).getTime();
           return acc + (updated - created);
@@ -257,307 +189,336 @@ export function Inicio() {
       };
 
       setStats(statsData);
-      setAvailableYears(yearsData);
-      setAdministradores(adminsData);
+      setAvailableYears(yearsData || []);
+      setAdministradores(adminsData || []);
       
-      // Ajustar año seleccionado si no está en la lista
-      if (yearsData.length > 0 && !yearsData.includes(currentYear)) {
-        setSelectedAnho(yearsData[0]);
+      let initialYear = currentYear;
+      if (yearsData && yearsData.length > 0 && !yearsData.includes(currentYear)) {
+        initialYear = yearsData[0];
+        setSelectedAnho(initialYear);
       }
-      
-      setLoading(false);
-      
-      // Cargar incidents activos del año actual
-      await loadActiveIncidents();
+      loadActiveIncidents(initialYear, currentMonth, selectedAdministrador);
     } catch (error) {
-      console.error('❌ Error cargando datos de inicio:', error);
+      console.error('Error cargando estadísticas:', error);
+    } finally {
       setLoading(false);
     }
   };
 
-  const loadActiveIncidents = async () => {
+  const loadActiveIncidents = async (targetYear?: number, targetMes?: number | null, targetAdmin?: number | null) => {
     try {
       setLoadingMarkers(true);
+      const yearToUse = targetYear !== undefined ? targetYear : selectedAnho;
+      const mesToUse = targetMes !== undefined ? targetMes : selectedMes;
+      const adminToUse = targetAdmin !== undefined ? targetAdmin : selectedAdministrador;
       
       const params: any = {
         page: 1,
         limit: 10000,
-        anho: selectedAnho,
       };
-      
-      // Solo agregar administradorId si está seleccionado
-      if (selectedAdministrador) {
-        params.administradorId = selectedAdministrador;
+
+      if (yearToUse) {
+        params.anho = yearToUse;
+      }
+
+      if (mesToUse) {
+        params.mes = mesToUse;
       }
       
-      // Usar endpoint ligero para markers
+      if (adminToUse) {
+        params.administradorId = adminToUse;
+      }
+      
       const activeIncidentsData = await incidentsService.getMapMarkers(params);
-      
-      // Solo incidencias con coordenadas para el mapa
-      const activeForMap = activeIncidentsData.data.filter((i: Incident) => 
-        i.latitude && i.longitude
+      const activeForMap = (activeIncidentsData.data || []).filter((i: Incident) => 
+        i.latitude !== null && i.latitude !== undefined &&
+        i.longitude !== null && i.longitude !== undefined &&
+        !isNaN(Number(i.latitude)) && !isNaN(Number(i.longitude)) &&
+        (i.estadoId === 1 || i.estadoId === 2 || i.estadoId === 5 || !i.estadoId) &&
+        i.estadoId !== 3 && i.estadoId !== 4 &&
+        (!yearToUse || i.anho === yearToUse || (i.createdAt && new Date(i.createdAt).getFullYear() === yearToUse)) &&
+        (!mesToUse || i.mes === mesToUse || (i.createdAt && new Date(i.createdAt).getMonth() + 1 === mesToUse))
       );
-      
+
       setActiveIncidents(activeForMap);
     } catch (error) {
-      console.error('❌ Error cargando incidentes activos:', error);
+      console.error('Error cargando incidentes activos:', error);
+      setActiveIncidents([]);
     } finally {
       setLoadingMarkers(false);
     }
   };
 
   return (
-    <div className="container-fluid" style={{ padding: '20px', height: 'calc(100vh - 120px)', display: 'flex', flexDirection: 'column' }}>
-        <div className="row g-3 mb-3" style={{ flexShrink: 0 }}>
-          <div className="col">
-            <div className="card border-0 shadow-sm h-100">
-              <div className="card-body">
-                <div className="d-flex justify-content-between align-items-start mb-2">
-                  <h6 className="text-muted mb-0">Pendientes Hoy</h6>
-                  <i className="fas fa-exclamation-circle" style={{ fontSize: '24px', color: '#ffc107' }}></i>
+    <div className="container-fluid px-3 py-2" style={{ height: '100%', display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
+      
+      {/* Cabecera compacta */}
+      <div style={{ flexShrink: 0, marginBottom: '6px' }}>
+        <PageHeader 
+          icon="fa-solid fa-desktop"
+          title="Centro de Control y Monitoreo"
+          subtitle="Supervisión en tiempo real de semáforos, intersecciones e incidencias técnicas en Lima Metropolitana"
+          actions={
+            <>
+              <button 
+                className="btn btn-sm btn-outline-secondary"
+                onClick={() => {
+                  loadInicioData();
+                  loadActiveIncidents(selectedAnho, selectedMes, selectedAdministrador);
+                }}
+                title="Actualizar datos"
+              >
+                <i className="fa-solid fa-arrows-rotate me-1"></i> Actualizar
+              </button>
+              <button 
+                className="btn btn-sm btn-primary"
+                onClick={() => navigate('/incidents')}
+              >
+                <i className="fa-solid fa-list me-1"></i> Ver Incidencias
+              </button>
+            </>
+          }
+        />
+      </div>
+
+      {/* Cuadrícula de KPIs / Widgets Técnicos Compactos */}
+      <div className="row g-2 mb-2" style={{ flexShrink: 0 }}>
+        {/* KPI 1: Pendientes Hoy */}
+        <div className="col">
+          <div className="card card-widget mb-0 h-100 border">
+            <div className="card-body py-2 px-3">
+              <div className="d-flex justify-content-between align-items-center mb-1">
+                <div className="widget-subheading text-uppercase text-muted fw-bold" style={{ fontSize: '11px' }}>Pendientes Hoy</div>
+                <div className="widget-icon-box text-warning" style={{ width: '28px', height: '28px' }}>
+                  <i className="fa-solid fa-clock" style={{ fontSize: '13px' }}></i>
                 </div>
-                {loading ? (
-                  <div className="placeholder-glow">
-                    <span className="placeholder col-6" style={{ height: '2.5rem', display: 'block' }}></span>
-                  </div>
-                ) : (
-                  <h2 className="mb-0" style={{ fontSize: '2.5rem', fontWeight: 'bold' }}>
-                    {stats?.todayOpenTickets || 0}
-                  </h2>
-                )}
-                <small className="text-muted">Tickets sin atender del día</small>
               </div>
+              <div className="widget-numbers text-dark mb-0" style={{ fontSize: '20px' }}>
+                {loading ? <span className="placeholder col-6"></span> : (stats?.todayOpenTickets || 0)}
+              </div>
+              <small className="text-muted d-block" style={{ fontSize: '10px' }}>Tickets sin atender del día</small>
             </div>
           </div>
-          <div className="col">
-            <div className="card border-0 shadow-sm h-100">
-              <div className="card-body">
-                <div className="d-flex justify-content-between align-items-start mb-2">
-                  <h6 className="text-muted mb-0">Cerrados Hoy</h6>
-                  <i className="fas fa-check-circle" style={{ fontSize: '24px', color: '#28a745' }}></i>
+        </div>
+
+        {/* KPI 2: Cerrados Hoy */}
+        <div className="col">
+          <div className="card card-widget mb-0 h-100 border">
+            <div className="card-body py-2 px-3">
+              <div className="d-flex justify-content-between align-items-center mb-1">
+                <div className="widget-subheading text-uppercase text-muted fw-bold" style={{ fontSize: '11px' }}>Cerrados Hoy</div>
+                <div className="widget-icon-box text-success" style={{ width: '28px', height: '28px' }}>
+                  <i className="fa-solid fa-circle-check" style={{ fontSize: '13px' }}></i>
                 </div>
-                {loading ? (
-                  <div className="placeholder-glow">
-                    <span className="placeholder col-6" style={{ height: '2.5rem', display: 'block' }}></span>
-                  </div>
-                ) : (
-                  <h2 className="mb-0" style={{ fontSize: '2.5rem', fontWeight: 'bold' }}>
-                    {stats?.todayClosedTickets || 0}
-                  </h2>
-                )}
-                <small className="text-muted">Tickets resueltos del día</small>
               </div>
+              <div className="widget-numbers text-success mb-0" style={{ fontSize: '20px' }}>
+                {loading ? <span className="placeholder col-6"></span> : (stats?.todayClosedTickets || 0)}
+              </div>
+              <small className="text-muted d-block" style={{ fontSize: '10px' }}>Tickets resueltos del día</small>
             </div>
           </div>
-          <div className="col">
-            <div className="card border-0 shadow-sm h-100">
-              <div className="card-body">
-                <div className="d-flex justify-content-between align-items-start mb-2">
-                  <h6 className="text-muted mb-0">Total Activos</h6>
-                  <i className="fas fa-tasks" style={{ fontSize: '24px', color: '#0056b3' }}></i>
+        </div>
+
+        {/* KPI 3: Total Activos */}
+        <div className="col">
+          <div className="card card-widget mb-0 h-100 border">
+            <div className="card-body py-2 px-3">
+              <div className="d-flex justify-content-between align-items-center mb-1">
+                <div className="widget-subheading text-uppercase text-muted fw-bold" style={{ fontSize: '11px' }}>Total Activos</div>
+                <div className="widget-icon-box text-primary" style={{ width: '28px', height: '28px' }}>
+                  <i className="fa-solid fa-list-check" style={{ fontSize: '13px' }}></i>
                 </div>
-                {loading ? (
-                  <div className="placeholder-glow">
-                    <span className="placeholder col-6" style={{ height: '2.5rem', display: 'block' }}></span>
-                  </div>
-                ) : (
-                  <h2 className="mb-0" style={{ fontSize: '2.5rem', fontWeight: 'bold' }}>
-                    {stats?.activeIncidents || 0}
-                  </h2>
-                )}
-                <small className="text-muted">Todos los tickets abiertos</small>
               </div>
+              <div className="widget-numbers text-primary mb-0" style={{ fontSize: '20px' }}>
+                {loading ? <span className="placeholder col-6"></span> : (stats?.activeIncidents || 0)}
+              </div>
+              <small className="text-muted d-block" style={{ fontSize: '10px' }}>Todos los tickets abiertos</small>
             </div>
           </div>
-          <div className="col">
-            <div className="card border-0 shadow-sm h-100">
-              <div className="card-body">
-                <div className="d-flex justify-content-between align-items-start mb-2">
-                  <h6 className="text-muted mb-0">Total Resueltos</h6>
-                  <i className="fas fa-check-double" style={{ fontSize: '24px', color: '#17a2b8' }}></i>
+        </div>
+
+        {/* KPI 4: Total Resueltos */}
+        <div className="col">
+          <div className="card card-widget mb-0 h-100 border">
+            <div className="card-body py-2 px-3">
+              <div className="d-flex justify-content-between align-items-center mb-1">
+                <div className="widget-subheading text-uppercase text-muted fw-bold" style={{ fontSize: '11px' }}>Total Resueltos</div>
+                <div className="widget-icon-box text-secondary" style={{ width: '28px', height: '28px' }}>
+                  <i className="fa-solid fa-check-double" style={{ fontSize: '13px' }}></i>
                 </div>
-                {loading ? (
-                  <div className="placeholder-glow">
-                    <span className="placeholder col-6" style={{ height: '2.5rem', display: 'block' }}></span>
-                  </div>
-                ) : (
-                  <h2 className="mb-0" style={{ fontSize: '2.5rem', fontWeight: 'bold' }}>
-                    {stats?.closedTickets || 0}
-                  </h2>
-                )}
-                <small className="text-muted">Histórico de cerrados</small>
               </div>
+              <div className="widget-numbers text-dark mb-0" style={{ fontSize: '20px' }}>
+                {loading ? <span className="placeholder col-6"></span> : (stats?.closedTickets || 0)}
+              </div>
+              <small className="text-muted d-block" style={{ fontSize: '10px' }}>Histórico acumulado</small>
             </div>
           </div>
-          <div className="col">
-            <div 
-              className="card border-0 shadow-sm h-100" 
-              style={{ cursor: 'pointer', transition: 'transform 0.2s' }}
-              onMouseEnter={(e) => e.currentTarget.style.transform = 'translateY(-2px)'}
-              onMouseLeave={(e) => e.currentTarget.style.transform = 'translateY(0)'}
-              onClick={() => navigate('/incidents?incidenciaId=66&estadoId=1,2,5')}
-            >
-              <div className="card-body">
-                <div className="d-flex justify-content-between align-items-start mb-2">
-                  <h6 className="text-muted mb-0">Cruces Apagados</h6>
-                  <i className="fas fa-traffic-light" style={{ fontSize: '24px', color: '#dc3545' }}></i>
+        </div>
+
+        {/* KPI 5: Intersecciones Apagadas (Crítico) */}
+        <div className="col">
+          <div 
+            className="card card-widget mb-0 h-100 border border-danger-subtle" 
+            style={{ cursor: 'pointer', backgroundColor: '#fffcfc' }}
+            onClick={() => navigate('/incidents?incidenciaId=66&estadoId=1,2,5')}
+            title="Ver tickets de intersecciones apagadas"
+          >
+            <div className="card-body py-2 px-3">
+              <div className="d-flex justify-content-between align-items-center mb-1">
+                <div className="widget-subheading text-uppercase text-danger fw-bold" style={{ fontSize: '11px' }}>Intersecciones Apagadas</div>
+                <div className="widget-icon-box text-danger" style={{ width: '28px', height: '28px', backgroundColor: 'rgba(192, 57, 43, 0.1)' }}>
+                  <i className="fa-solid fa-traffic-light" style={{ fontSize: '13px' }}></i>
                 </div>
-                {loading ? (
-                  <div className="placeholder-glow">
-                    <span className="placeholder col-6" style={{ height: '2.5rem', display: 'block' }}></span>
-                  </div>
-                ) : (
-                  <h2 className="mb-0" style={{ fontSize: '2.5rem', fontWeight: 'bold', color: '#dc3545' }}>
-                    {stats?.crucesApagadosCount || 0}
-                  </h2>
-                )}
-                <small className="text-muted d-block">Pendiente, En Proceso, Reasignado</small>
-                <small className="text-primary">
-                  <i className="fas fa-arrow-right me-1"></i>
-                  Click para ver detalles
+              </div>
+              <div className="widget-numbers text-danger mb-0" style={{ fontSize: '20px' }}>
+                {loading ? <span className="placeholder col-6"></span> : (stats?.crucesApagadosCount || 0)}
+              </div>
+              <div className="d-flex justify-content-between align-items-center mt-1">
+                <small className="text-muted" style={{ fontSize: '10px' }}>Atención urgente</small>
+                <small className="text-danger fw-bold" style={{ fontSize: '10px' }}>
+                  Ver detalles <i className="fa-solid fa-arrow-right ms-1"></i>
                 </small>
               </div>
             </div>
           </div>
         </div>
+      </div>
 
-        <div className="row g-3" style={{ flex: 1, minHeight: 0 }}>
-          <div className="col-12" style={{ height: '100%' }}>
-            <div className="card border-0 shadow-sm" style={{ height: '100%' }}>
-              <div className="card-body p-0" style={{ position: 'relative', height: '100%' }}>
-                {activeIncidents.length === 0 && (
-                  <div style={{ 
-                    position: 'absolute', 
-                    top: '50%', 
-                    left: '50%', 
-                    transform: 'translate(-50%, -50%)', 
-                    zIndex: 1000,
-                    backgroundColor: 'white',
-                    padding: '20px',
-                    borderRadius: '8px',
-                    boxShadow: '0 2px 8px rgba(0,0,0,0.15)',
-                    textAlign: 'center'
-                  }}>
-                    <i className="fas fa-map-marked-alt fa-3x text-muted mb-3"></i>
-                    <h5 className="text-muted">No hay incidencias para mostrar</h5>
-                    <p className="text-muted mb-0">Las incidencias deben tener ubicación geográfica para mostrarse en el mapa</p>
+      {/* Contenedor del Mapa en Card Formal que llena el espacio restante */}
+      <div className="card mb-0 border shadow-sm" style={{ flex: 1, minHeight: 0, display: 'flex', flexDirection: 'column' }}>
+        <div className="card-header bg-white border-bottom py-1 px-3 d-flex justify-content-between align-items-center">
+          <div className="d-flex align-items-center">
+            <i className="fa-solid fa-map-location-dot text-primary me-2"></i>
+            <span className="fw-bold text-dark" style={{ fontSize: '12px' }}>
+              Mapa de Incidencias Georreferenciadas
+            </span>
+          </div>
+          <span className="badge bg-light text-dark border" style={{ fontSize: '11px' }}>
+            <i className="fa-solid fa-map-pin text-danger me-1"></i>
+            {activeIncidents.length} ubicaciones
+          </span>
+        </div>
+
+        <div className="card-body p-0" style={{ position: 'relative', flex: 1, minHeight: 0 }}>
+          {activeIncidents.length === 0 && !loadingMarkers && (
+            <div style={{ 
+              position: 'absolute', 
+              top: '50%', 
+              left: '50%', 
+              transform: 'translate(-50%, -50%)', 
+              zIndex: 1000,
+              backgroundColor: 'white',
+              padding: '20px 24px',
+              borderRadius: 'var(--border-radius)',
+              border: '1px solid var(--enterprise-border)',
+              boxShadow: 'var(--shadow)',
+              textAlign: 'center'
+            }}>
+              <i className="fa-solid fa-map-location-dot fa-2x text-muted mb-2"></i>
+              <h6 className="text-dark fw-bold mb-1">No hay incidencias georreferenciadas</h6>
+              <small className="text-muted">Las incidencias deben contar con coordenadas para mostrarse en el mapa.</small>
+            </div>
+          )}
+          
+          {/* Panel Flotante de Filtro */}
+          <div 
+            className="card border shadow-sm"
+            style={{
+              position: 'absolute',
+              top: '12px',
+              right: '12px',
+              zIndex: 1000,
+              width: '220px',
+              backgroundColor: 'rgba(255, 255, 255, 0.95)',
+              backdropFilter: 'blur(4px)',
+            }}
+          >
+            <div className="card-body p-2 px-3">
+              <div className="mb-2">
+                <label className="form-label mb-1 fw-bold text-muted" style={{ fontSize: '10.5px' }}>
+                  <i className="fa-solid fa-calendar-days text-secondary me-1"></i> Año:
+                </label>
+                <select 
+                  className="form-select form-select-sm py-1"
+                  style={{ fontSize: '12px' }}
+                  value={selectedAnho}
+                  onChange={(e) => setSelectedAnho(parseInt(e.target.value))}
+                  disabled={loadingMarkers}
+                >
+                  {availableYears.map(year => (
+                    <option key={year} value={year}>{year}</option>
+                  ))}
+                </select>
+              </div>
+
+              <div className="mb-2">
+                <label className="form-label mb-1 fw-bold text-muted" style={{ fontSize: '10.5px' }}>
+                  <i className="fa-solid fa-calendar text-secondary me-1"></i> Mes:
+                </label>
+                <select 
+                  className="form-select form-select-sm py-1"
+                  style={{ fontSize: '12px' }}
+                  value={selectedMes || ''}
+                  onChange={(e) => setSelectedMes(e.target.value ? parseInt(e.target.value) : null)}
+                  disabled={loadingMarkers}
+                >
+                  <option value="">Todos</option>
+                  {MESES.map(m => (
+                    <option key={m.value} value={m.value}>{m.label}</option>
+                  ))}
+                </select>
+              </div>
+
+              <div className="mb-2">
+                <label className="form-label mb-1 fw-bold text-muted" style={{ fontSize: '10.5px' }}>
+                  <i className="fa-solid fa-user-shield text-secondary me-1"></i> Administrado por:
+                </label>
+                <select 
+                  className="form-select form-select-sm py-1"
+                  style={{ fontSize: '12px' }}
+                  value={selectedAdministrador || ''}
+                  onChange={(e) => setSelectedAdministrador(e.target.value ? parseInt(e.target.value) : null)}
+                  disabled={loadingMarkers}
+                >
+                  <option value="">Todos</option>
+                  {administradores.map(admin => (
+                    <option key={admin.id} value={admin.id}>{admin.nombre}</option>
+                  ))}
+                </select>
+              </div>
+
+              <div className="pt-2 border-top d-flex justify-content-between align-items-center" style={{ fontSize: '11px', color: 'var(--gray-600)' }}>
+                <span className="fw-semibold">{activeIncidents.length} ubicaciones</span>
+                {loadingMarkers && (
+                  <div className="spinner-border spinner-border-sm text-primary" role="status" style={{ width: '13px', height: '13px' }}>
+                    <span className="visually-hidden">Cargando...</span>
                   </div>
                 )}
-                {/* Filtro de administrador y año */}
-                <div style={{
-                  position: 'absolute',
-                  top: '20px',
-                  right: '20px',
-                  zIndex: 1000,
-                  backgroundColor: 'white',
-                  padding: '12px 15px',
-                  borderRadius: '8px',
-                  boxShadow: '0 2px 8px rgba(0,0,0,0.2)',
-                  fontSize: '13px',
-                  minWidth: '220px'
-                }}>
-                  <div style={{ marginBottom: '10px' }}>
-                    <label style={{ fontSize: '12px', color: '#333', fontWeight: 'bold', display: 'block', marginBottom: '6px' }}>
-                      <i className="fas fa-calendar-alt me-2"></i>
-                      Año:
-                    </label>
-                    <select 
-                      className="form-select form-select-sm"
-                      value={selectedAnho}
-                      onChange={(e) => setSelectedAnho(parseInt(e.target.value))}
-                      style={{ fontSize: '12px' }}
-                      disabled={loadingMarkers}
-                    >
-                      {availableYears.map(year => (
-                        <option key={year} value={year}>{year}</option>
-                      ))}
-                    </select>
-                  </div>
-                  <div style={{ marginBottom: '8px' }}>
-                    <label style={{ fontSize: '12px', color: '#333', fontWeight: 'bold', display: 'block', marginBottom: '6px' }}>
-                      <i className="fas fa-user-tie me-2"></i>
-                      Administrado por:
-                    </label>
-                    <select 
-                      className="form-select form-select-sm"
-                      value={selectedAdministrador || ''}
-                      onChange={(e) => setSelectedAdministrador(e.target.value ? parseInt(e.target.value) : null)}
-                      style={{ fontSize: '12px' }}
-                      disabled={loadingMarkers}
-                    >
-                      <option value="">Todos</option>
-                      {administradores.map(admin => (
-                        <option key={admin.id} value={admin.id}>{admin.nombre}</option>
-                      ))}
-                    </select>
-                  </div>
-                  <div style={{ fontSize: '11px', color: '#666', paddingTop: '8px', borderTop: '1px solid #eee', display: 'flex', alignItems: 'center', gap: '8px' }}>
-                    <span>{activeIncidents.length} incidencias activas</span>
-                    {loadingMarkers && (
-                      <div className="spinner-border spinner-border-sm text-primary" role="status" style={{ width: '14px', height: '14px' }}>
-                        <span className="visually-hidden">Cargando...</span>
-                      </div>
-                    )}
-                  </div>
-                </div>
-                <div style={{ height: '100%', width: '100%' }}>
-                  <MapContainer 
-                    {...({ center: LIMA_CENTER, zoom: 12, scrollWheelZoom: true } as any)}
-                    style={{ height: '100%', width: '100%' }}
-                  >
-                    <MapResizer />
-                    <MarkerManager incidents={activeIncidents} onZoomChange={setCurrentZoom} />
-                    <TileLayer url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" />
-                    {activeIncidents.map((incident) => {
-                      if (!incident.latitude || !incident.longitude) return null;
-                      const markerIcon = getMarkerIcon(incident.incidencia?.prioridad?.id, currentZoom);
-                      return (
-                        <Marker 
-                          key={incident.id} 
-                          {...({ position: [incident.latitude, incident.longitude], icon: markerIcon } as any)}
-                        >
-                          <Popup>
-                            <div style={{ minWidth: '200px', fontSize: '13px' }}>
-                              <div style={{ marginBottom: '10px' }}>
-                                <strong style={{ fontSize: '15px', color: '#0056b3', display: 'block', marginBottom: '6px' }}>
-                                  {incident.incidencia?.tipo || 'Incidencia'}
-                                </strong>
-                                {incident.cruce?.nombre && (
-                                  <div style={{ marginBottom: '4px' }}>
-                                    <strong>📍</strong> {incident.cruce.nombre}
-                                  </div>
-                                )}
-                                <div style={{ marginBottom: '4px' }}>
-                                  <strong>Ticket:</strong> #{incident.id}
-                                </div>
-                                <div style={{ marginBottom: '8px', color: '#dc3545', fontWeight: '500' }}>
-                                  ⏱️ {(() => {
-                                    const days = Math.floor((new Date().getTime() - new Date(incident.createdAt).getTime()) / (1000 * 60 * 60 * 24));
-                                    return days === 0 ? 'Hoy' : `${days} día${days > 1 ? 's' : ''} sin atención`;
-                                  })()}
-                                </div>
-                              </div>
-                              <button
-                                className="btn btn-sm btn-primary w-100"
-                                onClick={() => {
-                                  setSelectedIncidentId(incident.id);
-                                  setDetailModalOpen(true);
-                                }}
-                                style={{ fontSize: '12px' }}
-                              >
-                                Ver Detalle / Seguimiento
-                              </button>
-                            </div>
-                          </Popup>
-                        </Marker>
-                      );
-                    })}
-                  </MapContainer>
-                </div>
               </div>
             </div>
           </div>
+
+          <div style={{ height: '100%', width: '100%' }}>
+            <MapContainer 
+              {...({ center: LIMA_CENTER, zoom: 12, scrollWheelZoom: true } as any)}
+              style={{ height: '100%', width: '100%' }}
+            >
+              <MapResizer />
+              <TileLayer 
+                url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" 
+                attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+              />
+              <IncidentClusterLayer 
+                incidents={activeIncidents} 
+                onSelectIncident={(incidentId) => {
+                  setSelectedIncidentId(incidentId);
+                  setDetailModalOpen(true);
+                }} 
+              />
+            </MapContainer>
+          </div>
         </div>
+      </div>
 
       {detailModalOpen && selectedIncidentId && (
         <IncidentDetail

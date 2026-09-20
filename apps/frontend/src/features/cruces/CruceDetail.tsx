@@ -4,6 +4,7 @@ import { MapContainer, TileLayer, Marker, Popup } from 'react-leaflet';
 import 'leaflet/dist/leaflet.css';
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
+import { toast } from 'react-hot-toast';
 import { getMapImage } from '../../utils/getMapImage';
 import { useNavigate, useParams } from 'react-router-dom';
 import { crucesService, perifericosService, Cruce, Periferico, CrucePeriferico } from '../../services/cruces.service';
@@ -32,7 +33,7 @@ export function CruceDetail({ cruceId, onClose }: CruceDetailProps) {
       doc.text('Sistema de Monitoreo de Semáforos', 105, 15, { align: 'center' });
 
       doc.setFontSize(13);
-      doc.text('Ficha de Cruce', 105, 24, { align: 'center' });
+      doc.text('Ficha de Intersección', 105, 24, { align: 'center' });
       if (cruce.nombre) {
         doc.setFontSize(12);
         doc.text(cruce.nombre, 105, 32, { align: 'center' });
@@ -42,7 +43,7 @@ export function CruceDetail({ cruceId, onClose }: CruceDetailProps) {
       let y = 42;
 
       // Footer con número de página
-      const addFooter = (doc) => {
+      const addFooter = (doc: any) => {
         const pageCount = doc.internal.getNumberOfPages();
         for (let i = 1; i <= pageCount; i++) {
           doc.setPage(i);
@@ -83,7 +84,7 @@ export function CruceDetail({ cruceId, onClose }: CruceDetailProps) {
         ['Código', cruce.codigo || 'N/A'],
         ['Código Anterior', cruce.codigoAnterior || 'N/A'],
         ['Distrito', cruce.ubigeo?.distrito || cruce.ubigeoId || 'N/A'],
-        ['Tipo de Cruce', getTipoNombrePDF(cruce.tipoCruce)],
+        ['Tipo de Intersección', getTipoNombrePDF(cruce.tipoCruce)],
         ['Tipo de Gestión', getTipoNombrePDF(cruce.tipoGestion)],
         ['Tipo de Control', getTipoNombrePDF(cruce.tipoControl)],
         ['Tipo de Operación', getTipoNombrePDF(cruce.tipoOperacion)],
@@ -126,7 +127,7 @@ export function CruceDetail({ cruceId, onClose }: CruceDetailProps) {
         margin: { left: 14 + columnWidth + 2 },
       });
 
-      y = Math.max(doc.lastAutoTable.finalY) + 6;
+      y = Math.max((doc as any).lastAutoTable.finalY) + 6;
 
       // Observaciones (si existen)
       if (cruce.observaciones) {
@@ -169,7 +170,7 @@ export function CruceDetail({ cruceId, onClose }: CruceDetailProps) {
       }
 
       addFooter(doc);
-      doc.save(`ficha-cruce-${cruce.codigo || cruce.id}.pdf`);
+      doc.save(`ficha-interseccion-${cruce.codigo || cruce.id}.pdf`);
     };
   const navigate = useNavigate();
   const params = useParams();
@@ -216,7 +217,7 @@ export function CruceDetail({ cruceId, onClose }: CruceDetailProps) {
       setCruce(data);
     } catch (error) {
       console.error('Error loading cruce:', error);
-      alert('Error al cargar el cruce');
+      toast.error('Error al cargar la información de la intersección');
     } finally {
       setLoading(false);
     }
@@ -257,14 +258,16 @@ export function CruceDetail({ cruceId, onClose }: CruceDetailProps) {
   };
 
   const handleOpenPlano = (planoPath: string, isPdf: boolean) => {
+    const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:3001/api';
+    const baseUrl = apiUrl.replace('/api', '');
     if (isPdf) {
       // Para PDFs, abrir en modal
-      setSelectedPlano(`http://192.168.18.230:3001${planoPath}`);
+      setSelectedPlano(`${baseUrl}${planoPath.startsWith('/') ? '' : '/'}${planoPath}`);
       setPlanoModalOpen(true);
     } else {
       // Para DWG, descargar directamente
       const link = document.createElement('a');
-      link.href = `http://192.168.18.230:3001${planoPath}`;
+      link.href = `${baseUrl}${planoPath.startsWith('/') ? '' : '/'}${planoPath}`;
       link.download = planoPath.split('/').pop() || 'plano.dwg';
       document.body.appendChild(link);
       link.click();
@@ -289,14 +292,9 @@ export function CruceDetail({ cruceId, onClose }: CruceDetailProps) {
         observaciones: newPeriferico.observaciones || undefined
       };
       
-      // No enviar IP por ahora ya que es un tipo no soportado (cidr)
-      // if (newPeriferico.ip) {
-      //   perifericoData.ip = newPeriferico.ip;
-      // }
-      
       const createdPeriferico = await perifericosService.createPeriferico(perifericoData);
       
-      // 2. Asociar el periférico al cruce
+      // 2. Asociar el periférico a la intersección
       await crucesService.addPeriferico(id, createdPeriferico.id);
       
       // 3. Recargar periféricos y cerrar modal
@@ -317,24 +315,24 @@ export function CruceDetail({ cruceId, onClose }: CruceDetailProps) {
         observaciones: ''
       });
       
-      alert('Periférico agregado exitosamente');
+      toast.success('Periférico agregado exitosamente');
     } catch (error: any) {
       console.error('Error completo al agregar periférico:', error);
       console.error('Detalle del error:', error.response?.data || error.message);
-      alert(`Error al agregar el periférico: ${error.response?.data?.message || error.message || 'Error desconocido'}`);
+      toast.error(`Error al agregar periférico: ${error.response?.data?.message || error.message || 'Error desconocido'}`);
     }
   };
 
   const handleRemovePeriferico = async (perifericoId: number) => {
     if (id === undefined) return;
-    if (!confirm('¿Está seguro de eliminar este periférico?')) return;
+    if (!window.confirm('¿Está seguro de eliminar este periférico?')) return;
     try {
       await crucesService.removePeriferico(id, perifericoId);
       await loadPerifericos();
-      alert('Periférico eliminado exitosamente');
+      toast.success('Periférico eliminado exitosamente');
     } catch (error) {
       console.error('Error removing periferico:', error);
-      alert('Error al eliminar el periférico');
+      toast.error('Error al eliminar el periférico');
     }
   };
 
@@ -350,7 +348,7 @@ export function CruceDetail({ cruceId, onClose }: CruceDetailProps) {
 
   if (!cruce) {
     return (
-      <div className="alert alert-danger">Cruce no encontrado</div>
+      <div className="alert alert-danger">Intersección no encontrada</div>
     );
   }
 
@@ -362,8 +360,8 @@ export function CruceDetail({ cruceId, onClose }: CruceDetailProps) {
             <div className="card-header bg-white border-bottom-0 pb-0">
               <div className="d-flex justify-content-between align-items-center">
                 <h5 className="fw-bold mb-0">
-                  <i className="fas fa-traffic-light me-2"></i>
-                  Detalle del Cruce
+                  <i className="fa-solid fa-traffic-light me-2 text-primary"></i>
+                  Detalle de la Intersección
                 </h5>
                 <div className="d-flex gap-2">
                   {cruce.planoPdf && (
@@ -372,7 +370,7 @@ export function CruceDetail({ cruceId, onClose }: CruceDetailProps) {
                       onClick={() => handleOpenPlano(cruce.planoPdf!, true)}
                       title="Visualizar PDF"
                     >
-                      <i className="fas fa-file-pdf"></i>
+                      <i className="fa-solid fa-file-pdf"></i>
                     </button>
                   )}
                   {cruce.planoDwg && (
@@ -381,14 +379,14 @@ export function CruceDetail({ cruceId, onClose }: CruceDetailProps) {
                       onClick={() => handleOpenPlano(cruce.planoDwg!, false)}
                       title="Descargar DWG"
                     >
-                      <i className="fas fa-file"></i>
+                      <i className="fa-solid fa-file-lines"></i>
                     </button>
                   )}
                 </div>
               </div>
               {cruce.nombre && (
                 <p className="text-muted mb-2 mt-2">
-                  <i className="fas fa-map-marker-alt me-2"></i>
+                  <i className="fa-solid fa-location-dot me-2 text-danger"></i>
                   {cruce.nombre}
                 </p>
               )}
@@ -400,7 +398,7 @@ export function CruceDetail({ cruceId, onClose }: CruceDetailProps) {
                   <span>{cruce.codigo || 'N/A'}</span>
                 </li>
                 <li className="list-group-item d-flex justify-content-between align-items-center">
-                  <span><strong>Administrador por:</strong></span>
+                  <span><strong>Administrado por:</strong></span>
                   <span>{cruce.administrador?.nombre || 'N/A'}</span>
                 </li>
                 <li className="list-group-item d-flex justify-content-between align-items-center">
@@ -423,13 +421,15 @@ export function CruceDetail({ cruceId, onClose }: CruceDetailProps) {
                   <span><strong>N° de Suministro:</strong></span>
                   <span>{cruce.electricoSuministro || 'N/A'}</span>
                 </li>
-                {/* Mapa de ubicación del cruce */}
-                {(cruce.latitud && cruce.longitud) && (
+                {/* Mapa de ubicación de la intersección */}
+                {(cruce.latitud !== null && cruce.latitud !== undefined && cruce.latitud !== '' &&
+                  cruce.longitud !== null && cruce.longitud !== undefined && cruce.longitud !== '' &&
+                  !isNaN(Number(cruce.latitud)) && !isNaN(Number(cruce.longitud))) ? (
                   <li className="list-group-item">
                     <strong>Ubicación:</strong>
                     <div style={{ height: '220px', width: '100%', marginTop: 8, borderRadius: 8, overflow: 'hidden' }}>
                       <MapContainer
-                        center={[cruce.latitud, cruce.longitud]}
+                        center={[Number(cruce.latitud), Number(cruce.longitud)]}
                         zoom={17}
                         style={{ height: '100%', width: '100%' }}
                         scrollWheelZoom={false}
@@ -442,13 +442,21 @@ export function CruceDetail({ cruceId, onClose }: CruceDetailProps) {
                           url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
                           attribution="&copy; OpenStreetMap contributors"
                         />
-                        <Marker position={[cruce.latitud, cruce.longitud]}>
+                        <Marker position={[Number(cruce.latitud), Number(cruce.longitud)]}>
                           <Popup>
                             {cruce.nombre}
                           </Popup>
                         </Marker>
                       </MapContainer>
                     </div>
+                  </li>
+                ) : (
+                  <li className="list-group-item d-flex justify-content-between align-items-center text-muted">
+                    <span><strong>Ubicación:</strong></span>
+                    <span className="badge bg-light text-secondary border">
+                      <i className="fa-solid fa-triangle-exclamation me-1 text-warning"></i>
+                      Sin coordenadas registradas
+                    </span>
                   </li>
                 )}
                 {cruce.observaciones && (
@@ -460,7 +468,7 @@ export function CruceDetail({ cruceId, onClose }: CruceDetailProps) {
               </ul>
               <div className="d-flex justify-content-end p-3 pt-2">
                 <button className="btn btn-outline-danger" onClick={handleExportPDF}>
-                  <i className="fas fa-file-pdf me-2"></i> Exportar ficha PDF
+                  <i className="fa-solid fa-file-pdf me-2"></i> Exportar ficha PDF
                 </button>
               </div>
             </div>
@@ -471,7 +479,7 @@ export function CruceDetail({ cruceId, onClose }: CruceDetailProps) {
                 }
                 navigate(`/cruces/${id}/edit`);
               }}>
-                <i className="fas fa-edit me-1"></i> Editar
+                <i className="fa-solid fa-pen-to-square me-1"></i> Editar
               </button>
               <button className="btn btn-outline-secondary" onClick={() => {
                 if (cruceId && onClose) {
@@ -480,7 +488,7 @@ export function CruceDetail({ cruceId, onClose }: CruceDetailProps) {
                   navigate('/cruces');
                 }
               }}>
-                <i className="fas fa-arrow-left me-2"></i> Volver
+                <i className="fa-solid fa-arrow-left me-2"></i> Volver
               </button>
             </div>
           </div>
@@ -489,11 +497,11 @@ export function CruceDetail({ cruceId, onClose }: CruceDetailProps) {
           <div className="card shadow-sm h-100">
             <div className="card-header bg-white border-bottom-0 pb-0 d-flex align-items-center justify-content-between">
               <span className="fw-bold">
-                <i className="fas fa-microchip me-2"></i>
+                <i className="fa-solid fa-microchip me-2"></i>
                 Periféricos ({perifericos.length})
               </span>
               <button className="btn btn-sm btn-outline-primary" onClick={() => setShowAddModal(true)}>
-                <i className="fas fa-plus"></i>
+                <i className="fa-solid fa-plus"></i>
               </button>
             </div>
             <div className="card-body p-0">
@@ -506,7 +514,7 @@ export function CruceDetail({ cruceId, onClose }: CruceDetailProps) {
                       <div className="d-flex justify-content-between align-items-center">
                         <div className="flex-grow-1">
                           <h6 className="mb-0">
-                            <i className="fas fa-microchip me-2 text-primary"></i>
+                            <i className="fa-solid fa-microchip me-2 text-primary"></i>
                             {getTipoNombre(cp.periferico?.tipoPeriferico)}
                           </h6>
                         </div>
@@ -519,14 +527,14 @@ export function CruceDetail({ cruceId, onClose }: CruceDetailProps) {
                             }}
                             title="Ver detalle"
                           >
-                            <i className="fas fa-eye"></i>
+                            <i className="fa-solid fa-eye"></i>
                           </button>
                           <button
                             className="btn btn-sm btn-outline-danger"
                             onClick={() => handleRemovePeriferico(cp.perifericoId)}
                             title="Eliminar"
                           >
-                            <i className="fas fa-times"></i>
+                            <i className="fa-solid fa-xmark"></i>
                           </button>
                         </div>
                       </div>
@@ -546,7 +554,7 @@ export function CruceDetail({ cruceId, onClose }: CruceDetailProps) {
             <div className="modal-content">
               <div className="modal-header bg-primary text-white">
                 <h5 className="modal-title">
-                  <i className="fas fa-microchip me-2"></i>
+                  <i className="fa-solid fa-microchip me-2"></i>
                   Agregar Nuevo Periférico
                 </h5>
                 <button type="button" className="btn-close btn-close-white" onClick={() => setShowAddModal(false)}></button>
@@ -617,19 +625,6 @@ export function CruceDetail({ cruceId, onClose }: CruceDetailProps) {
                     />
                   </div>
 
-                  {/* Campo IP comentado temporalmente - requiere tipo CIDR en DB
-                  <div className="col-md-6">
-                    <label className="form-label fw-bold">Dirección IP</label>
-                    <input
-                      type="text"
-                      className="form-control"
-                      value={newPeriferico.ip}
-                      onChange={(e) => setNewPeriferico({...newPeriferico, ip: e.target.value})}
-                      placeholder="Ej: 192.168.1.100"
-                    />
-                  </div>
-                  */}
-
                   <div className="col-md-6">
                     <label className="form-label fw-bold">Usuario</label>
                     <input
@@ -681,7 +676,7 @@ export function CruceDetail({ cruceId, onClose }: CruceDetailProps) {
               </div>
               <div className="modal-footer bg-light">
                 <button type="button" className="btn btn-outline-secondary" onClick={() => setShowAddModal(false)}>
-                  <i className="fas fa-times me-2"></i>
+                  <i className="fa-solid fa-xmark me-2"></i>
                   Cancelar
                 </button>
                 <button 
@@ -690,7 +685,7 @@ export function CruceDetail({ cruceId, onClose }: CruceDetailProps) {
                   onClick={handleAddPeriferico}
                   disabled={!newPeriferico.tipoPeriferico}
                 >
-                  <i className="fas fa-plus me-2"></i>
+                  <i className="fa-solid fa-plus me-2"></i>
                   Agregar Periférico
                 </button>
               </div>
@@ -706,7 +701,7 @@ export function CruceDetail({ cruceId, onClose }: CruceDetailProps) {
             <div className="modal-content">
               <div className="modal-header bg-danger text-white">
                 <h5 className="modal-title">
-                  <i className="fas fa-file-pdf me-2"></i>
+                  <i className="fa-solid fa-file-pdf me-2"></i>
                   Visualización de Plano PDF
                 </h5>
                 <button 
@@ -734,7 +729,7 @@ export function CruceDetail({ cruceId, onClose }: CruceDetailProps) {
             <div className="modal-content">
               <div className="modal-header bg-primary text-white">
                 <h5 className="modal-title">
-                  <i className="fas fa-microchip me-2"></i>
+                  <i className="fa-solid fa-microchip me-2"></i>
                   Detalle del Periférico
                 </h5>
                 <button 
@@ -753,7 +748,7 @@ export function CruceDetail({ cruceId, onClose }: CruceDetailProps) {
                     <div className="card bg-light border-0">
                       <div className="card-body py-2">
                         <strong className="text-primary">
-                          <i className="fas fa-tag me-2"></i>
+                          <i className="fa-solid fa-tag me-2"></i>
                           Tipo: {getTipoNombre(selectedPerifericoDetail.periferico?.tipoPeriferico)}
                         </strong>
                       </div>
@@ -823,7 +818,7 @@ export function CruceDetail({ cruceId, onClose }: CruceDetailProps) {
                           onClick={() => setShowPassword(!showPassword)}
                           title={showPassword ? 'Ocultar contraseña' : 'Mostrar contraseña'}
                         >
-                          <i className={`fas fa-eye${showPassword ? '-slash' : ''}`}></i>
+                          <i className={`fa-solid fa-eye${showPassword ? '-slash' : ''}`}></i>
                         </button>
                       )}
                     </div>
@@ -834,11 +829,11 @@ export function CruceDetail({ cruceId, onClose }: CruceDetailProps) {
                     <p className="mb-0">
                       {selectedPerifericoDetail.periferico?.enGarantia ? (
                         <span className="badge bg-success">
-                          <i className="fas fa-check me-1"></i>Sí
+                          <i className="fa-solid fa-check me-1"></i>Sí
                         </span>
                       ) : (
                         <span className="badge bg-secondary">
-                          <i className="fas fa-times me-1"></i>No
+                          <i className="fa-solid fa-xmark me-1"></i>No
                         </span>
                       )}
                     </p>
@@ -866,7 +861,7 @@ export function CruceDetail({ cruceId, onClose }: CruceDetailProps) {
                         <div className="col-md-6">
                           <label className="form-label fw-bold text-muted mb-1" style={{ fontSize: '12px' }}>Fecha de Creación</label>
                           <p className="mb-0">
-                            <i className="far fa-calendar-alt me-2 text-muted"></i>
+                            <i className="fa-regular fa-calendar-days me-2 text-muted"></i>
                             {new Date(selectedPerifericoDetail.periferico.createdAt).toLocaleString('es-PE')}
                           </p>
                         </div>
@@ -875,7 +870,7 @@ export function CruceDetail({ cruceId, onClose }: CruceDetailProps) {
                         <div className="col-md-6">
                           <label className="form-label fw-bold text-muted mb-1" style={{ fontSize: '12px' }}>Última Modificación</label>
                           <p className="mb-0">
-                            <i className="far fa-calendar-alt me-2 text-muted"></i>
+                            <i className="fa-regular fa-calendar-days me-2 text-muted"></i>
                             {new Date(selectedPerifericoDetail.periferico.updatedAt).toLocaleString('es-PE')}
                           </p>
                         </div>
@@ -894,7 +889,7 @@ export function CruceDetail({ cruceId, onClose }: CruceDetailProps) {
                     setShowPassword(false);
                   }}
                 >
-                  <i className="fas fa-times me-2"></i>
+                  <i className="fa-solid fa-xmark me-2"></i>
                   Cerrar
                 </button>
               </div>

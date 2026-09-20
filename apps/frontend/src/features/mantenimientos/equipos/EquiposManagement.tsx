@@ -1,7 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import Select from 'react-select';
+import { toast } from 'react-hot-toast';
 import { equiposService, Equipo } from '../../../services/admin.service';
 import { customSelectStylesSmall } from '../../../styles/react-select-custom';
+import { PageHeader } from '../../../components/ui/PageHeader';
 
 type SortField = 'id' | 'nombre' | 'estado';
 type SortOrder = 'asc' | 'desc';
@@ -44,7 +46,7 @@ const EquiposManagement: React.FC = () => {
       setAllEquipos(data);
     } catch (error) {
       console.error('Error al cargar equipos:', error);
-      alert('Error al cargar equipos');
+      toast.error('Error al cargar equipos');
     } finally {
       setLoading(false);
     }
@@ -91,8 +93,8 @@ const EquiposManagement: React.FC = () => {
   };
 
   const getSortIcon = (field: SortField) => {
-    if (sortField !== field) return <i className="fas fa-sort text-muted ms-1"></i>;
-    return sortOrder === 'asc' ? <i className="fas fa-sort-up ms-1"></i> : <i className="fas fa-sort-down ms-1"></i>;
+    if (sortField !== field) return <i className="fa-solid fa-sort text-muted ms-1"></i>;
+    return sortOrder === 'asc' ? <i className="fa-solid fa-sort-up text-primary ms-1"></i> : <i className="fa-solid fa-sort-down text-primary ms-1"></i>;
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -101,16 +103,18 @@ const EquiposManagement: React.FC = () => {
     try {
       if (editingEquipo) {
         await equiposService.update(editingEquipo.id, formData);
+        toast.success('Equipo actualizado exitosamente');
       } else {
         await equiposService.create(formData);
+        toast.success('Equipo registrado exitosamente');
       }
       
       setShowModal(false);
       resetForm();
       loadData();
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error al guardar equipo:', error);
-      alert('Error al guardar equipo');
+      toast.error(error.response?.data?.message || 'Error al guardar equipo');
     }
   };
 
@@ -124,14 +128,15 @@ const EquiposManagement: React.FC = () => {
   };
 
   const handleDelete = async (id: number) => {
-    if (!confirm('¿Está seguro de desactivar este equipo?')) return;
+    if (!window.confirm('¿Está seguro de desactivar este equipo?')) return;
     
     try {
       await equiposService.delete(id);
+      toast.success('Equipo desactivado exitosamente');
       loadData();
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error al eliminar equipo:', error);
-      alert('Error al eliminar equipo');
+      toast.error(error.response?.data?.message || 'Error al eliminar equipo');
     }
   };
 
@@ -146,45 +151,56 @@ const EquiposManagement: React.FC = () => {
   };
 
   return (
-    <div className="container-fluid py-4">
-      <div className="d-flex justify-content-between align-items-center mb-4">
-        <h2>
-          <i className="fas fa-users-cog me-2"></i>
-          Gestión de Equipos
-        </h2>
-        <button 
-          className="btn btn-primary"
-          onClick={() => setShowModal(true)}
-        >
-          <i className="fas fa-plus me-2"></i>
-          Nuevo Equipo
-        </button>
-      </div>
+    <div className="container-fluid p-3">
+      <PageHeader
+        icon="fa-solid fa-users-gear"
+        title="Gestión de Equipos"
+        subtitle="Administración de cuadrillas y grupos de trabajo operativo"
+        actions={
+          <div className="d-flex gap-2">
+            <button
+              className={`btn btn-sm ${showFilters ? 'btn-secondary' : 'btn-outline-secondary'}`}
+              onClick={() => setShowFilters(!showFilters)}
+            >
+              <i className="fa-solid fa-filter me-1"></i>
+              {showFilters ? 'Ocultar Filtros' : 'Filtros'}
+            </button>
+            <button 
+              className="btn btn-sm btn-primary"
+              onClick={() => setShowModal(true)}
+            >
+              <i className="fa-solid fa-plus me-1"></i>
+              Nuevo Equipo
+            </button>
+          </div>
+        }
+      />
 
       {loading ? (
-        <div className="text-center py-5">
-          <div className="spinner-border" role="status">
+        <div className="card border shadow-sm p-5 text-center">
+          <div className="spinner-border text-primary mx-auto mb-2" role="status">
             <span className="visually-hidden">Cargando...</span>
           </div>
+          <small className="text-muted">Cargando equipos...</small>
         </div>
       ) : (
         <>
-          <div className="card border-0 shadow-sm mb-3">
-            <div className="card-header bg-white border-bottom">
-              <button className="btn btn-sm btn-outline-secondary" onClick={() => setShowFilters(!showFilters)}>
-                <i className="fas fa-filter me-2"></i>
-                {showFilters ? 'Ocultar Filtros' : 'Mostrar Filtros'}
-              </button>
-            </div>
-            {showFilters && (
-              <div className="card-body">
+          {showFilters && (
+            <div className="card border shadow-sm mb-3">
+              <div className="card-header bg-white border-bottom py-2">
+                <h6 className="card-title mb-0 fw-semibold text-dark" style={{ fontSize: '14px' }}>
+                  <i className="fa-solid fa-sliders me-2 text-primary"></i>
+                  Filtros de Equipos
+                </h6>
+              </div>
+              <div className="card-body py-3">
                 <div className="row g-2">
                   <div className="col-md-8">
-                    <label className="form-label small">Buscar</label>
-                    <input type="text" className="form-control custom-input-sm" placeholder="Nombre..." value={filters.search} onChange={(e) => handleFilterChange('search', e.target.value)} />
+                    <label className="form-label small fw-bold text-muted mb-1">Buscar</label>
+                    <input type="text" className="form-control form-control-sm" placeholder="Nombre del equipo..." value={filters.search} onChange={(e) => handleFilterChange('search', e.target.value)} />
                   </div>
                   <div className="col-md-2">
-                    <label className="form-label small">Estado</label>
+                    <label className="form-label small fw-bold text-muted mb-1">Estado</label>
                     <Select
                       options={[
                         { value: '', label: 'Todos' },
@@ -199,89 +215,141 @@ const EquiposManagement: React.FC = () => {
                   </div>
                   <div className="col-md-2 d-flex align-items-end">
                     <button className="btn btn-outline-secondary btn-sm w-100" onClick={() => { setFilters({ search: '', estado: '' }); setPage(1); }}>
-                      <i className="fas fa-eraser me-1"></i> Limpiar
+                      <i className="fa-solid fa-eraser me-1"></i> Limpiar
                     </button>
                   </div>
                 </div>
               </div>
-            )}
-          </div>
-          <div className="card">
-            <div className="card-body">
-              <div className="table-responsive">
-                <table className="table table-hover">
-                  <thead>
-                    <tr>
-                      <th onClick={() => handleSort('id')} style={{ cursor: 'pointer' }}>ID {getSortIcon('id')}</th>
-                      <th onClick={() => handleSort('nombre')} style={{ cursor: 'pointer' }}>Nombre {getSortIcon('nombre')}</th>
-                      <th onClick={() => handleSort('estado')} style={{ cursor: 'pointer' }}>Estado {getSortIcon('estado')}</th>
-                      <th>Acciones</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {equipos.map(equipo => (
-                    <tr key={equipo.id}>
-                      <td>{equipo.id}</td>
-                      <td>{equipo.nombre}</td>
-                      <td>
-                        <span className={`badge ${equipo.estado ? 'bg-success' : 'bg-secondary'}`}>
-                          {equipo.estado ? 'Activo' : 'Inactivo'}
-                        </span>
-                      </td>
-                      <td>
-                        <button
-                          className="btn btn-sm btn-outline-primary me-2"
-                          onClick={() => handleEdit(equipo)}
-                        >
-                          <i className="fas fa-edit"></i>
-                        </button>
-                        {equipo.estado && (
-                          <button
-                            className="btn btn-sm btn-outline-danger"
-                            onClick={() => handleDelete(equipo.id)}
-                          >
-                            <i className="fas fa-trash"></i>
-                          </button>
-                        )}
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
             </div>
-            {totalPages > 1 && (
-              <div className="d-flex justify-content-between align-items-center mt-3">
-                <span className="text-muted">Mostrando {(page - 1) * limit + 1} - {Math.min(page * limit, total)} de {total}</span>
-                <div className="d-flex gap-2 align-items-center">
+          )}
+          <div className="card border shadow-sm">
+            <div className="card-header bg-white border-bottom py-2 d-flex justify-content-between align-items-center">
+              <h6 className="card-title mb-0 fw-semibold text-dark" style={{ fontSize: '14px' }}>
+                <i className="fa-solid fa-list me-2 text-primary"></i>
+                Listado de Equipos ({total} registros)
+              </h6>
+              <div className="d-flex align-items-center gap-2">
+                <span className="small text-muted">Mostrar:</span>
+                <div style={{ width: '80px' }}>
                   <Select
                     options={[
-                      { value: 10, label: '10 por página' },
-                      { value: 25, label: '25 por página' },
-                      { value: 50, label: '50 por página' }
+                      { value: 10, label: '10' },
+                      { value: 25, label: '25' },
+                      { value: 50, label: '50' },
+                      { value: 100, label: '100' }
                     ]}
-                    value={{ value: limit, label: `${limit} por página` }}
+                    value={{ value: limit, label: String(limit) }}
                     onChange={(option) => { setLimit(Number(option?.value || 10)); setPage(1); }}
                     styles={customSelectStylesSmall}
+                    isSearchable={false}
                   />
-                  <nav>
-                    <ul className="pagination pagination-sm mb-0">
-                      <li className={`page-item ${page === 1 ? 'disabled' : ''}`}>
-                        <button className="page-link" onClick={() => setPage(page - 1)} disabled={page === 1}>Anterior</button>
-                      </li>
-                      {Array.from({ length: Math.min(totalPages, 5) }, (_, i) => {
-                        let pageNum = totalPages <= 5 ? i + 1 : page <= 3 ? i + 1 : page >= totalPages - 2 ? totalPages - 4 + i : page - 2 + i;
-                        return <li key={pageNum} className={`page-item ${page === pageNum ? 'active' : ''}`}><button className="page-link" onClick={() => setPage(pageNum)}>{pageNum}</button></li>;
-                      })}
-                      <li className={`page-item ${page === totalPages ? 'disabled' : ''}`}>
-                        <button className="page-link" onClick={() => setPage(page + 1)} disabled={page === totalPages}>Siguiente</button>
-                      </li>
-                    </ul>
-                  </nav>
                 </div>
+              </div>
+            </div>
+            <div className="card-body p-0">
+              <div className="table-responsive">
+                <table className="table table-hover table-striped align-middle mb-0">
+                  <thead className="table-light text-uppercase" style={{ fontSize: '12px' }}>
+                    <tr>
+                      <th style={{ width: '80px', cursor: 'pointer' }} onClick={() => handleSort('id')}>
+                        ID {getSortIcon('id')}
+                      </th>
+                      <th style={{ cursor: 'pointer' }} onClick={() => handleSort('nombre')}>
+                        Nombre {getSortIcon('nombre')}
+                      </th>
+                      <th style={{ width: '120px', cursor: 'pointer' }} className="text-center" onClick={() => handleSort('estado')}>
+                        Estado {getSortIcon('estado')}
+                      </th>
+                      <th style={{ width: '100px' }} className="text-center">Acciones</th>
+                    </tr>
+                  </thead>
+                  <tbody style={{ fontSize: '13px' }}>
+                    {equipos.length === 0 ? (
+                      <tr>
+                        <td colSpan={4} className="text-center py-4 text-muted">
+                          <i className="fa-solid fa-inbox fa-2x mb-2 d-block text-secondary"></i>
+                          No se encontraron registros
+                        </td>
+                      </tr>
+                    ) : (
+                      equipos.map(equipo => (
+                        <tr key={equipo.id}>
+                          <td className="fw-semibold text-secondary">#{equipo.id}</td>
+                          <td className="fw-medium text-dark">{equipo.nombre}</td>
+                          <td className="text-center">
+                            <span className={`badge ${equipo.estado ? 'bg-success' : 'bg-secondary'}`}>
+                              {equipo.estado ? 'Activo' : 'Inactivo'}
+                            </span>
+                          </td>
+                          <td className="text-center">
+                            <div className="btn-group btn-group-sm">
+                              <button
+                                className="btn btn-outline-primary btn-sm py-1 px-2"
+                                onClick={() => handleEdit(equipo)}
+                                title="Editar"
+                              >
+                                <i className="fa-solid fa-pen-to-square"></i>
+                              </button>
+                              {equipo.estado && (
+                                <button
+                                  className="btn btn-outline-danger btn-sm py-1 px-2"
+                                  onClick={() => handleDelete(equipo.id)}
+                                  title="Desactivar"
+                                >
+                                  <i className="fa-solid fa-trash-can"></i>
+                                </button>
+                              )}
+                            </div>
+                          </td>
+                        </tr>
+                      ))
+                    )}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+
+            {totalPages > 1 && (
+              <div className="card-footer bg-white border-top py-2 d-flex justify-content-between align-items-center">
+                <span className="small text-muted">
+                  Página {page} de {totalPages} ({total} registros totales)
+                </span>
+                <nav>
+                  <ul className="pagination pagination-sm mb-0">
+                    <li className={`page-item ${page === 1 ? 'disabled' : ''}`}>
+                      <button className="page-link" onClick={() => setPage(page - 1)}>
+                        <i className="fa-solid fa-chevron-left"></i>
+                      </button>
+                    </li>
+                    {[...Array(totalPages)].map((_, i) => {
+                      const pageNum = i + 1;
+                      if (
+                        pageNum === 1 ||
+                        pageNum === totalPages ||
+                        (pageNum >= page - 1 && pageNum <= page + 1)
+                      ) {
+                        return (
+                          <li key={pageNum} className={`page-item ${page === pageNum ? 'active' : ''}`}>
+                            <button className="page-link" onClick={() => setPage(pageNum)}>
+                              {pageNum}
+                            </button>
+                          </li>
+                        );
+                      } else if (pageNum === page - 2 || pageNum === page + 2) {
+                        return <li key={pageNum} className="page-item disabled"><span className="page-link">...</span></li>;
+                      }
+                      return null;
+                    })}
+                    <li className={`page-item ${page === totalPages ? 'disabled' : ''}`}>
+                      <button className="page-link" onClick={() => setPage(page + 1)}>
+                        <i className="fa-solid fa-chevron-right"></i>
+                      </button>
+                    </li>
+                  </ul>
+                </nav>
               </div>
             )}
           </div>
-        </div>
         </>
       )}
 

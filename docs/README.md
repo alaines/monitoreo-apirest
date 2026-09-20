@@ -1,62 +1,39 @@
-# Documentacion del Proyecto
-
-Documentacion tecnica y guias del Sistema de Monitoreo de Semaforos e Incidencias.
-
-## Estructura de Documentacion
-
-### `/architecture` - Arquitectura y Diseno
-Documentos relacionados con decisiones arquitectonicas, analisis de diseno y configuracion de servidores.
-
-- **ANALISIS-MUI-DISENO.md** - Analisis de Material-UI y decisiones de diseno de interfaz
-- **SERVER-CONFIG.md** - Configuracion de servidores y deployment
-
-### `/guides` - Guias de Uso
-Guias rapidas y referencias para desarrolladores.
-
-- **GUIA-RAPIDA.md** - Guia rapida para iniciar el proyecto
-- **IMAGENES-Y-ASSETS.md** - Gestion de imagenes y recursos estaticos
-
-### `/sprints` - Planificacion de Sprints
-Planificacion activa de sprints y product backlog.
-
-- **product-backlog.md** - Backlog completo del producto
-- **sprint-0-setup.md** - Sprint inicial de configuracion
-- **sprint-1-auth-users.md** - Autenticacion y usuarios
-- **sprint-2-incidents.md** - Gestion de incidencias
-- **sprint-4-cruces.md** - Gestion de cruces semaforizados
-- **sprint-5-estructuras.md** - Inventario de estructuras (FUTURO)
-
-### `/sprints-completed` - Sprints Completados
-Archivo historico de sprints finalizados.
-
-- **sprint-1-COMPLETADO.md** - Sprint 1 completado
-
-### Documento Raiz
-- **ESTADO-ACTUAL.md** - Estado actual del proyecto y ultimos cambios
-
-## Navegacion Rapida
-
-### Para Desarrolladores Nuevos
-1. Leer [README.md principal](/README.md)
-2. Revisar [GUIA-RAPIDA.md](guides/GUIA-RAPIDA.md)
-3. Consultar [ESTADO-ACTUAL.md](ESTADO-ACTUAL.md)
-
-### Para Planificacion
-1. Revisar [product-backlog.md](sprints/product-backlog.md)
-2. Consultar sprints activos en `/sprints`
-
-### Para Arquitectura
-1. Revisar documentos en `/architecture`
-2. Consultar schema de base de datos en `apps/backend/prisma/schema.prisma`
-
-## Mantenimiento de Documentacion
-
-- Mantener sprints activos en `/sprints`
-- Mover sprints completados a `/sprints-completed`
-- Actualizar ESTADO-ACTUAL.md con cada cambio significativo
-- Documentar decisiones arquitectonicas en `/architecture`
-- Crear guias en `/guides` para procesos comunes
+# ÍNDICE GENERAL DE DOCUMENTACIÓN
+## Sistema de Control y Monitoreo de Intersecciones Semafóricas e Incidencias
+**Versión del Sistema**: v1.2.0  
+**Fecha de Actualización**: Septiembre 2026  
 
 ---
 
-Ultima actualizacion: 2024
+## 📚 Manuales Principales
+
+1. **[Manual de Usuario](MANUAL_USUARIO.md)**  
+   Guía completa para operadores, supervisores y administradores. Detalla el Centro de Control y Monitoreo, mapa de clustering jerárquico por severidad, gestión del ciclo de vida de incidencias, catálogo de cruces y reportes estadísticos.
+
+2. **[Manual de Instalación y Despliegue](MANUAL_INSTALACION.md)**  
+   Procedimiento integral para instalar y desplegar el sistema usando **Docker Compose** (recomendado) o en servidores dedicados mediante **PM2**, configuración de PostgreSQL + PostGIS, variables de entorno y proxy inverso Nginx con WebSockets.
+
+3. **[Manual de Mantenimiento y Operaciones](MANUAL_MANTENIMIENTO.md)**  
+   Guía técnica para administradores de sistemas y DevOps. Incluye comandos de operación diaria, estrategia de backups (`backups/`), restauración de base de datos, reglas obligatorias de compilación, gestión de migraciones Prisma y solución de problemas.
+
+4. **[Estado del Proyecto y Balance de Sprints](ESTADO_PROYECTO_SPRINTS.md)**  
+   Evaluación del estado de los Sprints (0 al 10), detalle de módulos completados y backlog priorizado de funcionalidades pendientes (Roadmap).
+
+---
+
+## 📂 Estructura de la Documentación
+
+- **`/docs`**:
+  - `MANUAL_USUARIO.md` - Manual operativo para usuarios finales y operadores.
+  - `MANUAL_INSTALACION.md` - Guía de instalación y despliegue del sistema.
+  - `MANUAL_MANTENIMIENTO.md` - Guía de operaciones, backups y mantenimiento.
+  - `ESTADO_PROYECTO_SPRINTS.md` - Balance de sprints y funcionalidades implementadas vs pendientes.
+  - `DESIGN_SYSTEM.md` - Guía del sistema de diseño (Bootstrap 5 + FontAwesome 6).
+  - `MAPA_CALOR_README.md` - Documentación técnica del mapa de calor de incidencias.
+  - `REPORTE_GRAFICO.md` - Especificación técnica del módulo de reportes gráficos.
+  - `gestion-menus-tree-behavior.md` - Documentación del árbol jerárquico de menús (Nested Set).
+- **`/docs/sprints`**: Historial de planificación de historias de usuario por sprint.
+- **`/docs/sprints-completed`**: Resúmenes de cierre de sprints anteriores.
+- **`/docs/guides`**: Guías complementarias (imágenes, versionamiento, zonas horarias).
+- **`/docs/screenshots`**: Capturas de pantalla oficiales de la aplicación.
+- **`/archive`**: Archivo histórico de reportes temporales y borradores obsoletos.

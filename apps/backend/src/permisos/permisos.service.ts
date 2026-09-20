@@ -89,6 +89,19 @@ export class PermisosService {
       return false;
     }
 
+    // Administradores y Super Administradores tienen acceso total
+    if (usuario.grupoId === 4 || usuario.grupoId === 9) {
+      return true;
+    }
+
+    // Verificar si el grupo tiene nombre ADMINISTRADOR o SUPER_ADMIN
+    const grupo = await this.prisma.grupo.findUnique({
+      where: { id: usuario.grupoId },
+    });
+    if (grupo?.nombre === 'ADMINISTRADOR' || grupo?.nombre === 'SUPER_ADMIN') {
+      return true;
+    }
+
     // Verificar si el menú existe
     const menu = await this.prisma.menu.findUnique({
       where: { codigo: menuCodigo },
@@ -96,7 +109,6 @@ export class PermisosService {
 
     // Si el menú no existe, permitir acceso (endpoints sin control de permisos)
     if (!menu) {
-      console.log(`[PermisosService] Menú '${menuCodigo}' no existe, permitiendo acceso`);
       return true;
     }
 

@@ -1,0 +1,183 @@
+/* ==========================================================
+   ESTILOS DE CLUSTERING JERÁRQUICO POR SEVERIDAD EN LEAFLET
+   ========================================================== */
+
+/* Wrapper del Icono DivIcon de Leaflet para Clusters */
+.leaflet-cluster-custom {
+  background: transparent !important;
+  border: none !important;
+}
+
+/* Burbuja del Cluster */
+.cluster-bubble {
+  width: 100%;
+  height: 100%;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  transition: transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1);
+  box-sizing: border-box;
+}
+
+.cluster-bubble:hover {
+  transform: scale(1.1);
+  z-index: 999;
+}
+
+.cluster-bubble .cluster-center {
+  width: 72%;
+  height: 72%;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 700;
+  font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.3);
+  user-select: none;
+}
+
+/* 1. Cluster Rojo (Crítico / Alta Severidad / Semáforo Apagado) */
+.cluster-bubble.cluster-critical {
+  background: rgba(220, 53, 69, 0.25);
+  border: 3px solid rgba(220, 53, 69, 0.4);
+}
+
+.cluster-bubble.cluster-critical .cluster-center {
+  background: rgba(220, 53, 69, 0.88);
+  border: 2px solid rgba(255, 255, 255, 0.7);
+  color: #ffffff;
+}
+
+/* 2. Cluster Amarillo / Ámbar (Medio / En Proceso) */
+.cluster-bubble.cluster-medium {
+  background: rgba(255, 193, 7, 0.28);
+  border: 3px solid rgba(255, 193, 7, 0.4);
+}
+
+.cluster-bubble.cluster-medium .cluster-center {
+  background: rgba(255, 193, 7, 0.88);
+  border: 2px solid rgba(255, 255, 255, 0.85);
+  color: #212529;
+}
+
+/* 3. Cluster Azul Marino (Normal / Bajo / Operativo) */
+.cluster-bubble.cluster-low {
+  background: rgba(29, 68, 105, 0.25);
+  border: 3px solid rgba(29, 68, 105, 0.4);
+}
+
+.cluster-bubble.cluster-low .cluster-center {
+  background: rgba(29, 68, 105, 0.90);
+  border: 2px solid rgba(255, 255, 255, 0.7);
+  color: #ffffff;
+}
+
+/* ==========================================================
+   ESTILOS DE MARCADORES INDIVIDUALES (ZOOM MÁXIMO / AISLADOS)
+   ========================================================== */
+
+.leaflet-custom-individual-marker {
+  background: transparent !important;
+  border: none !important;
+}
+
+.individual-marker-bubble {
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  transition: transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1);
+  box-sizing: border-box;
+}
+
+.individual-marker-bubble:hover {
+  transform: scale(1.18);
+  z-index: 1000;
+}
+
+.individual-marker-bubble .marker-center {
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.35);
+  border: 2px solid #ffffff;
+}
+
+/* Marcador Individual Crítico (Rojo con triángulo de advertencia) */
+.individual-marker-bubble.marker-critical {
+  background: rgba(220, 53, 69, 0.25);
+  border: 2px solid rgba(220, 53, 69, 0.45);
+}
+
+.individual-marker-bubble.marker-critical .marker-center {
+  background: #dc3545;
+  color: #ffffff;
+  font-size: 11px;
+}
+
+/* Marcador Individual Medio (Ámbar con triángulo de advertencia) */
+.individual-marker-bubble.marker-medium {
+  background: rgba(255, 193, 7, 0.28);
+  border: 2px solid rgba(255, 193, 7, 0.45);
+}
+
+.individual-marker-bubble.marker-medium .marker-center {
+  background: #ffc107;
+  color: #212529;
+  font-size: 11px;
+}
+
+/* Marcador Individual Normal / Operativo (Azul con semáforo) */
+.individual-marker-bubble.marker-normal {
+  background: rgba(2, 132, 199, 0.25);
+  border: 2px solid rgba(2, 132, 199, 0.4);
+}
+
+.individual-marker-bubble.marker-normal .marker-center {
+  background: #0284c7;
+  color: #ffffff;
+  font-size: 11px;
+}
+
+/* ==========================================================
+   POPUP BOOTSTRAP 5 EN LEAFLET
+   ========================================================= */
+
+.leaflet-bootstrap-popup .leaflet-popup-content-wrapper {
+  padding: 0 !important;
+  overflow: hidden !important;
+  border-radius: 8px !important;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.18) !important;
+  border: 1px solid rgba(0, 0, 0, 0.1) !important;
+}
+
+.leaflet-bootstrap-popup .leaflet-popup-content {
+  margin: 0 !important;
+  line-height: 1.4 !important;
+}
+
+.leaflet-bootstrap-popup .leaflet-popup-tip-container {
+  margin-top: -1px;
+}
+
+.leaflet-bootstrap-popup .leaflet-popup-close-button {
+  top: 8px !important;
+  right: 8px !important;
+  color: #6c757d !important;
+  padding: 4px !important;
+  font-size: 16px !important;
+  z-index: 10;
+}
+
+.leaflet-bootstrap-popup .leaflet-popup-close-button:hover {
+  color: #000000 !important;
+}

@@ -1,7 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import Select from 'react-select';
+import { toast } from 'react-hot-toast';
 import { administradoresService, Administrador } from '../../../services/admin.service';
 import { customSelectStylesSmall } from '../../../styles/react-select-custom';
+import { PageHeader } from '../../../components/ui/PageHeader';
 
 type SortField = 'id' | 'nombre' | 'responsable' | 'email' | 'telefono' | 'estado';
 type SortOrder = 'asc' | 'desc';
@@ -43,7 +45,7 @@ const AdministradoresManagement: React.FC = () => {
       setAllAdministradores(data);
     } catch (error) {
       console.error('Error al cargar administradores:', error);
-      alert('Error al cargar administradores');
+      toast.error('Error al cargar administradores');
     } finally {
       setLoading(false);
     }
@@ -96,8 +98,8 @@ const AdministradoresManagement: React.FC = () => {
   };
 
   const getSortIcon = (field: SortField) => {
-    if (sortField !== field) return <i className="fas fa-sort text-muted ms-1"></i>;
-    return sortOrder === 'asc' ? <i className="fas fa-sort-up ms-1"></i> : <i className="fas fa-sort-down ms-1"></i>;
+    if (sortField !== field) return <i className="fa-solid fa-sort text-muted ms-1"></i>;
+    return sortOrder === 'asc' ? <i className="fa-solid fa-sort-up text-primary ms-1"></i> : <i className="fa-solid fa-sort-down text-primary ms-1"></i>;
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -106,16 +108,18 @@ const AdministradoresManagement: React.FC = () => {
     try {
       if (editingAdministrador) {
         await administradoresService.update(editingAdministrador.id, formData);
+        toast.success('Administrador actualizado exitosamente');
       } else {
         await administradoresService.create(formData);
+        toast.success('Administrador registrado exitosamente');
       }
       
       setShowModal(false);
       resetForm();
       loadData();
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error al guardar administrador:', error);
-      alert('Error al guardar administrador');
+      toast.error(error.response?.data?.message || 'Error al guardar administrador');
     }
   };
 
@@ -132,14 +136,15 @@ const AdministradoresManagement: React.FC = () => {
   };
 
   const handleDelete = async (id: number) => {
-    if (!confirm('¿Está seguro de desactivar este administrador?')) return;
+    if (!window.confirm('¿Está seguro de desactivar este administrador?')) return;
     
     try {
       await administradoresService.delete(id);
+      toast.success('Administrador desactivado exitosamente');
       loadData();
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error al eliminar administrador:', error);
-      alert('Error al eliminar administrador');
+      toast.error(error.response?.data?.message || 'Error al eliminar administrador');
     }
   };
 
@@ -154,75 +159,97 @@ const AdministradoresManagement: React.FC = () => {
   };
 
   return (
-    <div className="container-fluid py-4">
-      <div className="d-flex justify-content-between align-items-center mb-4">
-        <h2>
-          <i className="fas fa-user-shield me-2"></i>
-          Gestión de Administradores
-        </h2>
-        <button 
-          className="btn btn-primary"
-          onClick={() => setShowModal(true)}
-        >
-          <i className="fas fa-plus me-2"></i>
-          Nuevo Administrador
-        </button>
-      </div>
+    <div className="container-fluid p-3">
+      <PageHeader
+        icon="fa-solid fa-user-shield"
+        title="Gestión de Administradores"
+        subtitle="Control de cuentas administrativas y datos de contacto"
+        actions={
+          <div className="d-flex gap-2">
+            <button
+              className={`btn btn-sm ${showFilters ? 'btn-secondary' : 'btn-outline-secondary'}`}
+              onClick={() => setShowFilters(!showFilters)}
+            >
+              <i className="fa-solid fa-filter me-1"></i>
+              {showFilters ? 'Ocultar Filtros' : 'Filtros'}
+            </button>
+            <button 
+              className="btn btn-sm btn-primary"
+              onClick={() => setShowModal(true)}
+            >
+              <i className="fa-solid fa-plus me-1"></i>
+              Nuevo Administrador
+            </button>
+          </div>
+        }
+      />
 
       {loading ? (
-        <div className="text-center py-5">
-          <div className="spinner-border" role="status">
+        <div className="card border shadow-sm p-5 text-center">
+          <div className="spinner-border text-primary mx-auto mb-2" role="status">
             <span className="visually-hidden">Cargando...</span>
           </div>
+          <small className="text-muted">Cargando administradores...</small>
         </div>
       ) : (
         <>
-          <div className="card border-0 shadow-sm mb-3">
-            <div className="card-header bg-white border-bottom">
-              <button className="btn btn-sm btn-outline-secondary" onClick={() => setShowFilters(!showFilters)}>
-                <i className="fas fa-filter me-2"></i>
-                {showFilters ? 'Ocultar Filtros' : 'Mostrar Filtros'}
-              </button>
-            </div>
-            {showFilters && (
-              <div className="card-body">
+          {showFilters && (
+            <div className="card border shadow-sm mb-3">
+              <div className="card-header bg-white border-bottom py-2">
+                <h6 className="card-title mb-0 fw-semibold text-dark" style={{ fontSize: '14px' }}>
+                  <i className="fa-solid fa-sliders me-2 text-primary"></i>
+                  Filtros de Administradores
+                </h6>
+              </div>
+              <div className="card-body py-3">
                 <div className="row g-2">
-                  <div className="col-md-8">
-                    <label className="form-label small">Buscar</label>
-                    <input type="text" className="form-control custom-input-sm" placeholder="Nombre o email..." value={filters.search} onChange={(e) => handleFilterChange('search', e.target.value)} />
+                  <div className="col-md-7">
+                    <label className="form-label small fw-bold text-muted mb-1">Buscar por Nombre o Email</label>
+                    <input 
+                      type="text" 
+                      className="form-control form-control-sm" 
+                      placeholder="Escriba nombre o correo..." 
+                      value={filters.search} 
+                      onChange={(e) => handleFilterChange('search', e.target.value)} 
+                    />
                   </div>
-                  <div className="col-md-2">
-                    <label className="form-label small">Estado</label>
+                  <div className="col-md-3">
+                    <label className="form-label small fw-bold text-muted mb-1">Estado</label>
                     <Select
                       options={[
-                        { value: '', label: 'Todos' },
+                        { value: '', label: 'Todos los estados' },
                         { value: 'true', label: 'Activos' },
                         { value: 'false', label: 'Inactivos' }
                       ]}
-                      value={filters.estado === 'true' ? { value: 'true', label: 'Activos' } : filters.estado === 'false' ? { value: 'false', label: 'Inactivos' } : { value: '', label: 'Todos' }}
+                      value={filters.estado === 'true' ? { value: 'true', label: 'Activos' } : filters.estado === 'false' ? { value: 'false', label: 'Inactivos' } : { value: '', label: 'Todos los estados' }}
                       onChange={(option) => handleFilterChange('estado', option?.value || '')}
                       isClearable
                       styles={customSelectStylesSmall}
+                      placeholder="Seleccione..."
                     />
                   </div>
                   <div className="col-md-2 d-flex align-items-end">
-                    <button className="btn btn-outline-secondary btn-sm w-100" onClick={() => { setFilters({ search: '', estado: '' }); setPage(1); }}>
-                      <i className="fas fa-eraser me-1"></i> Limpiar
+                    <button 
+                      className="btn btn-outline-secondary btn-sm w-100" 
+                      onClick={() => { setFilters({ search: '', estado: '' }); setPage(1); }}
+                    >
+                      <i className="fa-solid fa-eraser me-1"></i> Limpiar
                     </button>
                   </div>
                 </div>
               </div>
-            )}
-          </div>
+            </div>
+          )}
 
-          <div className="card">
-            <div className="card-body">
-              <div className="d-flex justify-content-between align-items-center mb-3">
-                <div>
-                  Mostrando {administradores.length} de {total} registros
-                </div>
-                <div>
-                  <label className="me-2">Mostrar:</label>
+          <div className="card border shadow-sm">
+            <div className="card-header bg-white border-bottom py-2 d-flex justify-content-between align-items-center">
+              <h6 className="card-title mb-0 fw-semibold text-dark" style={{ fontSize: '14px' }}>
+                <i className="fa-solid fa-list me-2 text-primary"></i>
+                Listado de Administradores ({total} registros)
+              </h6>
+              <div className="d-flex align-items-center gap-2">
+                <span className="small text-muted">Mostrar:</span>
+                <div style={{ width: '80px' }}>
                   <Select
                     options={[
                       { value: 10, label: '10' },
@@ -233,14 +260,18 @@ const AdministradoresManagement: React.FC = () => {
                     value={{ value: limit, label: String(limit) }}
                     onChange={(option) => { setLimit(Number(option?.value || 10)); setPage(1); }}
                     styles={customSelectStylesSmall}
+                    isSearchable={false}
                   />
                 </div>
               </div>
+            </div>
+
+            <div className="card-body p-0">
               <div className="table-responsive">
-                <table className="table table-hover">
-                  <thead>
+                <table className="table table-hover table-striped align-middle mb-0">
+                  <thead className="table-light text-uppercase" style={{ fontSize: '12px' }}>
                     <tr>
-                      <th style={{ cursor: 'pointer' }} onClick={() => handleSort('id')}>
+                      <th style={{ width: '80px', cursor: 'pointer' }} onClick={() => handleSort('id')}>
                         ID {getSortIcon('id')}
                       </th>
                       <th style={{ cursor: 'pointer' }} onClick={() => handleSort('nombre')}>
@@ -255,52 +286,94 @@ const AdministradoresManagement: React.FC = () => {
                       <th style={{ cursor: 'pointer' }} onClick={() => handleSort('email')}>
                         Email {getSortIcon('email')}
                       </th>
-                      <th style={{ cursor: 'pointer' }} onClick={() => handleSort('estado')}>
+                      <th style={{ width: '120px', cursor: 'pointer' }} className="text-center" onClick={() => handleSort('estado')}>
                         Estado {getSortIcon('estado')}
                       </th>
-                      <th>Acciones</th>
+                      <th style={{ width: '100px' }} className="text-center">Acciones</th>
                     </tr>
                   </thead>
-                  <tbody>
-                    {administradores.map(admin => (
-                      <tr key={admin.id}>
-                        <td>{admin.id}</td>
-                        <td>{admin.nombre}</td>
-                        <td>{admin.responsable || '-'}</td>
-                        <td>{admin.telefono || '-'}</td>
-                        <td>{admin.email || '-'}</td>
-                        <td>
-                          <span className={`badge ${admin.estado ? 'bg-success' : 'bg-secondary'}`}>
-                            {admin.estado ? 'Activo' : 'Inactivo'}
-                          </span>
-                        </td>
-                        <td>
-                          <button
-                            className="btn btn-sm btn-outline-primary me-2"
-                            onClick={() => handleEdit(admin)}
-                          >
-                            <i className="fas fa-edit"></i>
-                          </button>
-                          {admin.estado && (
-                            <button
-                              className="btn btn-sm btn-outline-danger"
-                              onClick={() => handleDelete(admin.id)}
-                            >
-                              <i className="fas fa-trash"></i>
-                            </button>
-                          )}
+                  <tbody style={{ fontSize: '13px' }}>
+                    {administradores.length === 0 ? (
+                      <tr>
+                        <td colSpan={7} className="text-center py-4 text-muted">
+                          <i className="fa-solid fa-inbox fa-2x mb-2 d-block text-secondary"></i>
+                          No se encontraron registros
                         </td>
                       </tr>
-                    ))}
+                    ) : (
+                      administradores.map(admin => (
+                        <tr key={admin.id}>
+                          <td className="fw-semibold text-secondary">#{admin.id}</td>
+                          <td className="fw-medium text-dark">{admin.nombre}</td>
+                          <td>
+                            {admin.responsable ? (
+                              <span className="badge bg-light text-dark border">
+                                <i className="fa-solid fa-user-tag me-1 text-primary"></i>
+                                {admin.responsable}
+                              </span>
+                            ) : (
+                              <span className="text-muted small">-</span>
+                            )}
+                          </td>
+                          <td>
+                            {admin.telefono ? (
+                              <span>
+                                <i className="fa-solid fa-phone me-1 text-secondary small"></i>
+                                {admin.telefono}
+                              </span>
+                            ) : '-'}
+                          </td>
+                          <td>
+                            {admin.email ? (
+                              <span className="text-secondary">
+                                <i className="fa-solid fa-envelope me-1 text-secondary small"></i>
+                                {admin.email}
+                              </span>
+                            ) : '-'}
+                          </td>
+                          <td className="text-center">
+                            <span className={`badge ${admin.estado ? 'bg-success' : 'bg-secondary'}`}>
+                              {admin.estado ? 'Activo' : 'Inactivo'}
+                            </span>
+                          </td>
+                          <td className="text-center">
+                            <div className="btn-group btn-group-sm">
+                              <button
+                                className="btn btn-outline-primary btn-sm py-1 px-2"
+                                onClick={() => handleEdit(admin)}
+                                title="Editar"
+                              >
+                                <i className="fa-solid fa-pen-to-square"></i>
+                              </button>
+                              {admin.estado && (
+                                <button
+                                  className="btn btn-outline-danger btn-sm py-1 px-2"
+                                  onClick={() => handleDelete(admin.id)}
+                                  title="Desactivar"
+                                >
+                                  <i className="fa-solid fa-trash-can"></i>
+                                </button>
+                              )}
+                            </div>
+                          </td>
+                        </tr>
+                      ))
+                    )}
                   </tbody>
                 </table>
               </div>
-              {totalPages > 1 && (
+            </div>
+
+            {totalPages > 1 && (
+              <div className="card-footer bg-white border-top py-2 d-flex justify-content-between align-items-center">
+                <span className="small text-muted">
+                  Página {page} de {totalPages} ({total} registros totales)
+                </span>
                 <nav>
-                  <ul className="pagination justify-content-center mb-0">
+                  <ul className="pagination pagination-sm mb-0">
                     <li className={`page-item ${page === 1 ? 'disabled' : ''}`}>
                       <button className="page-link" onClick={() => setPage(page - 1)}>
-                        <i className="fas fa-chevron-left"></i>
+                        <i className="fa-solid fa-chevron-left"></i>
                       </button>
                     </li>
                     {[...Array(totalPages)].map((_, i) => {
@@ -324,96 +397,102 @@ const AdministradoresManagement: React.FC = () => {
                     })}
                     <li className={`page-item ${page === totalPages ? 'disabled' : ''}`}>
                       <button className="page-link" onClick={() => setPage(page + 1)}>
-                        <i className="fas fa-chevron-right"></i>
+                        <i className="fa-solid fa-chevron-right"></i>
                       </button>
                     </li>
                   </ul>
                 </nav>
-              )}
-            </div>
+              </div>
+            )}
           </div>
         </>
       )}
 
       {showModal && (
         <div className="modal show d-block" tabIndex={-1} style={{ backgroundColor: 'rgba(0,0,0,0.5)' }}>
-          <div className="modal-dialog modal-lg">
-            <div className="modal-content">
-              <div className="modal-header">
-                <h5 className="modal-title">
+          <div className="modal-dialog modal-dialog-centered modal-lg">
+            <div className="modal-content border-0 shadow">
+              <div className="modal-header bg-light border-bottom py-2">
+                <h5 className="modal-title fs-6 fw-bold text-dark">
+                  <i className="fa-solid fa-user-shield me-2 text-primary"></i>
                   {editingAdministrador ? 'Editar Administrador' : 'Nuevo Administrador'}
                 </h5>
                 <button type="button" className="btn-close" onClick={handleCloseModal}></button>
               </div>
               <form onSubmit={handleSubmit}>
-                <div className="modal-body">
-                  <div className="row">
-                    <div className="col-md-6 mb-3">
-                      <label className="form-label">Nombre *</label>
+                <div className="modal-body p-3">
+                  <div className="row g-3">
+                    <div className="col-md-6">
+                      <label className="form-label small fw-bold text-secondary">Nombre de la Entidad / Persona *</label>
                       <input
                         type="text"
-                        className="form-control custom-input"
+                        className="form-control form-control-sm"
                         value={formData.nombre}
                         onChange={(e) => setFormData({ ...formData, nombre: e.target.value })}
                         required
                         maxLength={255}
+                        placeholder="Ej: Municipalidad Metropolitana"
                       />
                     </div>
 
-                    <div className="col-md-6 mb-3">
-                      <label className="form-label">Responsable</label>
+                    <div className="col-md-6">
+                      <label className="form-label small fw-bold text-secondary">Persona Responsable</label>
                       <input
                         type="text"
-                        className="form-control custom-input"
+                        className="form-control form-control-sm"
                         value={formData.responsable}
                         onChange={(e) => setFormData({ ...formData, responsable: e.target.value })}
                         maxLength={255}
+                        placeholder="Ej: Ing. Carlos Rivas"
                       />
                     </div>
-                  </div>
 
-                  <div className="row">
-                    <div className="col-md-6 mb-3">
-                      <label className="form-label">Teléfono</label>
+                    <div className="col-md-6">
+                      <label className="form-label small fw-bold text-secondary">Teléfono de Contacto</label>
                       <input
                         type="number"
-                        className="form-control custom-input"
+                        className="form-control form-control-sm"
                         value={formData.telefono || ''}
                         onChange={(e) => setFormData({ ...formData, telefono: e.target.value ? Number(e.target.value) : null })}
+                        placeholder="Ej: 987654321"
                       />
                     </div>
 
-                    <div className="col-md-6 mb-3">
-                      <label className="form-label">Email</label>
+                    <div className="col-md-6">
+                      <label className="form-label small fw-bold text-secondary">Correo Electrónico</label>
                       <input
                         type="email"
-                        className="form-control custom-input"
+                        className="form-control form-control-sm"
                         value={formData.email}
                         onChange={(e) => setFormData({ ...formData, email: e.target.value })}
                         maxLength={255}
+                        placeholder="ejemplo@entidad.gob.pe"
                       />
                     </div>
-                  </div>
 
-                  <div className="mb-3 form-check">
-                    <input
-                      type="checkbox"
-                      className="form-check-input"
-                      id="estadoCheck"
-                      checked={formData.estado}
-                      onChange={(e) => setFormData({ ...formData, estado: e.target.checked })}
-                    />
-                    <label className="form-check-label" htmlFor="estadoCheck">
-                      Activo
-                    </label>
+                    <div className="col-12">
+                      <div className="form-check form-switch">
+                        <input
+                          type="checkbox"
+                          className="form-check-input"
+                          id="estadoCheck"
+                          checked={formData.estado}
+                          onChange={(e) => setFormData({ ...formData, estado: e.target.checked })}
+                        />
+                        <label className="form-check-label small fw-bold text-secondary" htmlFor="estadoCheck">
+                          Estado Activo
+                        </label>
+                      </div>
+                    </div>
                   </div>
                 </div>
-                <div className="modal-footer">
-                  <button type="button" className="btn btn-secondary" onClick={handleCloseModal}>
-                    Cancelar
+                <div className="modal-footer bg-light border-top py-2">
+                  <button type="button" className="btn btn-sm btn-secondary" onClick={handleCloseModal}>
+                    <i className="fa-solid fa-xmark me-1"></i> Cancelar
                   </button>
-                  <button type="submit" className="btn btn-primary">
-                    {editingAdministrador ? 'Actualizar' : 'Crear'}
+                  <button type="submit" className="btn btn-sm btn-primary">
+                    <i className="fa-solid fa-floppy-disk me-1"></i>
+                    {editingAdministrador ? 'Actualizar' : 'Guardar'}
                   </button>
                 </div>
               </form>
@@ -426,3 +505,4 @@ const AdministradoresManagement: React.FC = () => {
 };
 
 export default AdministradoresManagement;
+

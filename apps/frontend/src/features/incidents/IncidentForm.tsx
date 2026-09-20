@@ -216,7 +216,7 @@ export function IncidentForm({ incidentId, onClose, onSave }: IncidentFormProps)
     }
 
     if (!formData.cruceId) {
-      setError('Debe seleccionar un cruce/semáforo');
+      setError('Debe seleccionar una intersección / semáforo');
       return;
     }
 
@@ -299,7 +299,7 @@ export function IncidentForm({ incidentId, onClose, onSave }: IncidentFormProps)
               </div>
               {selectedIncidencia && (
                 <small className="text-success">
-                  <i className="fas fa-check-circle me-1"></i>
+                  <i className="fa-solid fa-circle-check me-1"></i>
                   Seleccionado: {selectedIncidencia.tipo}
                 </small>
               )}
@@ -326,12 +326,12 @@ export function IncidentForm({ incidentId, onClose, onSave }: IncidentFormProps)
               </div>
 
               <div className="col-md-6 mb-3 cruce-autocomplete">
-                    <label className="form-label">Cruce/Semáforo *</label>
+                    <label className="form-label">Intersección / Semáforo *</label>
                     <div className="position-relative">
                       <input
                         type="text"
                         className="form-control custom-input"
-                        placeholder="Buscar cruce..."
+                        placeholder="Buscar intersección..."
                         value={cruceSearch}
                         onChange={handleCruceSearchChange}
                         onFocus={() => setShowCruceDropdown(true)}
@@ -359,7 +359,7 @@ export function IncidentForm({ incidentId, onClose, onSave }: IncidentFormProps)
                     </div>
                     {selectedCruce && (
                       <small className="text-success">
-                        <i className="fas fa-check-circle me-1"></i>
+                        <i className="fa-solid fa-circle-check me-1"></i>
                         Seleccionado: {selectedCruce.nombre}
                       </small>
                     )}
@@ -461,7 +461,7 @@ export function IncidentForm({ incidentId, onClose, onSave }: IncidentFormProps)
 
                 {incidentLocation && (
               <div className="alert alert-info mb-0">
-                <strong><i className="fas fa-map-marker-alt me-2"></i>Ubicación heredada del cruce:</strong>
+                <strong><i className="fa-solid fa-location-dot me-2"></i>Ubicación heredada del cruce:</strong>
                 <div className="mt-2">
                   <small>Latitud: {incidentLocation.latitude.toFixed(6)}</small><br />
                   <small>Longitud: {incidentLocation.longitude.toFixed(6)}</small>
@@ -477,7 +477,7 @@ export function IncidentForm({ incidentId, onClose, onSave }: IncidentFormProps)
             className="btn btn-outline-secondary"
             onClick={onClose}
           >
-            <i className="fas fa-times me-2"></i>
+            <i className="fa-solid fa-xmark me-2"></i>
             Cancelar
           </button>
           <button
@@ -485,7 +485,7 @@ export function IncidentForm({ incidentId, onClose, onSave }: IncidentFormProps)
             className="btn btn-primary"
             disabled={loading}
           >
-            <i className="fas fa-save me-2"></i>
+            <i className="fa-solid fa-floppy-disk me-2"></i>
             {loading ? 'Guardando...' : 'Guardar'}
           </button>
         </div>

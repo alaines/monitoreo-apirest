@@ -47,44 +47,77 @@ export class IncidentsService {
       console.error('Error broadcasting incident creation:', error);
     }
 
-    // Enviar notificación si es una incidencia crítica
-    if (CRITICAL_INCIDENT_IDS.includes(createIncidentDto.incidenciaId)) {
-      try {
-        const incidenciaTipo = ticket.incidencia?.tipo || 'Incidencia crítica';
-        const cruceNombre = ticket.cruce?.nombre || `Cruce #${ticket.cruceId}`;
-        
-        // Notificar a todos los usuarios activos
-        await this.notificationsService.notifyNewIncidencia(
-          ticketId,
-          incidenciaTipo,
-          cruceNombre,
-          ticket.descripcion || '',
-        );
-      } catch (error) {
-        console.error('Error al enviar notificación de nueva incidencia:', error);
-        // No fallar la creación del ticket si falla la notificación
-      }
+    // Enviar notificación a los usuarios
+    try {
+      const isCritical = CRITICAL_INCIDENT_IDS.includes(createIncidentDto.incidenciaId);
+      const incidenciaTipo = ticket.incidencia?.tipo || 'Nueva Incidencia';
+      const cruceNombre = ticket.cruce?.nombre || `Cruce #${ticket.cruceId}`;
+      
+      await this.notificationsService.notifyNewIncidencia(
+        ticketId,
+        incidenciaTipo,
+        cruceNombre,
+        ticket.descripcion || '',
+        isCritical,
+      );
+    } catch (error) {
+      console.error('Error al enviar notificación de nueva incidencia:', error);
     }
 
     return ticket;
   }
 
   async findAll(query: QueryIncidentsDto) {
-    const { page = 1, limit = 10, estadoId, incidenciaId, equipoId, cruceId, administradorId, anho, search } = query;
+    const { page = 1, limit = 10, estadoId, incidenciaId, equipoId, cruceId, administradorId, anho, search, fechaDesde, fechaHasta } = query as any;
     const skip = (page - 1) * limit;
 
     const where: any = {};
 
-    if (estadoId) where.estadoId = estadoId;
-    if (incidenciaId) where.incidenciaId = incidenciaId;
-    if (equipoId) where.equipoId = equipoId;
-    if (cruceId) where.cruceId = cruceId;
-    if (anho) where.anho = anho;
+    if (estadoId) {
+      if (typeof estadoId === 'string') {
+        const ids = estadoId.split(',').map(s => parseInt(s.trim(), 10)).filter(n => !isNaN(n));
+        if (ids.length === 1) {
+          where.estadoId = ids[0];
+        } else if (ids.length > 1) {
+          where.estadoId = { in: ids };
+        }
+      } else if (Array.isArray(estadoId)) {
+        where.estadoId = { in: estadoId.map(Number) };
+      } else {
+        where.estadoId = Number(estadoId);
+      }
+    }
+
+    if (incidenciaId) {
+      const incId = Number(incidenciaId);
+      const children = await this.prisma.incidencia.findMany({
+        where: { parentId: incId, estado: true },
+        select: { id: true },
+      });
+      if (children.length > 0) {
+        where.incidenciaId = { in: [incId, ...children.map(c => c.id)] };
+      } else {
+        where.incidenciaId = incId;
+      }
+    }
+    if (equipoId) where.equipoId = Number(equipoId);
+    if (cruceId) where.cruceId = Number(cruceId);
+    if (anho) where.anho = Number(anho);
+    
+    if (fechaDesde || fechaHasta) {
+      where.createdAt = {};
+      if (fechaDesde) {
+        where.createdAt.gte = new Date(`${fechaDesde}T00:00:00.000Z`);
+      }
+      if (fechaHasta) {
+        where.createdAt.lte = new Date(`${fechaHasta}T23:59:59.999Z`);
+      }
+    }
     
     // Filtro por administrador a través de la relación con cruce
     if (administradorId) {
       where.cruce = {
-        administradorId: administradorId,
+        administradorId: Number(administradorId),
       };
     }
     
@@ -139,46 +172,12 @@ export class IncidentsService {
       this.prisma.ticket.count({ where }),
     ]);
 
-    // Obtener coordenadas de los tickets que las tengan en geom
-    const ticketIds = tickets.map(t => t.id);
-    const ticketCoords: any = await this.prisma.$queryRawUnsafe(
-      `SELECT id, ST_X(geom) as longitude, ST_Y(geom) as latitude 
-       FROM tickets 
-       WHERE id = ANY($1) AND geom IS NOT NULL`,
-      ticketIds,
-    );
-    
-    const coordsMap = new Map();
-    ticketCoords.forEach((tc: any) => {
-      coordsMap.set(tc.id, {
-        latitude: parseFloat(tc.latitude),
-        longitude: parseFloat(tc.longitude),
-      });
-    });
-    
-    // Asignar coordenadas a cada ticket (del ticket o del cruce)
-    const ticketsWithCoords = tickets.map((ticket) => {
-      let latitude: number | null = null;
-      let longitude: number | null = null;
-      
-      // Si tiene coordenadas propias, usarlas
-      if (coordsMap.has(ticket.id)) {
-        const coords = coordsMap.get(ticket.id);
-        latitude = coords.latitude;
-        longitude = coords.longitude;
-      }
-      // Si no, usar las del cruce si existe
-      else if (ticket.cruce?.latitud && ticket.cruce?.longitud) {
-        latitude = ticket.cruce.latitud;
-        longitude = ticket.cruce.longitud;
-      }
-      
-      return {
-        ...ticket,
-        latitude,
-        longitude,
-      };
-    });
+    // Asignar coordenadas a cada ticket desde el cruce asociado
+    const ticketsWithCoords = tickets.map((ticket) => ({
+      ...ticket,
+      latitude: ticket.cruce?.latitud ? Number(ticket.cruce.latitud) : null,
+      longitude: ticket.cruce?.longitud ? Number(ticket.cruce.longitud) : null,
+    }));
 
     return {
       data: ticketsWithCoords,
@@ -280,7 +279,17 @@ export class IncidentsService {
       data: updateData,
     });
 
-    return this.findOne(id);
+    const updatedTicket = await this.findOne(id);
+
+    try {
+      this.notificationsGateway.broadcastIncidentUpdated(updatedTicket);
+      const cruceNombre = updatedTicket.cruce?.nombre || `Cruce #${updatedTicket.cruceId}`;
+      await this.notificationsService.notifyIncidenciaUpdated(id, cruceNombre, 'Datos actualizados');
+    } catch (error) {
+      console.error('Error broadcasting incident update:', error);
+    }
+
+    return updatedTicket;
   }
 
   async remove(id: number) {
@@ -294,16 +303,17 @@ export class IncidentsService {
   }
 
   async getStatistics() {
-    const [total, pendientes, enProceso, resueltas] = await Promise.all([
+    const [total, pendientes, enProceso, reasignadas, resueltas] = await Promise.all([
       this.prisma.ticket.count(),
-      this.prisma.ticket.count({ where: { estadoId: 1 } }),
-      this.prisma.ticket.count({ where: { estadoId: 2 } }),
-      this.prisma.ticket.count({ where: { estadoId: { in: [3, 4] } } }),
+      this.prisma.ticket.count({ where: { estadoId: 1 } }), // ASIGNADO
+      this.prisma.ticket.count({ where: { estadoId: 2 } }), // EN PROCESO
+      this.prisma.ticket.count({ where: { estadoId: 5 } }), // REASIGNADO
+      this.prisma.ticket.count({ where: { estadoId: { in: [3, 4] } } }), // CANCELADO / RESUELTO
     ]);
 
     return {
       total,
-      pendientes,
+      pendientes: pendientes + reasignadas,
       enProceso,
       resueltas,
     };
@@ -325,7 +335,7 @@ export class IncidentsService {
       where: {
         incidenciaId: 66, // CRUCE APAGADO
         estadoId: {
-          in: [1, 2, 5], // Pendiente, En Proceso, Observado
+          in: [1, 2, 5], // Asignado, En Proceso, Reasignado
         },
       },
     });
@@ -334,30 +344,57 @@ export class IncidentsService {
   }
 
   async getMapMarkers(query: QueryIncidentsDto) {
-    const { page = 1, limit = 10000, estadoId, administradorId, anho, year, month, incidenciaId } = query;
-    const skip = (page - 1) * limit;
+    const { page, limit, estadoId, administradorId, anho, mes, year, month, incidenciaId, allStates, caracteristica, prioridadId } = query;
+    const takeAmount = limit && limit > 10 ? limit : 10000;
+    const skipAmount = page && page > 1 ? (page - 1) * takeAmount : 0;
 
-    const where: any = {};
+    const where: any = {
+      cruce: {
+        latitud: { not: null },
+        longitud: { not: null },
+      },
+    };
 
-    // Solo tickets activos por defecto
+    // Si se envía estadoId explícito, usarlo.
+    // Si se envía allStates = true (mapas de calor o reportes históricos), incluir todos los estados.
+    // De lo contrario, para el monitoreo en vivo por defecto, SOLO incidencias activas: ASIGNADO (1), EN PROCESO (2), REASIGNADO (5).
     if (estadoId) {
       where.estadoId = estadoId;
+    } else if (allStates) {
+      // No restringir estadoId
     } else {
-      where.estadoId = { in: [1, 2] }; // Pendiente y En Proceso
+      where.estadoId = { in: [1, 2, 5] };
     }
 
-    if (anho) where.anho = anho;
+    if (anho) where.anho = Number(anho);
+    if (mes) where.mes = Number(mes);
     
-    // Filtros para mapa de calor: year y month usando created_at
-    if (year || month) {
-      const yearValue = year || new Date().getFullYear();
-      const monthValue = month || new Date().getMonth() + 1;
-      
-      // Calcular el primer día del siguiente mes (manejando diciembre -> enero)
+    // Filtros de fecha para mapa de calor y reportes
+    if (year && month) {
+      const yearValue = Number(year);
+      const monthValue = Number(month);
       const nextMonth = monthValue === 12 ? 1 : monthValue + 1;
       const nextYear = monthValue === 12 ? yearValue + 1 : yearValue;
       
-      // Formato: YYYY-MM (ej: "2026-01")
+      const yearMonth = `${yearValue}-${String(monthValue).padStart(2, '0')}`;
+      const nextYearMonth = `${nextYear}-${String(nextMonth).padStart(2, '0')}`;
+      
+      where.createdAt = {
+        gte: new Date(`${yearMonth}-01T00:00:00.000Z`),
+        lt: new Date(`${nextYearMonth}-01T00:00:00.000Z`),
+      };
+    } else if (year && !month) {
+      const yearValue = Number(year);
+      where.createdAt = {
+        gte: new Date(`${yearValue}-01-01T00:00:00.000Z`),
+        lt: new Date(`${yearValue + 1}-01-01T00:00:00.000Z`),
+      };
+    } else if (!year && month) {
+      const yearValue = new Date().getFullYear();
+      const monthValue = Number(month);
+      const nextMonth = monthValue === 12 ? 1 : monthValue + 1;
+      const nextYear = monthValue === 12 ? yearValue + 1 : yearValue;
+      
       const yearMonth = `${yearValue}-${String(monthValue).padStart(2, '0')}`;
       const nextYearMonth = `${nextYear}-${String(nextMonth).padStart(2, '0')}`;
       
@@ -367,14 +404,31 @@ export class IncidentsService {
       };
     }
     
-    // Filtro por tipo de incidencia para mapa de calor
+    // Filtro por tipo de incidencia
     if (incidenciaId) {
       where.incidenciaId = incidenciaId;
+    }
+
+    // Filtro por característica (I = Incidencia, T = Tareas/Trabajos)
+    if (caracteristica) {
+      where.incidencia = {
+        ...where.incidencia,
+        caracteristica: caracteristica,
+      };
+    }
+
+    // Filtro por prioridad (1 = ALTA, 2 = MEDIA, 3 = BAJA)
+    if (prioridadId) {
+      where.OR = [
+        { prioridadId: Number(prioridadId) },
+        { incidencia: { prioridadId: Number(prioridadId) } },
+      ];
     }
     
     // Filtro por administrador a través de la relación con cruce
     if (administradorId) {
       where.cruce = {
+        ...where.cruce,
         administradorId: administradorId,
       };
     }
@@ -382,18 +436,27 @@ export class IncidentsService {
     // Consulta ligera - solo campos necesarios para markers
     const tickets = await this.prisma.ticket.findMany({
       where,
-      skip,
-      take: limit,
+      skip: skipAmount,
+      take: takeAmount,
       select: {
         id: true,
+        anho: true,
+        mes: true,
         incidenciaId: true,
         prioridadId: true,
         estadoId: true,
         createdAt: true,
+        estado: {
+          select: {
+            id: true,
+            nombre: true,
+          },
+        },
         incidencia: {
           select: {
             id: true,
             tipo: true,
+            caracteristica: true,
             prioridad: {
               select: {
                 id: true,
@@ -406,8 +469,14 @@ export class IncidentsService {
           select: {
             id: true,
             nombre: true,
+            codigo: true,
             latitud: true,
             longitud: true,
+            ubigeo: {
+              select: {
+                distrito: true,
+              },
+            },
             administrador: {
               select: {
                 id: true,
@@ -417,39 +486,37 @@ export class IncidentsService {
           },
         },
       },
+      orderBy: {
+        createdAt: 'desc',
+      },
     });
 
-    // Obtener coordenadas de los tickets que las tengan en geom
-    const ticketIds = tickets.map(t => t.id);
-    const ticketCoords: any = await this.prisma.$queryRawUnsafe(
-      `SELECT id, ST_X(geom) as longitude, ST_Y(geom) as latitude 
-       FROM tickets 
-       WHERE id = ANY($1) AND geom IS NOT NULL`,
-      ticketIds,
-    );
-    
-    const coordsMap = new Map();
-    ticketCoords.forEach((tc: any) => {
-      coordsMap.set(tc.id, {
-        latitude: parseFloat(tc.latitude),
-        longitude: parseFloat(tc.longitude),
-      });
-    });
+    // Combinar datos con coordenadas validadas y normalizadas desde el cruce
+    const result = tickets
+      .map((ticket) => {
+        if (!ticket.cruce || ticket.cruce.latitud == null || ticket.cruce.longitud == null) return null;
+        let lat = Number(ticket.cruce.latitud);
+        let lng = Number(ticket.cruce.longitud);
+        if (isNaN(lat) || isNaN(lng)) return null;
 
-    // Combinar datos con coordenadas
-    const result = tickets.map(ticket => {
-      const coords = coordsMap.get(ticket.id);
-      return {
-        ...ticket,
-        latitude: coords?.latitude || ticket.cruce?.latitud || null,
-        longitude: coords?.longitude || ticket.cruce?.longitud || null,
-      };
-    });
+        // Normalizar en caso vengan enteros sin punto decimal
+        while (Math.abs(lat) > 90) lat = lat / 10;
+        while (Math.abs(lng) > 180) lng = lng / 10;
+
+        if (lat === 0 && lng === 0) return null;
+
+        return {
+          ...ticket,
+          latitude: lat,
+          longitude: lng,
+        };
+      })
+      .filter((t): t is NonNullable<typeof t> => t !== null);
 
     return {
       data: result,
       meta: {
-        total: tickets.length,
+        total: result.length,
       },
     };
   }
@@ -467,7 +534,7 @@ export class IncidentsService {
     });
 
     // Crear un mapa de incidencias por ID para búsqueda rápida
-    const incidenciasMap = new Map(incidencias.map(inc => [inc.id, inc]));
+    const incidenciasMap = new Map<number, (typeof incidencias)[number]>(incidencias.map(inc => [inc.id, inc]));
 
     // Construir el nombre completo con jerarquía
     const resultado = incidencias.map(inc => {
@@ -492,6 +559,7 @@ export class IncidentsService {
         tipo: nombreCompleto,
         caracteristica: inc.caracteristica,
         prioridadeId: inc.prioridadId,
+        prioridadId: inc.prioridadId,
         nombrePadre, // Para ordenamiento
       };
     });
@@ -533,6 +601,7 @@ export class IncidentsService {
       where: { estado: true },
       select: {
         id: true,
+        codigo: true,
         nombre: true,
       },
       orderBy: { nombre: 'asc' },
@@ -629,24 +698,21 @@ export class IncidentsService {
       });
     }
 
+    try {
+      const updatedTicket = await this.findOne(ticketId);
+      this.notificationsGateway.broadcastIncidentUpdated(updatedTicket);
+      
+      const cruceNombre = updatedTicket.cruce?.nombre || `Cruce #${updatedTicket.cruceId}`;
+      const estadoNombre = seguimiento.estado?.nombre || 'Seguimiento registrado';
+      await this.notificationsService.notifyStatusChange(ticketId, cruceNombre, estadoNombre, usuario);
+    } catch (error) {
+      console.error('Error broadcasting tracking update:', error);
+    }
+
     return seguimiento;
   }
 
   private async getCoordinates(ticketId: number): Promise<{ latitude: number; longitude: number } | null> {
-    // Primero intentar obtener las coordenadas del ticket
-    const result: any = await this.prisma.$queryRawUnsafe(
-      `SELECT ST_X(geom) as longitude, ST_Y(geom) as latitude FROM tickets WHERE id = $1`,
-      ticketId,
-    );
-
-    if (result && result.length > 0 && result[0].latitude && result[0].longitude) {
-      return {
-        latitude: parseFloat(result[0].latitude),
-        longitude: parseFloat(result[0].longitude),
-      };
-    }
-
-    // Si no tiene coordenadas propias, obtener las del cruce asociado
     const ticket = await this.prisma.ticket.findUnique({
       where: { id: ticketId },
       include: {
@@ -661,8 +727,8 @@ export class IncidentsService {
 
     if (ticket?.cruce?.latitud && ticket?.cruce?.longitud) {
       return {
-        latitude: ticket.cruce.latitud,
-        longitude: ticket.cruce.longitud,
+        latitude: Number(ticket.cruce.latitud),
+        longitude: Number(ticket.cruce.longitud),
       };
     }
 

@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
+import toast from 'react-hot-toast';
 import { 
   incidentsService, 
   Incident, 
@@ -9,6 +10,7 @@ import {
   EquipoCatalog,
   ResponsableCatalog
 } from '../../services/incidents.service';
+import { PageHeader } from '../../components/ui/PageHeader';
 
 interface IncidentDetailProps {
   incidentId?: number;
@@ -89,12 +91,13 @@ export function IncidentDetail({ incidentId: propIncidentId, onClose }: Incident
     e.preventDefault();
     
     if (!trackingForm.reporte.trim()) {
-      alert('El reporte es requerido');
+      toast.error('El reporte es requerido');
       return;
     }
 
     try {
       await incidentsService.createTracking(incidentId, trackingForm);
+      toast.success('Seguimiento registrado exitosamente');
       setTrackingForm({ reporte: '', estadoId: undefined, equipoId: undefined, responsableId: undefined });
       setShowTrackingForm(false);
       setResponsables([]);
@@ -103,7 +106,7 @@ export function IncidentDetail({ incidentId: propIncidentId, onClose }: Incident
     } catch (error: any) {
       console.error('Error creating tracking:', error);
       const errorMessage = error.response?.data?.message || error.message || 'Error al crear el seguimiento';
-      alert(errorMessage);
+      toast.error(errorMessage);
     }
   };
 
@@ -165,7 +168,7 @@ export function IncidentDetail({ incidentId: propIncidentId, onClose }: Incident
             <div className="modal-content">
               <div className="modal-body">
                 <div className="alert alert-warning">
-                  <i className="fas fa-exclamation-triangle me-2"></i>
+                  <i className="fa-solid fa-triangle-exclamation me-2"></i>
                   No se encontró la incidencia
                 </div>
                 <button className="btn btn-primary" onClick={onClose}>
@@ -179,13 +182,13 @@ export function IncidentDetail({ incidentId: propIncidentId, onClose }: Incident
     }
     
     return (
-      <div className="container-fluid py-4">
+      <div className="container-fluid p-3">
         <div className="alert alert-warning">
-          <i className="fas fa-exclamation-triangle me-2"></i>
+          <i className="fa-solid fa-triangle-exclamation me-2"></i>
           No se encontró la incidencia
         </div>
         <button className="btn btn-primary" onClick={() => navigate('/incidents')}>
-          <i className="fas fa-arrow-left me-2"></i>
+          <i className="fa-solid fa-arrow-left me-2"></i>
           Volver a la lista
         </button>
       </div>
@@ -208,7 +211,7 @@ export function IncidentDetail({ incidentId: propIncidentId, onClose }: Incident
           <div className="card mb-3">
             <div className="card-body">
               <h6 className="card-title mb-3 fw-bold">
-                <i className="fas fa-info-circle me-2 text-primary"></i>
+                <i className="fa-solid fa-circle-info me-2 text-primary"></i>
                 Información General
               </h6>
               
@@ -245,7 +248,7 @@ export function IncidentDetail({ incidentId: propIncidentId, onClose }: Incident
                   <div>
                     {incident.equipo?.nombre ? (
                       <span className="badge bg-info text-dark">
-                        <i className="fas fa-users me-1"></i>
+                        <i className="fa-solid fa-users me-1"></i>
                         {incident.equipo.nombre}
                       </span>
                     ) : (
@@ -265,11 +268,11 @@ export function IncidentDetail({ incidentId: propIncidentId, onClose }: Incident
               <div className="row mb-3">
                 <div className="col-12">
                   <label className="form-label text-muted small mb-1">
-                    <i className="fas fa-map-marker-alt me-1"></i>
-                    Cruce/Semáforo
+                    <i className="fa-solid fa-location-dot me-1"></i>
+                    Intersección / Semáforo
                   </label>
                   <div className="fw-bold">
-                    {incident.cruce?.nombre || <span className="text-muted">Sin cruce asignado</span>}
+                    {incident.cruce?.nombre || <span className="text-muted">Sin intersección asignada</span>}
                   </div>
                 </div>
               </div>
@@ -277,14 +280,14 @@ export function IncidentDetail({ incidentId: propIncidentId, onClose }: Incident
               <div className="row mb-3">
                 <div className="col-md-6">
                   <label className="form-label text-muted small mb-1">
-                    <i className="fas fa-bolt me-1"></i>
+                    <i className="fa-solid fa-bolt me-1"></i>
                     Empresa Eléctrica
                   </label>
                   <div>{incident.cruce?.electricoEmpresa || <span className="text-muted">No especificado</span>}</div>
                 </div>
                 <div className="col-md-6">
                   <label className="form-label text-muted small mb-1">
-                    <i className="fas fa-plug me-1"></i>
+                    <i className="fa-solid fa-plug me-1"></i>
                     Suministro
                   </label>
                   <div>{incident.cruce?.electricoSuministro || <span className="text-muted">No especificado</span>}</div>
@@ -305,14 +308,14 @@ export function IncidentDetail({ incidentId: propIncidentId, onClose }: Incident
               <div className="row">
                 <div className="col-md-6">
                   <label className="form-label text-muted small mb-1">
-                    <i className="fas fa-calendar me-1"></i>
+                    <i className="fa-solid fa-calendar-days me-1"></i>
                     Fecha de Creación
                   </label>
                   <div>{new Date(incident.createdAt).toLocaleString('es-PE')}</div>
                 </div>
                 <div className="col-md-6">
                   <label className="form-label text-muted small mb-1">
-                    <i className="fas fa-clock me-1"></i>
+                    <i className="fa-solid fa-clock me-1"></i>
                     Última Actualización
                   </label>
                   <div>{incident.updatedAt ? new Date(incident.updatedAt).toLocaleString('es-PE') : <span className="text-muted">No actualizado</span>}</div>
@@ -327,7 +330,7 @@ export function IncidentDetail({ incidentId: propIncidentId, onClose }: Incident
           <div className="card">
             <div className="card-body">
               <h6 className="card-title mb-3 fw-bold">
-                <i className="fas fa-location-arrow me-2 text-primary"></i>
+                <i className="fa-solid fa-location-crosshairs me-2 text-primary"></i>
                 Ubicación Geográfica
               </h6>
               {incident.latitude && incident.longitude ? (
@@ -346,13 +349,13 @@ export function IncidentDetail({ incidentId: propIncidentId, onClose }: Incident
                     rel="noopener noreferrer"
                     className="btn btn-sm btn-outline-primary w-100"
                   >
-                    <i className="fas fa-map-marker-alt me-2"></i>
+                    <i className="fa-solid fa-location-dot me-2"></i>
                     Ver en Google Maps
                   </a>
                 </>
               ) : (
                 <div className="text-muted text-center py-3">
-                  <i className="fas fa-map-marked-alt fa-2x mb-2 d-block"></i>
+                  <i className="fa-solid fa-map-location-dot fa-2x mb-2 d-block"></i>
                   Sin ubicación geográfica
                 </div>
               )}
@@ -368,7 +371,7 @@ export function IncidentDetail({ incidentId: propIncidentId, onClose }: Incident
             <div className="card-body">
               <div className="d-flex justify-content-between align-items-center mb-3">
                 <h6 className="card-title mb-0 fw-bold">
-                  <i className="fas fa-history me-2 text-primary"></i>
+                  <i className="fa-solid fa-clock-rotate-left me-2 text-primary"></i>
                   Historial de Seguimientos
                 </h6>
                 {incident.estadoId !== 4 ? (
@@ -376,12 +379,12 @@ export function IncidentDetail({ incidentId: propIncidentId, onClose }: Incident
                     className="btn btn-sm btn-primary"
                     onClick={() => setShowTrackingForm(!showTrackingForm)}
                   >
-                    <i className="fas fa-plus me-2"></i>
+                    <i className="fa-solid fa-plus me-2"></i>
                     Agregar Seguimiento
                   </button>
                 ) : (
                   <span className="badge bg-success">
-                    <i className="fas fa-check-circle me-1"></i>
+                    <i className="fa-solid fa-circle-check me-1"></i>
                     Incidencia Finalizada
                   </span>
                 )}
@@ -390,7 +393,7 @@ export function IncidentDetail({ incidentId: propIncidentId, onClose }: Incident
               {showTrackingForm && incident.estadoId !== 4 && (
                 <div className="mb-4 p-3 border rounded bg-light">
                   <h6 className="mb-3">
-                    <i className="fas fa-plus-circle me-2"></i>
+                    <i className="fa-solid fa-circle-plus me-2"></i>
                     Nuevo Seguimiento
                   </h6>
                   <form onSubmit={handleSubmitTracking}>
@@ -461,7 +464,7 @@ export function IncidentDetail({ incidentId: propIncidentId, onClose }: Incident
                     </div>
                     <div className="d-flex gap-2">
                       <button type="submit" className="btn btn-primary">
-                        <i className="fas fa-save me-2"></i>
+                        <i className="fa-solid fa-floppy-disk me-2"></i>
                         Guardar Seguimiento
                       </button>
                       <button
@@ -472,7 +475,7 @@ export function IncidentDetail({ incidentId: propIncidentId, onClose }: Incident
                           setTrackingForm({ reporte: '', estadoId: undefined, equipoId: undefined });
                         }}
                       >
-                        <i className="fas fa-times me-2"></i>
+                        <i className="fa-solid fa-xmark me-2"></i>
                         Cancelar
                       </button>
                     </div>
@@ -489,7 +492,7 @@ export function IncidentDetail({ incidentId: propIncidentId, onClose }: Incident
                 </div>
               ) : trackings.length === 0 ? (
                 <div className="text-center py-4 text-muted">
-                  <i className="fas fa-inbox fa-2x mb-3 d-block"></i>
+                  <i className="fa-solid fa-inbox fa-2x mb-3 d-block"></i>
                   <p className="mb-0">No hay seguimientos registrados</p>
                 </div>
               ) : (
@@ -501,11 +504,11 @@ export function IncidentDetail({ incidentId: propIncidentId, onClose }: Incident
                           <div className="d-flex justify-content-between align-items-start mb-2">
                             <div>
                               <small className="text-muted">
-                                <i className="fas fa-user me-1"></i>
+                                <i className="fa-solid fa-user me-1"></i>
                                 {tracking.usuarioRegistra || 'Sistema'}
                               </small>
                               <small className="text-muted ms-3">
-                                <i className="fas fa-clock me-1"></i>
+                                <i className="fa-solid fa-clock me-1"></i>
                                 {new Date(tracking.createdAt).toLocaleString('es-PE')}
                               </small>
                             </div>
@@ -518,12 +521,12 @@ export function IncidentDetail({ incidentId: propIncidentId, onClose }: Incident
                           {tracking.equipo && (
                             <div className="mb-2">
                               <span className="badge bg-info text-dark me-2">
-                                <i className="fas fa-users me-1"></i>
+                                <i className="fa-solid fa-users me-1"></i>
                                 {tracking.equipo.nombre}
                               </span>
                               {tracking.responsable && (
                                 <span className="badge bg-secondary">
-                                  <i className="fas fa-user-tie me-1"></i>
+                                  <i className="fa-solid fa-user-tie me-1"></i>
                                   {tracking.responsable.nombre}
                                 </span>
                               )}
@@ -550,7 +553,7 @@ export function IncidentDetail({ incidentId: propIncidentId, onClose }: Incident
           <div className="modal-content">
             <div className="modal-header bg-primary text-white">
               <h5 className="modal-title">
-                <i className="fas fa-eye me-2"></i>
+                <i className="fa-solid fa-eye me-2"></i>
                 Ver Incidencia
               </h5>
               <button type="button" className="btn-close btn-close-white" onClick={handleClose}></button>
@@ -560,7 +563,7 @@ export function IncidentDetail({ incidentId: propIncidentId, onClose }: Incident
             </div>
             <div className="modal-footer bg-light">
               <button type="button" className="btn btn-secondary" onClick={handleClose}>
-                <i className="fas fa-times me-2"></i>
+                <i className="fa-solid fa-xmark me-2"></i>
                 Cerrar
               </button>
               {incident.estadoId !== 4 && (
@@ -572,7 +575,7 @@ export function IncidentDetail({ incidentId: propIncidentId, onClose }: Incident
                     navigate(`/incidents/${incident.id}/edit`);
                   }}
                 >
-                  <i className="fas fa-edit me-2"></i>
+                  <i className="fa-solid fa-pen-to-square me-2"></i>
                   Editar Incidencia
                 </button>
               )}
@@ -584,28 +587,27 @@ export function IncidentDetail({ incidentId: propIncidentId, onClose }: Incident
   }
 
   return (
-    <div className="container-fluid py-4">
-      <div className="d-flex justify-content-between align-items-center mb-4">
-        <h3>
-          <i className="fas fa-eye me-2"></i>
-          Detalle de Incidencia
-        </h3>
-        <div>
-          <button className="btn btn-secondary me-2" onClick={handleClose}>
-            <i className="fas fa-arrow-left me-2"></i>
-            Volver
-          </button>
-          {incident.estadoId !== 4 && (
-            <button 
-              className="btn btn-primary"
-              onClick={() => navigate(`/incidents/${incident.id}/edit`)}
-            >
-              <i className="fas fa-edit me-2"></i>
-              Editar
+    <div className="container-fluid p-3">
+      <PageHeader 
+        icon="fa-solid fa-clipboard-list"
+        title={`Detalle de Incidencia #${incident.id}`}
+        subtitle={`${incident.incidencia?.tipo || 'Incidencia Técnica'} - ${incident.cruce?.nombre || 'Sin intersección asignada'}`}
+        actions={
+          <div className="d-flex gap-2">
+            <button className="btn btn-sm btn-outline-secondary" onClick={handleClose}>
+              <i className="fa-solid fa-arrow-left me-1"></i> Volver
             </button>
-          )}
-        </div>
-      </div>
+            {incident.estadoId !== 4 && (
+              <button 
+                className="btn btn-sm btn-primary"
+                onClick={() => navigate(`/incidents/${incident.id}/edit`)}
+              >
+                <i className="fa-solid fa-pen-to-square me-1"></i> Editar Incidencia
+              </button>
+            )}
+          </div>
+        }
+      />
       {content}
     </div>
   );

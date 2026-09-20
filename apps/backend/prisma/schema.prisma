@@ -159,7 +159,6 @@ model Ticket {
   dia                    Int?
   mes                    Int?
   anho                   Int?
-  geom                   Unsupported("geometry")?
   seguimientos           TicketSeguimiento[]
   cruce                  Cruce?                   @relation(fields: [cruceId], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "Tickets_to_cruces")
   equipo                 Equipo?                  @relation(fields: [equipoId], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "Tickets_to_equipos")
@@ -169,7 +168,6 @@ model Ticket {
 
   @@index([createdAt])
   @@index([estadoId], map: "tickets_estado_idx")
-  @@index([geom], map: "tickets_geom_gix", type: Gist)
   @@map("tickets")
 }
 
@@ -289,14 +287,12 @@ model Cruce {
   electricoEmpresa    String?                  @map("electrico_empresa") @db.VarChar(255)
   electricoSuministro String?                  @map("electrico_suministro") @db.VarChar(255)
   plataforma          Int?
-  geom                Unsupported("geometry")?
   administrador       Administrador?           @relation(fields: [administradorId], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "fk_cruces_administradores_1")
   proyecto            Proyecto                 @relation(fields: [proyectoId], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "fk_cruces_proyectos_1")
   ubigeo              Ubigeo                   @relation(fields: [ubigeoId], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "fk_cruces_ubigeos_1")
   crucesPerifericos   CrucePeriferico[]
   tickets             Ticket[]
 
-  @@index([geom], map: "cruces_geom_gix", type: Gist)
   @@map("cruces")
 }
 

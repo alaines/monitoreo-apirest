@@ -75,10 +75,10 @@ export function IncidentTracking({ incidentId }: IncidentTrackingProps) {
   };
 
   const getEventIcon = (eventName: string): string => {
-    if (eventName.includes('Creada')) return 'fa-plus-circle';
+    if (eventName.includes('Creada')) return 'fa-circle-plus';
     if (eventName.includes('Asignado')) return 'fa-users';
-    if (eventName.includes('Estado')) return 'fa-sync';
-    if (eventName.includes('Completado')) return 'fa-check-circle';
+    if (eventName.includes('Estado')) return 'fa-rotate';
+    if (eventName.includes('Completado')) return 'fa-circle-check';
     return 'fa-circle';
   };
 
@@ -101,9 +101,9 @@ export function IncidentTracking({ incidentId }: IncidentTrackingProps) {
   }
 
   return (
-    <div className="container-fluid">
+    <div className="container-fluid p-3">
       <h5 className="mb-4">
-        <i className="fas fa-history me-2"></i>
+        <i className="fa-solid fa-clock-rotate-left me-2"></i>
         Seguimiento de Incidencia
       </h5>
 
@@ -111,7 +111,7 @@ export function IncidentTracking({ incidentId }: IncidentTrackingProps) {
         <div className="card-body">
           {events.length === 0 ? (
             <div className="alert alert-info">
-              <i className="fas fa-info-circle me-2"></i>
+              <i className="fa-solid fa-circle-info me-2"></i>
               No hay eventos registrados para esta incidencia
             </div>
           ) : (
@@ -124,7 +124,7 @@ export function IncidentTracking({ incidentId }: IncidentTrackingProps) {
                         className={`rounded-circle bg-${getEventColor(event.event)} text-white d-flex align-items-center justify-content-center`}
                         style={{ width: '40px', height: '40px' }}
                       >
-                        <i className={`fas ${getEventIcon(event.event)}`}></i>
+                        <i className={`fa-solid ${getEventIcon(event.event)}`}></i>
                       </div>
                       {index < events.length - 1 && (
                         <div 
@@ -143,7 +143,7 @@ export function IncidentTracking({ incidentId }: IncidentTrackingProps) {
                             </small>
                           </div>
                           <p className="text-muted small mb-1">
-                            <i className="fas fa-user me-1"></i>
+                            <i className="fa-solid fa-user me-1"></i>
                             {event.user}
                           </p>
                           {event.description && (

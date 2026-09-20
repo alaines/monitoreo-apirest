@@ -6,6 +6,7 @@ import { ProtectedRoute } from './components/ProtectedRoute';
 import { LoginPage } from './features/auth/pages/LoginPage';
 import { Layout } from './components/Layout';
 import { Inicio } from './pages/Inicio';
+import { ErrorBoundary } from './components/ErrorBoundary';
 
 // Lazy load de componentes
 const IncidentsList = lazy(() => import('./features/incidents/IncidentsList').then(m => ({ default: m.IncidentsList })));
@@ -65,7 +66,7 @@ function App() {
 
   const LoadingFallback = () => (
     <div className="d-flex justify-content-center align-items-center" style={{ minHeight: '100vh' }}>
-      <div className="spinner-border" role="status">
+      <div className="spinner-border text-primary" role="status">
         <span className="visually-hidden">Cargando...</span>
       </div>
     </div>
@@ -76,27 +77,44 @@ function App() {
   }
 
   return (
-    <BrowserRouter>
+    <ErrorBoundary>
+      <BrowserRouter>
       <Toaster 
         position="top-right"
         toastOptions={{
-          duration: 3000,
+          duration: 3500,
           style: {
-            background: '#363636',
-            color: '#fff',
+            background: '#1e293b',
+            color: '#ffffff',
+            fontSize: '0.875rem',
+            fontWeight: 500,
+            borderRadius: '6px',
+            border: '1px solid #334155',
+            boxShadow: '0 10px 25px -5px rgba(0, 0, 0, 0.25), 0 8px 10px -6px rgba(0, 0, 0, 0.25)',
+            padding: '12px 18px',
           },
           success: {
             duration: 3000,
+            style: {
+              background: '#065f46',
+              color: '#ffffff',
+              border: '1px solid #047857',
+            },
             iconTheme: {
-              primary: '#10b981',
-              secondary: '#fff',
+              primary: '#ffffff',
+              secondary: '#065f46',
             },
           },
           error: {
-            duration: 4000,
+            duration: 4500,
+            style: {
+              background: '#991b1b',
+              color: '#ffffff',
+              border: '1px solid #b91c1c',
+            },
             iconTheme: {
-              primary: '#ef4444',
-              secondary: '#fff',
+              primary: '#ffffff',
+              secondary: '#991b1b',
             },
           },
         }}
@@ -109,39 +127,68 @@ function App() {
         
         {/* Rutas protegidas con Layout compartido */}
         <Route element={<ProtectedLayout />}>
-            <Route path="/" element={<Inicio />} />
-            <Route path="/incidents" element={<IncidentsList />} />
-            <Route path="/incidents/new" element={<IncidentForm incidentId={null} onClose={() => {}} onSave={() => {}} />} />
-            <Route path="/incidents/:id/edit" element={<IncidentForm incidentId={null} onClose={() => {}} onSave={() => {}} />} />
-            <Route path="/incidents/:id" element={<IncidentDetail />} />
-            <Route path="/cruces" element={<CrucesList />} />
-            <Route path="/cruces/mapa" element={<CrucesMap />} />
-            <Route path="/cruces/new" element={<CruceForm />} />
-            <Route path="/cruces/:id/edit" element={<CruceForm />} />
-            <Route path="/cruces/:id" element={<CruceDetail />} />
-            <Route path="/reportes/incidencias" element={<ReporteIncidencias />} />
-            <Route path="/reportes/grafico" element={<ReporteGrafico />} />
-            <Route path="/reportes/mapa" element={<MapaCalor />} />
-            <Route path="/admin/users" element={<UsersManagement />} />
-            <Route path="/admin/grupos" element={<GruposPermisosManagement />} />
-            <Route path="/admin/menus" element={<MenusManagement />} />
-            <Route path="/admin/catalogos" element={<CatalogosManagement />} />
-            <Route path="/mantenimientos/tipos" element={<CatalogosManagement />} />
-            <Route path="/mantenimientos/areas" element={<AreasManagement />} />
-            <Route path="/mantenimientos/equipos" element={<EquiposManagement />} />
-            <Route path="/mantenimientos/reportadores" element={<ReportadoresManagement />} />
-            <Route path="/mantenimientos/responsables" element={<ResponsablesManagement />} />
-            <Route path="/mantenimientos/administradores" element={<AdministradoresManagement />} />
-            <Route path="/mantenimientos/ejes" element={<EjesManagement />} />
-            <Route path="/mantenimientos/proyectos" element={<ProyectosManagement />} />
-            <Route path="/mantenimientos/incidencias" element={<IncidenciasManagement />} />
-            <Route path="/perfil" element={<MiPerfil />} />
-            <Route path="/configuracion" element={<Configuracion />} />
-          </Route>
+          <Route path="/" element={<Inicio />} />
+          <Route path="/incidents" element={<IncidentsList />} />
+          <Route path="/incidents/new" element={<IncidentForm incidentId={null} onClose={() => {}} onSave={() => {}} />} />
+          <Route path="/incidents/:id/edit" element={<IncidentForm incidentId={null} onClose={() => {}} onSave={() => {}} />} />
+          <Route path="/incidents/:id" element={<IncidentDetail />} />
+          <Route path="/cruces" element={<CrucesList />} />
+          <Route path="/cruces/mapa" element={<CrucesMap />} />
+          <Route path="/cruces/new" element={<CruceForm />} />
+          <Route path="/cruces/:id/edit" element={<CruceForm />} />
+          <Route path="/cruces/:id" element={<CruceDetail />} />
+          <Route path="/reportes/incidencias" element={<ReporteIncidencias />} />
+          <Route path="/reportes/grafico" element={<ReporteGrafico />} />
+          <Route path="/reportes/mapa" element={<MapaCalor />} />
+          <Route path="/admin/users" element={<UsersManagement />} />
+          <Route path="/admin/grupos" element={<GruposPermisosManagement />} />
+          <Route path="/admin/menus" element={<MenusManagement />} />
+          <Route path="/admin/catalogos" element={<CatalogosManagement />} />
+          <Route path="/mantenimientos/tipos" element={<CatalogosManagement />} />
+          <Route path="/mantenimientos/areas" element={<AreasManagement />} />
+          <Route path="/mantenimientos/equipos" element={<EquiposManagement />} />
+          <Route path="/mantenimientos/reportadores" element={<ReportadoresManagement />} />
+          <Route path="/mantenimientos/responsables" element={<ResponsablesManagement />} />
+          <Route path="/mantenimientos/administradores" element={<AdministradoresManagement />} />
+          <Route path="/mantenimientos/ejes" element={<EjesManagement />} />
+          <Route path="/mantenimientos/proyectos" element={<ProyectosManagement />} />
+          <Route path="/mantenimientos/incidencias" element={<IncidenciasManagement />} />
+          <Route path="/perfil" element={<MiPerfil />} />
+          <Route path="/configuracion" element={<Configuracion />} />
 
-          <Route path="*" element={<Navigate to="/" replace />} />
-        </Routes>
+          {/* Rutas heredadas de CakePHP / Redirecciones automáticas */}
+          <Route path="/mapas/red" element={<Navigate to="/cruces/mapa" replace />} />
+          <Route path="/intersecciones/cruces/*" element={<Navigate to="/cruces" replace />} />
+          <Route path="/intersecciones/cruces" element={<Navigate to="/cruces" replace />} />
+          <Route path="/intersecciones/tipos/*" element={<Navigate to="/mantenimientos/tipos" replace />} />
+          <Route path="/intersecciones/administradores/*" element={<Navigate to="/mantenimientos/administradores" replace />} />
+          <Route path="/intersecciones/ejes/*" element={<Navigate to="/mantenimientos/ejes" replace />} />
+          <Route path="/incidencia/tickets/*" element={<Navigate to="/incidents" replace />} />
+          <Route path="/incidencia/tickets" element={<Navigate to="/incidents" replace />} />
+          <Route path="/incidencia/reportes/*" element={<Navigate to="/reportes/incidencias" replace />} />
+          <Route path="/incidencia/reportes" element={<Navigate to="/reportes/incidencias" replace />} />
+          <Route path="/acceso/users/*" element={<Navigate to="/admin/users" replace />} />
+          <Route path="/acceso/users" element={<Navigate to="/admin/users" replace />} />
+          <Route path="/acceso/personas/*" element={<Navigate to="/admin/users" replace />} />
+          <Route path="/acceso/personas" element={<Navigate to="/admin/users" replace />} />
+          <Route path="/acceso/grupos/*" element={<Navigate to="/admin/grupos" replace />} />
+          <Route path="/acceso/grupos" element={<Navigate to="/admin/grupos" replace />} />
+          <Route path="/acceso/menus/*" element={<Navigate to="/admin/menus" replace />} />
+          <Route path="/acceso/menus" element={<Navigate to="/admin/menus" replace />} />
+          <Route path="/conteo/estadisticas/*" element={<Navigate to="/reportes/grafico" replace />} />
+          <Route path="/conteo/estadisticas" element={<Navigate to="/reportes/grafico" replace />} />
+          <Route path="/incidencia/areas/*" element={<Navigate to="/mantenimientos/areas" replace />} />
+          <Route path="/incidencia/equipos/*" element={<Navigate to="/mantenimientos/equipos" replace />} />
+          <Route path="/incidencia/reportadores/*" element={<Navigate to="/mantenimientos/reportadores" replace />} />
+          <Route path="/incidencia/responsables/*" element={<Navigate to="/mantenimientos/responsables" replace />} />
+          <Route path="/incidencia/proyectos/*" element={<Navigate to="/mantenimientos/proyectos" replace />} />
+          <Route path="/incidencia/incidencias/*" element={<Navigate to="/mantenimientos/incidencias" replace />} />
+        </Route>
+
+        <Route path="*" element={<Navigate to="/" replace />} />
+      </Routes>
     </BrowserRouter>
+  </ErrorBoundary>
   );
 }
 
