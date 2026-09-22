@@ -110,6 +110,6 @@ export class NotificationsController {
       return this.notificationsService.createMultiple(ids, { type, title, message });
     }
 
-    throw new BadRequestException('userId or userIds or all flag required');
+    throw new BadRequestException('Se requiere especificar userId, userIds o el indicador all');
   }
 }

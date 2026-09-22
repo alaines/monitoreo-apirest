@@ -230,7 +230,7 @@ export class IncidentsService {
     });
 
     if (!ticket) {
-      throw new NotFoundException(`Ticket with ID ${id} not found`);
+      throw new NotFoundException(`Incidencia con ID ${id} no encontrada`);
     }
 
     const coords = await this.getCoordinates(id);

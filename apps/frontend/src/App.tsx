@@ -19,6 +19,7 @@ const CrucesMap = lazy(() => import('./features/cruces/CrucesMap').then(m => ({ 
 const ReporteIncidencias = lazy(() => import('./features/reportes/ReporteIncidencias').then(m => ({ default: m.ReporteIncidencias })));
 const ReporteGrafico = lazy(() => import('./features/reportes/ReporteGrafico'));
 const MapaCalor = lazy(() => import('./features/reportes/MapaCalor').then(m => ({ default: m.MapaCalor })));
+const DashboardBI = lazy(() => import('./features/reportes/bi-dashboard/DashboardBI'));
 const UsersManagement = lazy(() => import('./features/admin/users/UsersManagement').then(m => ({ default: m.UsersManagement })));
 const GruposPermisosManagement = lazy(() => import('./features/admin/grupos/GruposPermisosManagement').then(m => ({ default: m.GruposPermisosManagement })));
 const MenusManagement = lazy(() => import('./features/admin/menus/MenusManagement').then(m => ({ default: m.MenusManagement })));
@@ -140,6 +141,7 @@ function App() {
           <Route path="/reportes/incidencias" element={<ReporteIncidencias />} />
           <Route path="/reportes/grafico" element={<ReporteGrafico />} />
           <Route path="/reportes/mapa" element={<MapaCalor />} />
+          <Route path="/reportes/bi-dashboard" element={<DashboardBI />} />
           <Route path="/admin/users" element={<UsersManagement />} />
           <Route path="/admin/grupos" element={<GruposPermisosManagement />} />
           <Route path="/admin/menus" element={<MenusManagement />} />

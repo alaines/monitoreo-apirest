@@ -220,6 +220,11 @@ export function IncidentForm({ incidentId, onClose, onSave }: IncidentFormProps)
       return;
     }
 
+    if (!formData.descripcion || !formData.descripcion.trim()) {
+      setError('La descripción de la incidencia es obligatoria');
+      return;
+    }
+
     setLoading(true);
 
     try {
@@ -399,7 +404,7 @@ export function IncidentForm({ incidentId, onClose, onSave }: IncidentFormProps)
                 </div>
 
                 <div className="mb-3">
-                  <label className="form-label">Descripción</label>
+                  <label className="form-label">Descripción *</label>
                   <textarea
                     className="form-control custom-textarea"
                     name="descripcion"

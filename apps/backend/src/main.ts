@@ -1,9 +1,11 @@
 import { NestFactory } from '@nestjs/core';
-import { ValidationPipe } from '@nestjs/common';
+import { ValidationPipe, BadRequestException } from '@nestjs/common';
 import { SwaggerModule, DocumentBuilder } from '@nestjs/swagger';
 import { AppModule } from './app.module';
 import { NestExpressApplication } from '@nestjs/platform-express';
 import { join } from 'path';
+import { formatValidationErrors } from './common/utils/validation-i18n';
+import { HttpExceptionFilter } from './common/filters/http-exception.filter';
 
 async function bootstrap() {
   const app = await NestFactory.create<NestExpressApplication>(AppModule);
@@ -24,7 +26,7 @@ async function bootstrap() {
     credentials: true,
   });
 
-  // Validation pipe
+  // Validation pipe con traducción de mensajes a español
   app.useGlobalPipes(
     new ValidationPipe({
       whitelist: true,
@@ -34,8 +36,15 @@ async function bootstrap() {
       transformOptions: {
         enableImplicitConversion: false,
       },
+      exceptionFactory: (errors) => {
+        const messages = formatValidationErrors(errors);
+        return new BadRequestException(messages);
+      },
     }),
   );
+
+  // Filtro global de excepciones con mensajes en español
+  app.useGlobalFilters(new HttpExceptionFilter());
 
   // Global prefix PRIMERO
   app.setGlobalPrefix('api');

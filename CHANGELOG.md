@@ -5,6 +5,20 @@ Todos los cambios notables de este proyecto serán documentados en este archivo.
 El formato está basado en [Keep a Changelog](https://keepachangelog.com/es-ES/1.0.0/),
 y este proyecto adhiere a [Semantic Versioning](https://semver.org/lang/es/).
 
+## [1.3.0] - 2026-09-22
+
+### Agregado (Added)
+- **Dashboard Ejecutivo BI (Réplica Power BI)**: Nuevo módulo analítico y gerencial integrado (`/reportes/bi-dashboard`) basado en los reportes ejecutivos `SGF-KPI` y `SGF-MONITOREO` del archivo `archive/GMU - Reportes .pbix`:
+  - **KPIs Ejecutivos en Tiempo Real**: Tarjetas de indicadores clave (Total Incidencias, Incidencias Resueltas, % Resolución, Intersecciones Afectadas, Tiempo Promedio de Respuesta en horas y días, Incidencias Críticas).
+  - **Evolución Mensual (Volumen vs Tiempo)**: Gráfico de doble eje con series de volumen de incidencias y curva de tiempo promedio de atención en horas.
+  - **Top 10 Causas y Averías**: Gráfico horizontal de distribución con diferenciación por severidad (Críticas vs Estándar) y porcentajes de participación.
+  - **Matriz Analítica por Distritos**: Tabla con ranking de incidencias, cruces afectados, volumen de resueltas, buscador reactivo, ordenamiento por columnas y barras de porcentaje de efectividad.
+  - **Carga y Desempeño de Cuadrillas**: Gráfico comparativo de tareas asignadas vs resueltas por equipo y tiempo promedio.
+  - **Distribución por Estado**: Gráfico Donut de flujo de atención de tickets.
+  - **Segmentación Multidimensional (Slicers)**: Filtrado reactivo por Año, Mes, Distrito, Administrador/Contratista y Equipo de Trabajo.
+  - **Exportación Ejecutiva a PDF y CSV**: Generación de informes PDF institucionales en alta definición con membrete municipal y exportación de matrices a CSV.
+- **Backend Analytics Engine**: Endpoints dedicados bajo `/api/reportes/bi-dashboard/*` con consultas SQL agrupadas de alta velocidad.
+
 ## [1.2.0] - 2026-09-19
 
 ### Agregado (Added)

@@ -97,6 +97,16 @@ const DEFAULT_FALLBACK_MENUS: Menu[] = [
         menuPadreId: 6,
         codigo: 'mapa-calor',
         submenus: []
+      },
+      {
+        id: 99,
+        nombre: 'Dashboard Ejecutivo BI',
+        ruta: '/reportes/bi-dashboard',
+        icono: 'fa-solid fa-chart-line',
+        orden: 4,
+        menuPadreId: 6,
+        codigo: 'reportes-bi',
+        submenus: []
       }
     ]
   },
@@ -115,7 +125,7 @@ const DEFAULT_FALLBACK_MENUS: Menu[] = [
       { id: 23, nombre: 'Proyectos', ruta: '/mantenimientos/proyectos', icono: 'fa-solid fa-diagram-project', orden: 4, menuPadreId: 9, codigo: 'proyectos', submenus: [] },
       { id: 24, nombre: 'Reportadores', ruta: '/mantenimientos/reportadores', icono: 'fa-solid fa-user-pen', orden: 5, menuPadreId: 9, codigo: 'reportadores', submenus: [] },
       { id: 25, nombre: 'Responsables', ruta: '/mantenimientos/responsables', icono: 'fa-solid fa-user-check', orden: 6, menuPadreId: 9, codigo: 'responsables', submenus: [] },
-      { id: 36, nombre: 'Tipos de Intersección', ruta: '/mantenimientos/tipos', icono: 'fa-solid fa-tags', orden: 7, menuPadreId: 9, codigo: 'tipos', submenus: [] },
+      { id: 36, nombre: 'Catálogo de Tipos', ruta: '/mantenimientos/tipos', icono: 'fa-solid fa-tags', orden: 7, menuPadreId: 9, codigo: 'tipos', submenus: [] },
       { id: 39, nombre: 'Administradores / Contratistas', ruta: '/mantenimientos/administradores', icono: 'fa-solid fa-user-shield', orden: 8, menuPadreId: 9, codigo: 'administradores', submenus: [] },
       { id: 42, nombre: 'Ejes y Vías', ruta: '/mantenimientos/ejes', icono: 'fa-solid fa-road', orden: 9, menuPadreId: 9, codigo: 'ejes-vias', submenus: [] },
     ]
@@ -147,7 +157,31 @@ export function Layout({ children }: { children: React.ReactNode }) {
   const isActive = (path: string) => location.pathname === path;
   const isActivePath = (path: string) => location.pathname.startsWith(path);
 
-  const menusToRender = (user?.menus && user.menus.length > 0) ? user.menus : DEFAULT_FALLBACK_MENUS;
+  const baseMenus = (user?.menus && user.menus.length > 0) ? user.menus : DEFAULT_FALLBACK_MENUS;
+  const menusToRender = baseMenus.map(m => {
+    if (m.codigo === 'reportes' || m.nombre.toLowerCase().includes('reportes')) {
+      const hasBi = m.submenus?.some(s => s.ruta === '/reportes/bi-dashboard' || s.codigo === 'reportes-bi');
+      if (!hasBi) {
+        return {
+          ...m,
+          submenus: [
+            ...(m.submenus || []),
+            {
+              id: 99,
+              nombre: 'Dashboard Ejecutivo BI',
+              ruta: '/reportes/bi-dashboard',
+              icono: 'fa-solid fa-chart-line',
+              orden: 4,
+              menuPadreId: m.id,
+              codigo: 'reportes-bi',
+              submenus: []
+            }
+          ]
+        };
+      }
+    }
+    return m;
+  });
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', height: '100vh', backgroundColor: 'var(--gray-100)', overflow: 'hidden' }}>
@@ -171,8 +205,8 @@ export function Layout({ children }: { children: React.ReactNode }) {
           >
             <i className="fa-solid fa-bars"></i>
           </button>
-          
-          <div 
+
+          <div
             style={{ fontSize: '18px', fontWeight: 'bold', color: 'var(--primary)', display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer' }}
             onClick={() => navigate('/')}
           >
@@ -195,7 +229,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
         {/* Notificaciones y Usuario en header */}
         <div style={{ display: 'flex', gap: '12px', alignItems: 'center' }}>
           <NotificationBell />
-          
+
           <div style={{ position: 'relative' }}>
             <button
               onClick={() => setShowUserMenu(!showUserMenu)}
@@ -206,13 +240,13 @@ export function Layout({ children }: { children: React.ReactNode }) {
                 borderRadius: '8px'
               }}
             >
-              <div style={{ 
-                width: '32px', 
-                height: '32px', 
-                borderRadius: '50%', 
-                backgroundColor: 'var(--primary)', 
-                display: 'flex', 
-                alignItems: 'center', 
+              <div style={{
+                width: '32px',
+                height: '32px',
+                borderRadius: '50%',
+                backgroundColor: 'var(--primary)',
+                display: 'flex',
+                alignItems: 'center',
                 justifyContent: 'center',
                 color: 'white'
               }}>
@@ -287,8 +321,8 @@ export function Layout({ children }: { children: React.ReactNode }) {
       {/* Contenedor con Sidebar y Contenido */}
       <div style={{ flex: 1, display: 'flex', overflow: 'hidden' }}>
         {/* Sidebar */}
-        <aside 
-          style={{ 
+        <aside
+          style={{
             width: sidebarOpen ? '260px' : '0',
             minWidth: sidebarOpen ? '260px' : '0',
             backgroundColor: 'var(--primary-darkest)',
@@ -304,7 +338,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
           {/* Navegación en sidebar */}
           <nav style={{ flex: 1, padding: '16px 0', overflowY: 'auto' }}>
             {/* Inicio siempre fijo en primer lugar */}
-            <DynamicMenuItem 
+            <DynamicMenuItem
               menu={{
                 id: 0,
                 nombre: 'Inicio',
@@ -341,7 +375,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
           <div className="row align-items-center">
             <div className="col-md-6">
               <p className="mb-0 text-muted" style={{ fontSize: '13px' }}>
-                © {new Date().getFullYear()} Sistema de Monitoreo <span className="ms-2 badge bg-primary">v1.1.6</span>
+                © {new Date().getFullYear()} Sistema de Monitoreo <span className="ms-2 badge bg-primary">v1.3.0</span>
               </p>
             </div>
             <div className="col-md-6 text-md-end">
