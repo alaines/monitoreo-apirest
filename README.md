@@ -1,6 +1,6 @@
 # Sistema de Monitoreo de Semáforos e Incidencias
 
-[![Version](https://img.shields.io/badge/version-1.2.0-blue.svg)](./CHANGELOG.md)
+[![Version](https://img.shields.io/badge/version-1.3.0-blue.svg)](./CHANGELOG.md)
 [![License](https://img.shields.io/badge/license-MIT-green.svg)](./LICENSE)
 
 Sistema integral de gestión y monitoreo de intersecciones semaforizadas e incidencias de tráfico en tiempo real. Monorepo fullstack desarrollado con NestJS, React, PostgreSQL y PostGIS.
@@ -11,9 +11,11 @@ Aland Laines Calonge
 
 ## Documentación del Proyecto
 
-- **[Guía de Instalación Completa](docs/INSTALLATION.md)** - Instalación detallada para desarrollo y producción
-- **[Arquitectura y Despliegue](docs/DEPLOYMENT.md)** - Guía de despliegue y configuración de servicios
+- **[Manual de Usuario](docs/MANUAL_USUARIO.md)** - Guía paso a paso para operadores, supervisores y administradores
+- **[Manual de Instalación](docs/MANUAL_INSTALACION.md)** - Instalación completa en Docker, PM2, desarrollo y producción
+- **[Manual de Mantenimiento](docs/MANUAL_MANTENIMIENTO.md)** - Guía técnica de soporte, base de datos, backups y monitoreo
 - **[Design System](docs/DESIGN_SYSTEM.md)** - Guía de estilos y componentes UI (Bootstrap 5 + FontAwesome 6)
+- **[Arquitectura y Despliegue](docs/DEPLOYMENT.md)** - Guía de despliegue y configuración de servicios
 - **[Reglas del Proyecto](docs/PROJECT_RULES.md)** - Estándares de desarrollo y reglas obligatorias
 - **[CHANGELOG](CHANGELOG.md)** - Historial de cambios y versiones
 - **[Guía de Configuración de Red](docs/NETWORK-CONFIG.md)** - Configuración de IPs y servidores
@@ -50,7 +52,7 @@ npm run dev:delete   # Eliminar servicios de PM2
 ```
 
 **Acceder:** http://localhost:5173  
-**Credenciales:** `admin` / `Admin123` (cambiar después del primer login)
+**Credenciales:** `admin` / `admin123` o `bmoron` / `123456`
 
 ### Producción (Instalación Automática)
 ```bash
@@ -69,36 +71,48 @@ El script instalará automáticamente:
 - Base de datos con usuario admin
 - Servicios configurados y corriendo
 
-Ver [Guía de Instalación](docs/INSTALLATION.md) para instalación manual o personalización.
+Ver [Manual de Instalación](docs/MANUAL_INSTALACION.md) para instalación manual, Docker o personalización.
 
-## Descripcion
+## Descripción
 
-Aplicacion web profesional para la gestion, seguimiento y analisis de cruces semaforizados, perifericos asociados e incidencias de trafico. Permite el registro completo de infraestructura vial, gestion de perifericos tecnicos, seguimiento de incidencias ciudadanas, y visualizacion geografica mediante mapas interactivos con priorizacion por nivel de urgencia.
+Aplicación web profesional para la gestión, seguimiento y análisis de cruces semaforizados, periféricos asociados e incidencias de tráfico. Permite el registro completo de infraestructura vial, gestión de periféricos técnicos, seguimiento de incidencias ciudadanas, visualización geográfica mediante mapas interactivos con clustering por nivel de urgencia y paneles gerenciales de inteligencia de negocios (BI).
 
 ## Capturas de Pantalla
 
-### Pantalla de Inicio
+### 1. Pantalla de Inicio - Centro de Monitoreo con Clustering Jerárquico por Severidad
 ![Inicio](docs/screenshots/inicio.PNG)
 
-### Login
-![Login](docs/screenshots/login.PNG)
+### 2. Reportes Gráficos y Series Temporales
+![Reportes Gráficos](docs/screenshots/reporte_grafico.PNG)
 
-### Gestion de Cruces
-![Gestion de Cruces](docs/screenshots/gestion_cruces.PNG)
+### 3. Mapa de Calor Geoespacial de Incidencias
+![Mapa de Calor](docs/screenshots/mapa_calor.PNG)
 
-### Mapa de Cruces Semaforizados
+### 4. Gestión y Seguimiento de Incidencias
+![Gestión de Incidencias](docs/screenshots/gestion_incidencias.PNG)
+
+### 5. Gestión e Inventario de Intersecciones Semafóricas
+![Gestión de Cruces](docs/screenshots/gestion_cruces.PNG)
+
+### 6. Mapa de Red de Intersecciones
 ![Mapa de Cruces](docs/screenshots/mapa_cruces.PNG)
 
-### Detalle de Cruce con Perifericos
+### 7. Detalle Técnico de Cruce y Periféricos
 ![Detalle de Cruce](docs/screenshots/detalle_cruce.PNG)
 
-### Gestion de Incidencias
-![Gestion de Incidencias](docs/screenshots/gestion_incidencias.PNG)
+### 8. Inicio de Sesión Institucional
+![Login](docs/screenshots/login.PNG)
 
-### Detalle de Incidencia
-![Detalle de Incidencia](docs/screenshots/detalle_incidencia.PNG)
+## Características Principales
 
-## Caracteristicas Principales
+### Dashboard Ejecutivo BI (Power BI Style)
+- **KPIs Ejecutivos en Tiempo Real**: Total Incidencias, Atendidas/Resueltas, % Resolución, Intersecciones Afectadas, Tiempo Promedio de Respuesta (en Horas y Días) e Incidencias Críticas.
+- **Evolución Mensual (Volumen vs Tiempo)**: Gráfico compuesto de barras y línea con doble eje Y para contrastar carga de trabajo contra velocidad de atención.
+- **Top 10 Causas y Averías**: Distribución porcentual con diferenciación visual de averías de alta prioridad.
+- **Matriz de Rendimiento Distrital**: Ranking interactivo con buscador reactivo, ordenamiento por columnas y barras de porcentaje de efectividad.
+- **Carga de Trabajo por Cuadrilla / Equipo**: Asignadas vs Resueltas y tiempo medio de resolución.
+- **Segmentación Multidimensional**: Slicers reactivos por Año, Mes, Distrito, Administrador y Equipo.
+- **Exportación Ejecutiva Corporativa**: Exportación a PDF en alta definición con membrete institucional y exportación a CSV.
 
 ### Gestion de Cruces Semaforizados
 - Registro completo de intersecciones viales con informacion tecnica
