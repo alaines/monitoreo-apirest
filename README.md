@@ -82,25 +82,31 @@ Aplicación web profesional para la gestión, seguimiento y análisis de cruces 
 ### 1. Pantalla de Inicio - Centro de Monitoreo con Clustering Jerárquico por Severidad
 ![Inicio](docs/screenshots/inicio.PNG)
 
-### 2. Reportes Gráficos y Series Temporales
+### 2. Dashboard Ejecutivo BI (Power BI Style)
+![Dashboard Ejecutivo BI](docs/screenshots/dashboard_bi.PNG)
+
+### 3. Reportes Gráficos Estadísticos y Series Temporales
 ![Reportes Gráficos](docs/screenshots/reporte_grafico.PNG)
 
-### 3. Mapa de Calor Geoespacial de Incidencias
+### 4. Mapa de Calor Geoespacial de Incidencias
 ![Mapa de Calor](docs/screenshots/mapa_calor.PNG)
 
-### 4. Gestión y Seguimiento de Incidencias
+### 5. Gestión y Seguimiento de Incidencias (Filtros Reactivos)
 ![Gestión de Incidencias](docs/screenshots/gestion_incidencias.PNG)
 
-### 5. Gestión e Inventario de Intersecciones Semafóricas
+### 6. Detalle Técnico y Timeline de Incidencia
+![Detalle de Incidencia](docs/screenshots/detalle_incidencia.PNG)
+
+### 7. Gestión e Inventario de Intersecciones Semafóricas
 ![Gestión de Cruces](docs/screenshots/gestion_cruces.PNG)
 
-### 6. Mapa de Red de Intersecciones
+### 8. Mapa de Red de Intersecciones
 ![Mapa de Cruces](docs/screenshots/mapa_cruces.PNG)
 
-### 7. Detalle Técnico de Cruce y Periféricos
+### 9. Ficha Técnica y Detalle de Cruce con Periféricos
 ![Detalle de Cruce](docs/screenshots/detalle_cruce.PNG)
 
-### 8. Inicio de Sesión Institucional
+### 10. Inicio de Sesión Institucional
 ![Login](docs/screenshots/login.PNG)
 
 ## Características Principales
