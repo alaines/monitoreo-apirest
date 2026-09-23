@@ -5,7 +5,7 @@ import autoTable from 'jspdf-autotable';
 import ApexCharts from 'apexcharts';
 
 import { PageHeader } from '../../../components/ui/PageHeader';
-import { LOGO_MUNILIMA_COLOR } from '../../../assets/logoMunilimaBase64';
+import { drawPdfHeader, applyPdfFooters, drawPdfMetadata, drawPdfKpiCards, getPdfTableStyles, PDF_COLORS } from '../../../utils/pdfReportHelper';
 import {
   biDashboardService,
   FullBiDashboardData,
@@ -108,110 +108,41 @@ export const DashboardBI: React.FC = () => {
 
     try {
       const doc = new jsPDF('p', 'mm', 'a4');
-      const pageWidth = 210;
-
-      const drawHeader = (pageNum: number) => {
-        // Institutional top banner
-        doc.setFillColor(29, 84, 109);
-        doc.rect(0, 0, pageWidth, pageNum === 1 ? 4 : 2.5, 'F');
-
-        if (pageNum === 1) {
-          doc.setTextColor(29, 84, 109);
-          doc.setFontSize(14);
-          doc.setFont('helvetica', 'bold');
-          doc.text('DASHBOARD EJECUTIVO DE GESTIÓN Y MONITOREO', 14, 13);
-
-          doc.setTextColor(51, 65, 85);
-          doc.setFontSize(9.5);
-          doc.setFont('helvetica', 'bold');
-          doc.text('Subgerencia de Gestión y Fiscalización - SGF', 14, 18.5);
-
-          doc.setTextColor(95, 149, 152);
-          doc.setFontSize(9);
-          doc.setFont('helvetica', 'normal');
-          doc.text('División de Monitoreo y Control Semafórico', 14, 23.5);
-
-          if (LOGO_MUNILIMA_COLOR) {
-            doc.addImage(LOGO_MUNILIMA_COLOR, 'PNG', 144, 7, 52, 21.5);
-          }
-
-          doc.setDrawColor(29, 84, 109);
-          doc.setLineWidth(0.5);
-          doc.line(14, 29, 196, 29);
-        } else {
-          doc.setTextColor(29, 84, 109);
-          doc.setFontSize(9);
-          doc.setFont('helvetica', 'bold');
-          doc.text('DASHBOARD EJECUTIVO BI - MONITOREO SEMAFÓRICO', 14, 9);
-
-          doc.setTextColor(100, 116, 139);
-          doc.setFontSize(8);
-          doc.setFont('helvetica', 'normal');
-          doc.text(`Año: ${filters.anho || 'Todos'} | Filtro: ${filters.distrito || 'Todos los distritos'}`, 196, 9, { align: 'right' });
-
-          doc.setDrawColor(226, 232, 240);
-          doc.setLineWidth(0.3);
-          doc.line(14, 12, 196, 12);
-        }
-      };
+      const tableStyles = getPdfTableStyles();
 
       // Page 1: Header + Meta + KPIs + Monthly Trend + Status Pie
-      drawHeader(1);
+      let y = drawPdfHeader(doc, true, 'Dashboard Ejecutivo de Gestión y Monitoreo');
 
-      doc.setFontSize(8.5);
-      doc.setTextColor(71, 85, 105);
-      doc.setFont('helvetica', 'bold');
-      doc.text('Período:', 14, 35);
-      doc.setFont('helvetica', 'normal');
-      doc.text(`Año ${filters.anho || 'Todos'}${filters.mes ? ` / Mes ${filters.mes}` : ''}`, 30, 35);
-
-      doc.setFont('helvetica', 'bold');
-      doc.text('Distrito:', 80, 35);
-      doc.setFont('helvetica', 'normal');
-      doc.text(filters.distrito || 'Todos los Distritos', 95, 35);
-
-      doc.setFont('helvetica', 'bold');
-      doc.text('Fecha Emisión:', 145, 35);
-      doc.setFont('helvetica', 'normal');
-      doc.text(new Date().toLocaleString('es-PE'), 168, 35);
+      // Metadatos
+      y = drawPdfMetadata(doc, y, [
+        { label: 'Período', value: `Año ${filters.anho || 'Todos'}${filters.mes ? ` / Mes ${filters.mes}` : ''}` },
+        { label: 'Distrito', value: filters.distrito || 'Todos los Distritos' },
+        { label: 'Fecha Emisión', value: new Date().toLocaleString('es-PE') },
+      ]);
 
       // KPI boxes
       const kpis = dashboardData.kpis;
       const kpiItems = [
-        { label: 'TOTAL INCIDENCIAS', val: kpis.totalIncidencias.toLocaleString(), color: [29, 84, 109] },
-        { label: 'ATENDIDAS', val: kpis.incidenciasAtendidas.toLocaleString(), color: [16, 185, 129] },
-        { label: '% RESOLUCIÓN', val: `${kpis.tasaResolucion}%`, color: [16, 185, 129] },
-        { label: 'INTERSECCIONES', val: kpis.interseccionesAfectadas.toLocaleString(), color: [6, 182, 212] },
-        { label: 'TIEMPO ATENCIÓN', val: `${kpis.tiempoPromedioHoras}h (${kpis.tiempoPromedioDias}d)`, color: [245, 158, 11] },
-        { label: 'CRÍTICAS', val: kpis.incidenciasCriticas.toLocaleString(), color: [239, 68, 68] },
+        { label: 'TOTAL INCIDENCIAS', value: kpis.totalIncidencias.toLocaleString(), color: PDF_COLORS.primary },
+        { label: 'ATENDIDAS', value: kpis.incidenciasAtendidas.toLocaleString(), color: PDF_COLORS.success },
+        { label: '% RESOLUCIÓN', value: `${kpis.tasaResolucion}%`, color: PDF_COLORS.success },
+        { label: 'INTERSECCIONES', value: kpis.interseccionesAfectadas.toLocaleString(), color: PDF_COLORS.secondary },
+        { label: 'TIEMPO ATENCIÓN', value: `${kpis.tiempoPromedioHoras}h (${kpis.tiempoPromedioDias}d)`, color: PDF_COLORS.warning },
+        { label: 'CRÍTICAS', value: kpis.incidenciasCriticas.toLocaleString(), color: PDF_COLORS.danger },
       ];
 
-      kpiItems.forEach((kpi, idx) => {
-        const x = 14 + (idx % 3) * 62;
-        const y = 40 + Math.floor(idx / 3) * 16;
-        doc.setFillColor(248, 250, 252);
-        doc.roundedRect(x, y, 58, 13, 1.5, 1.5, 'F');
-        doc.setFontSize(6.5);
-        doc.setFont('helvetica', 'bold');
-        doc.setTextColor(100, 116, 139);
-        doc.text(kpi.label, x + 3, y + 4.5);
-        doc.setFontSize(10.5);
-        doc.setTextColor(kpi.color[0], kpi.color[1], kpi.color[2]);
-        doc.text(kpi.val, x + 3, y + 10.5);
-      });
-
-      let currentY = 76;
+      y = drawPdfKpiCards(doc, y, kpiItems);
 
       // Chart 1: Monthly Trend
       const imgMonthly = await getChartImageUri('bi-chart-monthly-trend');
       if (imgMonthly) {
         doc.setFontSize(9.5);
         doc.setFont('helvetica', 'bold');
-        doc.setTextColor(29, 84, 109);
-        doc.text('1. Evolución Mensual: Volumen de Incidencias vs Tiempo de Atención', 14, currentY);
-        currentY += 3;
-        doc.addImage(imgMonthly, 'PNG', 14, currentY, 182, 65);
-        currentY += 70;
+        doc.setTextColor(PDF_COLORS.primary[0], PDF_COLORS.primary[1], PDF_COLORS.primary[2]);
+        doc.text('1. Evolución Mensual: Volumen de Incidencias vs Tiempo de Atención', 14, y);
+        y += 3;
+        doc.addImage(imgMonthly, 'PNG', 14, y, 182, 65);
+        y += 70;
       }
 
       // Chart 2: Status & Causes
@@ -221,24 +152,23 @@ export const DashboardBI: React.FC = () => {
       if (imgStatus && imgCauses) {
         doc.setFontSize(9.5);
         doc.setFont('helvetica', 'bold');
-        doc.setTextColor(29, 84, 109);
-        doc.text('2. Distribución por Estado y Principales Causas', 14, currentY);
-        currentY += 3;
-        doc.addImage(imgStatus, 'PNG', 14, currentY, 88, 65);
-        doc.addImage(imgCauses, 'PNG', 106, currentY, 90, 65);
-        currentY += 70;
+        doc.setTextColor(PDF_COLORS.primary[0], PDF_COLORS.primary[1], PDF_COLORS.primary[2]);
+        doc.text('2. Distribución por Estado y Principales Causas', 14, y);
+        y += 3;
+        doc.addImage(imgStatus, 'PNG', 14, y, 88, 65);
+        doc.addImage(imgCauses, 'PNG', 106, y, 90, 65);
+        y += 70;
       }
 
       // Page 2: Teams Chart + Districts Table
       doc.addPage();
-      drawHeader(2);
-      let page2Y = 18;
+      let page2Y = drawPdfHeader(doc, false, 'Dashboard Ejecutivo de Gestión y Monitoreo', `Año ${filters.anho || 'Todos'}`);
 
       const imgTeams = await getChartImageUri('bi-chart-teams');
       if (imgTeams) {
         doc.setFontSize(9.5);
         doc.setFont('helvetica', 'bold');
-        doc.setTextColor(29, 84, 109);
+        doc.setTextColor(PDF_COLORS.primary[0], PDF_COLORS.primary[1], PDF_COLORS.primary[2]);
         doc.text('3. Desempeño y Carga de Trabajo por Cuadrilla / Equipo', 14, page2Y);
         page2Y += 3;
         doc.addImage(imgTeams, 'PNG', 14, page2Y, 182, 65);
@@ -247,7 +177,7 @@ export const DashboardBI: React.FC = () => {
 
       doc.setFontSize(9.5);
       doc.setFont('helvetica', 'bold');
-      doc.setTextColor(29, 84, 109);
+      doc.setTextColor(PDF_COLORS.primary[0], PDF_COLORS.primary[1], PDF_COLORS.primary[2]);
       doc.text('4. Ranking de Incidencias y Desempeño por Distrito', 14, page2Y);
       page2Y += 4;
 
@@ -262,45 +192,31 @@ export const DashboardBI: React.FC = () => {
       ]);
 
       autoTable(doc, {
+        ...tableStyles,
         startY: page2Y,
         head: [['Distrito', 'Incidencias', '% Total', 'Cruces', 'Resueltas', '% Resolución']],
         body: tableData,
-        theme: 'striped',
-        styles: { fontSize: 8, cellPadding: 1.5 },
-        headStyles: { fillColor: [29, 84, 109], textColor: [255, 255, 255], fontStyle: 'bold' },
         columnStyles: {
-          0: { cellWidth: 50 },
+          0: { cellWidth: 50, halign: 'left' },
           1: { halign: 'right' },
           2: { halign: 'right' },
           3: { halign: 'right' },
           4: { halign: 'right' },
           5: { halign: 'center' },
         },
-        margin: { left: 14, right: 14 },
       });
 
       // Footers
-      const totalPages = doc.getNumberOfPages();
-      for (let p = 1; p <= totalPages; p++) {
-        doc.setPage(p);
-        doc.setDrawColor(226, 232, 240);
-        doc.setLineWidth(0.3);
-        doc.line(14, 285, 196, 285);
-        doc.setFontSize(7.5);
-        doc.setTextColor(148, 163, 184);
-        doc.text('Municipalidad Metropolitana de Lima - SGF', 14, 290);
-        doc.text(`Página ${p} de ${totalPages}`, 105, 290, { align: 'center' });
-        doc.text(new Date().toLocaleDateString('es-PE'), 196, 290, { align: 'right' });
-      }
+      applyPdfFooters(doc);
 
-      const fileName = `Dashboard_Ejecutivo_BI_${filters.anho || 'General'}_${new Date().toISOString().split('T')[0]}.pdf`;
+      const fileName = `dashboard_ejecutivo_bi_${filters.anho || 'todos'}_${new Date().toISOString().split('T')[0]}.pdf`;
       doc.save(fileName);
       toast.dismiss(toastId);
-      toast.success('Reporte Ejecutivo PDF generado exitosamente');
-    } catch (err) {
+      toast.success('Reporte Ejecutivo BI exportado exitosamente');
+    } catch (error) {
       toast.dismiss(toastId);
-      console.error('Error al exportar PDF BI:', err);
-      toast.error('Error al generar el PDF del Dashboard');
+      console.error('Error exporting PDF:', error);
+      toast.error('Error al generar el reporte PDF');
     } finally {
       setExportingPDF(false);
     }

@@ -8,7 +8,7 @@ import toast from 'react-hot-toast';
 import jsPDF from 'jspdf';
 import { reportesGraficoService, ReporteGraficoResponse } from '../../services/reportes-grafico.service';
 import { PageHeader } from '../../components/ui/PageHeader';
-import { LOGO_MUNILIMA_COLOR } from '../../assets/logoMunilimaBase64';
+import { drawPdfHeader, applyPdfFooters, drawPdfMetadata, drawPdfKpiCards } from '../../utils/pdfReportHelper';
 
 // Asignar a window por compatibilidad
 if (typeof window !== 'undefined') {
@@ -181,106 +181,22 @@ export const ReporteGrafico: React.FC = () => {
         periodoTexto = `${filtros.dia}/${filtros.mes}/${filtros.anio}`;
       }
 
-      // Función para dibujar encabezado institucional corporativo
-      const drawHeader = (isFirst: boolean) => {
-        if (isFirst) {
-          // Barra de acento superior azul institucional
-          doc.setFillColor(29, 84, 109);
-          doc.rect(0, 0, 210, 3.5, 'F');
-
-          // Títulos institucionales lado izquierdo
-          doc.setTextColor(29, 84, 109);
-          doc.setFontSize(13);
-          doc.setFont('helvetica', 'bold');
-          doc.text('SISTEMA DE MONITOREO DE SEMÁFOROS', 14, 12);
-
-          doc.setTextColor(51, 65, 85);
-          doc.setFontSize(9.5);
-          doc.setFont('helvetica', 'bold');
-          doc.text('Subgerencia de Gestión y Fiscalización', 14, 17.5);
-
-          doc.setTextColor(95, 149, 152);
-          doc.setFontSize(9);
-          doc.setFont('helvetica', 'normal');
-          doc.text('División de Monitoreo y Control', 14, 22.5);
-
-          doc.setTextColor(100, 116, 139);
-          doc.setFontSize(8.5);
-          doc.setFont('helvetica', 'italic');
-          doc.text('Reporte Estadístico de Incidencias y Averías', 14, 27);
-
-          // Logo institucional de la Municipalidad de Lima en el lado derecho
-          if (LOGO_MUNILIMA_COLOR) {
-            // Relación de aspecto ~2.43:1 (w: 52mm, h: 21.5mm)
-            doc.addImage(LOGO_MUNILIMA_COLOR, 'PNG', 144, 6.5, 52, 21.5);
-          }
-
-          // Línea divisoria inferior del encabezado
-          doc.setDrawColor(29, 84, 109);
-          doc.setLineWidth(0.6);
-          doc.line(14, 30, 196, 30);
-        } else {
-          // Encabezado compacto para páginas secundarias
-          doc.setFillColor(29, 84, 109);
-          doc.rect(0, 0, 210, 2.5, 'F');
-
-          doc.setTextColor(29, 84, 109);
-          doc.setFontSize(9);
-          doc.setFont('helvetica', 'bold');
-          doc.text('SISTEMA DE MONITOREO DE SEMÁFOROS', 14, 8);
-
-          doc.setTextColor(100, 116, 139);
-          doc.setFontSize(7.5);
-          doc.setFont('helvetica', 'normal');
-          doc.text('Subgerencia de Gestión y Fiscalización | División de Monitoreo y Control', 14, 12);
-
-          doc.setTextColor(29, 84, 109);
-          doc.setFontSize(8);
-          doc.setFont('helvetica', 'bold');
-          doc.text(`Período: ${periodoTexto}`, 196, 10, { align: 'right' });
-
-          doc.setDrawColor(226, 232, 240);
-          doc.setLineWidth(0.3);
-          doc.line(14, 14.5, 196, 14.5);
-        }
-      };
-
       // Página 1: Encabezado + Metadatos + Cajas KPI
-      drawHeader(true);
+      let y = drawPdfHeader(doc, true, 'Reporte Estadístico de Incidencias y Averías');
 
-      doc.setTextColor(33, 37, 41);
-      doc.setFontSize(9);
-      doc.setFont('helvetica', 'bold');
-      doc.text('Período de Análisis: ', 14, 36);
-      doc.setFont('helvetica', 'normal');
-      doc.text(periodoTexto, 50, 36);
-
-      doc.setFont('helvetica', 'bold');
-      doc.text('Fecha de Emisión: ', 14, 41);
-      doc.setFont('helvetica', 'normal');
-      doc.text(new Date().toLocaleString('es-PE'), 50, 41);
+      y = drawPdfMetadata(doc, y, [
+        { label: 'Período de Análisis', value: periodoTexto },
+        { label: 'Fecha de Emisión', value: new Date().toLocaleString('es-PE') },
+      ]);
 
       // Resumen KPI en Cajas
       const kpis = [
-        { label: 'TOTAL INCIDENCIAS', val: datos.resumen.totalIncidencias.toString() },
-        { label: 'INTERSECCIONES AFECTADAS', val: datos.resumen.totalCruces.toString() },
-        { label: 'TIPOS DISTINTOS', val: datos.resumen.totalTipos.toString() },
+        { label: 'TOTAL INCIDENCIAS', value: datos.resumen.totalIncidencias.toString() },
+        { label: 'INTERSECCIONES AFECTADAS', value: datos.resumen.totalCruces.toString() },
+        { label: 'TIPOS DISTINTOS', value: datos.resumen.totalTipos.toString() },
       ];
 
-      kpis.forEach((kpi, idx) => {
-        const x = 14 + idx * 62;
-        doc.setFillColor(245, 247, 250);
-        doc.roundedRect(x, 46, 58, 16, 2, 2, 'F');
-        doc.setFontSize(7);
-        doc.setFont('helvetica', 'bold');
-        doc.setTextColor(100, 116, 139);
-        doc.text(kpi.label, x + 4, 52);
-        doc.setFontSize(12);
-        doc.setTextColor(29, 84, 109);
-        doc.text(kpi.val, x + 4, 59);
-      });
-
-      let y = 68;
+      y = drawPdfKpiCards(doc, y, kpis);
 
       // Lista de gráficos a capturar e insertar
       const chartItems = [
@@ -299,8 +215,7 @@ export const ReporteGrafico: React.FC = () => {
           // Si el gráfico no cabe en la página actual, agregar nueva página
           if (y + item.height + 12 > 280) {
             doc.addPage();
-            drawHeader(false);
-            y = 19;
+            y = drawPdfHeader(doc, false, 'Reporte Estadístico de Incidencias y Averías', `Período: ${periodoTexto}`);
           }
 
           // Título de la sección del gráfico
@@ -317,19 +232,7 @@ export const ReporteGrafico: React.FC = () => {
       }
 
       // Pie de página en todas las páginas
-      const totalPages = doc.getNumberOfPages();
-      for (let pageNum = 1; pageNum <= totalPages; pageNum++) {
-        doc.setPage(pageNum);
-        doc.setDrawColor(226, 232, 240);
-        doc.setLineWidth(0.3);
-        doc.line(14, 285, 196, 285);
-
-        doc.setFontSize(7.5);
-        doc.setTextColor(148, 163, 184);
-        doc.text('Municipalidad Metropolitana de Lima', 14, 290);
-        doc.text(`Página ${pageNum} de ${totalPages}`, 105, 290, { align: 'center' });
-        doc.text(new Date().toLocaleDateString('es-PE'), 196, 290, { align: 'right' });
-      }
+      applyPdfFooters(doc);
 
       const nombreArchivo = `reporte_grafico_${filtros.periodo}_${filtros.anio}_${new Date().toISOString().split('T')[0]}.pdf`;
       doc.save(nombreArchivo);

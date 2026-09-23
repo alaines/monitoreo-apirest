@@ -5,6 +5,68 @@ Todos los cambios notables de este proyecto serán documentados en este archivo.
 El formato está basado en [Keep a Changelog](https://keepachangelog.com/es-ES/1.0.0/),
 y este proyecto adhiere a [Semantic Versioning](https://semver.org/lang/es/).
 
+## [1.4.4] - 2026-09-22
+
+### Corregido (Fixed)
+- **Informe Ejecutivo de Intersecciones Semafóricas (PDF)**:
+  - Corrección del solapamiento de tablas asegurando el cálculo estricto de la coordenada vertical `y` posterior a cada bloque `autoTable`.
+  - Remoción completa de indicadores y columnas de Activos e Inactivos en todas las tarjetas de KPIs y tablas analíticas (Conectividad, Administradores y Cobertura Distrital), optimizando el espacio visual y la legibilidad institucional.
+
+## [1.4.3] - 2026-09-22
+
+### Mejorado (Changed)
+- **Informe Ejecutivo de Intersecciones Semafóricas (PDF y Excel)**:
+  - Ajuste del título de la sección 2 a `2. Distribución por Administrador`.
+  - Simplificación del encabezado de la tabla a `Administrador`.
+  - Remoción de las columnas de Activos e Inactivos en la matriz de administradores para una presentación ejecutiva más limpia y focalizada.
+
+## [1.4.2] - 2026-09-22
+
+### Corregido (Fixed)
+- **Exportación PDF en Reporte de Incidencias**: Corrección del error de tiempo de ejecución `distrito is not defined` en `ReporteIncidencias.tsx`, mapeando adecuadamente los filtros activos de tipo de incidencia, estado operativo y administrador a los metadatos del informe institucional sin alterar ninguna otra funcionalidad.
+
+## [1.4.1] - 2026-09-22
+
+### Mejorado (Changed)
+- **Estandarización y Unificación de Estilos en Todos los Reportes PDF del Sistema**:
+  - **Módulo Centralizado (`pdfReportHelper.ts`)**: Creación de una biblioteca transversal con componentes y estilos corporativos oficiales para documentos PDF (jsPDF + autoTable).
+  - **Encabezado Institucional Homogéneo**:
+    - Cintillo superior azul petróleo (`#1D546D`), título "SISTEMA DE MONITOREO DE SEMÁFOROS", jerarquía "Subgerencia de Gestión y Fiscalización" y "División de Monitoreo y Control", subtítulo de reporte y logotipo oficial de la Municipalidad Metropolitana de Lima en alta resolución.
+    - Encabezado compacto automático para páginas secundarias con información de contexto y período.
+  - **Pie de Página Institucional**: Cintillo divisor con leyenda oficial "Municipalidad Metropolitana de Lima", paginación dinámica "Página X de Y" y fecha de emisión.
+  - **Módulos Actualizados al Nuevo Estándar**:
+    - *Reporte Estadístico de Incidencias y Averías* (`/reportes/graficos`)
+    - *Reporte de Gestión de Incidencias* (`/reportes/incidencias`)
+    - *Dashboard Ejecutivo BI* (`/reportes/bi-dashboard`)
+    - *Informe Ejecutivo de Intersecciones Semafóricas* (`/cruces`)
+    - *Ficha Técnica de Intersección Semafórica* (`CruceDetail.tsx`)
+
+## [1.4.0] - 2026-09-22
+
+### Agregado (Added)
+- **Exportación a Excel y Reporte Ejecutivo PDF en Gestión de Intersecciones**:
+  - **Exportación a Excel (`.xlsx`)**: Generación de archivo Excel institucional con dos pestañas de datos procesados:
+    - *Listado de Intersecciones*: Matriz exhaustiva con 23 columnas que abarcan Código de cruce, Nombre/Intersección, Distrito, Provincia, Estado Operativo, Tipo de Comunicación/Red, Administrador/Contratista, Proyecto, Tipo de Cruce, Tipo de Estructura, Tipo de Control, Coordenadas GPS (Latitud/Longitud), Cantidad de Periféricos vinculados, Disponibilidad de Planos técnicos (PDF y DWG), Empresa Eléctrica, Suministro Eléctrico, Año de Implementación, Observaciones y Fecha de Registro.
+    - *Resumen Ejecutivo*: Pestaña analítica integrada con tablas consolidadas de KPIs generales, distribución por tipo de comunicación, administradores y ranking de cobertura por distritos.
+  - **Reporte Ejecutivo Institucional en PDF**: Generación en cliente con `jsPDF` y `jspdf-autotable` con membrete oficial de la Municipalidad Metropolitana de Lima (GMU / SGF), tarjetas de métricas clave (Total cruces, % Operatividad, cruces activos/inactivos, cruces con planos, cruces con periféricos), desglose tabular por Tipo de Comunicación y Red, resumen por Administrador/Contratista y matriz de Cobertura Semafórica por Distritos con pie de página y paginación institucional.
+  - **Endpoints Backend**:
+    - `GET /api/cruces/export/excel`: Generación binaria y streaming optimizado con `ExcelJS` aplicando estilos, cabeceras personalizadas, anchos automáticos y autofiltros.
+    - `GET /api/cruces/resumen-ejecutivo`: Agregación analítica de datos en PostgreSQL para cálculo rápido de métricas e indicadores de la red semafórica.
+
+## [1.3.2] - 2026-09-22
+
+### Corregido (Fixed)
+- **Eliminación de Scroll Horizontal y Adaptabilidad de Pantalla**:
+  - Corrección de márgenes negativos (`-1.5rem`) en `.app-page-title` que desbordaban el ancho del contenedor `container-fluid p-3`.
+  - Configuración global de `box-sizing: border-box`, `overflow-x: hidden`, `max-width: 100%` en `html`, `body`, `#root`, `container-fluid` y `Layout.tsx` (`minWidth: 0`, `overflowX: 'hidden'`).
+  - Adaptabilidad fluida del viewport a cualquier resolución de pantalla, manteniendo el scroll horizontal encapsulado únicamente dentro de `.table-responsive` para tablas con columnas extensas.
+
+## [1.3.1] - 2026-09-22
+
+### Corregido (Fixed)
+- **Gestión de Permisos de Grupo**: Corrección del método de guardado masivo en el frontend (`admin.service.ts`), resolviendo la excepción `assignToGrupo is not a function` que impedía guardar la matriz de privilegios en el módulo de perfiles y seguridad.
+- **Robustez en Backend de Permisos**: Inclusión de `skipDuplicates: true` en la persistencia masiva de permisos de grupo (`bulkSavePermisos`) para prevenir conflictos de llaves únicas en PostgreSQL.
+
 ## [1.3.0] - 2026-09-22
 
 ### Agregado (Added)

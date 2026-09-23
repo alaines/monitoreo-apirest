@@ -90,6 +90,27 @@ export const crucesService = {
     return response.data;
   },
 
+  async exportarExcel(params?: QueryCrucesParams) {
+    const response = await api.get('/cruces/export/excel', {
+      params,
+      responseType: 'blob',
+    });
+    const url = window.URL.createObjectURL(new Blob([response.data]));
+    const link = document.createElement('a');
+    link.href = url;
+    const fecha = new Date().toISOString().split('T')[0];
+    link.setAttribute('download', `intersecciones_${fecha}.xlsx`);
+    document.body.appendChild(link);
+    link.click();
+    link.remove();
+    window.URL.revokeObjectURL(url);
+  },
+
+  async getResumenEjecutivo(params?: QueryCrucesParams) {
+    const response = await api.get('/cruces/resumen-ejecutivo', { params });
+    return response.data;
+  },
+
   async getCruce(id: number) {
     const response = await api.get(`/cruces/${id}`);
     return response.data;

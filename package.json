@@ -1,6 +1,6 @@
 {
   "name": "monitoreo-apirest",
-  "version": "1.2.0",
+  "version": "1.4.4",
   "description": "Sistema de Gestión de Incidencias de Semáforos - Monorepo",
   "private": true,
   "workspaces": [
@@ -48,7 +48,7 @@
     "prisma",
     "leaflet"
   ],
-  "author": "EMC-GMU",
+  "author": "DMC-GMU",
   "license": "MIT",
   "devDependencies": {
     "@types/multer": "^2.0.0",

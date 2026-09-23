@@ -184,7 +184,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
   });
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', height: '100vh', backgroundColor: 'var(--gray-100)', overflow: 'hidden' }}>
+    <div style={{ display: 'flex', flexDirection: 'column', height: '100vh', width: '100%', maxWidth: '100%', backgroundColor: 'var(--gray-100)', overflow: 'hidden' }}>
       {/* Header */}
       <header className="bg-white border-bottom" style={{
         display: 'flex',
@@ -192,9 +192,11 @@ export function Layout({ children }: { children: React.ReactNode }) {
         justifyContent: 'space-between',
         padding: '12px 20px',
         height: '60px',
+        width: '100%',
         flexShrink: 0,
         zIndex: 1050,
-        position: 'relative'
+        position: 'relative',
+        boxSizing: 'border-box'
       }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: '15px' }}>
           <button
@@ -319,7 +321,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
       </header>
 
       {/* Contenedor con Sidebar y Contenido */}
-      <div style={{ flex: 1, display: 'flex', overflow: 'hidden' }}>
+      <div style={{ flex: 1, display: 'flex', overflow: 'hidden', width: '100%', minWidth: 0, minHeight: 0 }}>
         {/* Sidebar */}
         <aside
           style={{
@@ -358,9 +360,9 @@ export function Layout({ children }: { children: React.ReactNode }) {
         </aside>
 
         {/* Contenedor principal */}
-        <div style={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
+        <div style={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden', minWidth: 0, width: '100%' }}>
           {/* Contenido */}
-          <main style={{ flex: 1, overflow: 'auto' }}>
+          <main style={{ flex: 1, overflowY: 'auto', overflowX: 'hidden', width: '100%', minWidth: 0 }}>
             {children}
           </main>
         </div>
@@ -369,13 +371,15 @@ export function Layout({ children }: { children: React.ReactNode }) {
       {/* Footer */}
       <footer className="bg-white border-top" style={{
         flexShrink: 0,
-        padding: '12px 20px'
+        padding: '12px 20px',
+        width: '100%',
+        boxSizing: 'border-box'
       }}>
         <div className="container-fluid">
           <div className="row align-items-center">
             <div className="col-md-6">
               <p className="mb-0 text-muted" style={{ fontSize: '13px' }}>
-                © {new Date().getFullYear()} Sistema de Monitoreo <span className="ms-2 badge bg-primary">v1.3.0</span>
+                © {new Date().getFullYear()} Sistema de Monitoreo <span className="ms-2 badge bg-primary">v1.4.4</span>
               </p>
             </div>
             <div className="col-md-6 text-md-end">

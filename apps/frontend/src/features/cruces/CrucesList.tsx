@@ -1,6 +1,10 @@
 import { useState, useEffect } from 'react';
 import Select from 'react-select';
 import { toast } from 'react-hot-toast';
+import jsPDF from 'jspdf';
+import autoTable from 'jspdf-autotable';
+import { drawPdfHeader, applyPdfFooters, drawPdfMetadata, drawPdfKpiCards, getPdfTableStyles, PDF_COLORS } from '../../utils/pdfReportHelper';
+import { useAuthStore } from '../auth/authStore';
 import { customSelectStylesSmall } from '../../styles/react-select-custom';
 import { crucesService, Cruce } from '../../services/cruces.service';
 import { CruceDetail } from './CruceDetail';
@@ -11,6 +15,7 @@ type SortField = 'codigo' | 'nombre' | 'distrito' | 'estado';
 type SortOrder = 'asc' | 'desc';
 
 export function CrucesList() {
+  const { user } = useAuthStore();
   const [cruces, setCruces] = useState<Cruce[]>([]);
   const [loading, setLoading] = useState(true);
   const [page, setPage] = useState(1);
@@ -26,6 +31,8 @@ export function CrucesList() {
   const [formMode, setFormMode] = useState<'create' | 'edit'>('create');
   const [planoModalOpen, setPlanoModalOpen] = useState(false);
   const [selectedPlano, setSelectedPlano] = useState<{ url: string; nombre: string; type: 'pdf' | 'dwg' } | null>(null);
+  const [exportingExcel, setExportingExcel] = useState(false);
+  const [exportingPDF, setExportingPDF] = useState(false);
 
   // Filtros
   const [filters, setFilters] = useState({
@@ -39,6 +46,15 @@ export function CrucesList() {
     loadCruces();
   }, [page, limit, sortField, sortOrder, filters]);
 
+  const getFilterParams = () => {
+    const params: any = {};
+    if (filters.search) params.search = filters.search;
+    if (filters.codigo) params.codigo = filters.codigo;
+    if (filters.distrito) params.ubigeoId = filters.distrito;
+    if (filters.estado !== '') params.estado = filters.estado === 'true';
+    return params;
+  };
+
   const loadCruces = async () => {
     try {
       setLoading(true);
@@ -47,12 +63,8 @@ export function CrucesList() {
         limit,
         sortBy: sortField,
         sortOrder,
+        ...getFilterParams(),
       };
-      
-      if (filters.search) params.search = filters.search;
-      if (filters.codigo) params.codigo = filters.codigo;
-      if (filters.distrito) params.ubigeoId = filters.distrito;
-      if (filters.estado !== '') params.estado = filters.estado === 'true';
 
       const response = await crucesService.getCruces(params);
       setCruces(response.data);
@@ -136,6 +148,226 @@ export function CrucesList() {
     }
   };
 
+  const handleExportExcel = async () => {
+    try {
+      setExportingExcel(true);
+      const params = getFilterParams();
+      await crucesService.exportarExcel(params);
+      toast.success('Listado de intersecciones exportado a Excel exitosamente');
+    } catch (error: any) {
+      console.error('Error al exportar a Excel:', error);
+      toast.error(`Error al exportar a Excel: ${error.response?.data?.message || error.message}`);
+    } finally {
+      setExportingExcel(false);
+    }
+  };
+
+  const handleExportPDF = async () => {
+    try {
+      setExportingPDF(true);
+      const params = getFilterParams();
+      const resumen = await crucesService.getResumenEjecutivo(params);
+
+      if (!resumen || !resumen.totales || resumen.totales.total === 0) {
+        toast.error('No hay datos disponibles para generar el reporte');
+        return;
+      }
+
+      const doc = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' });
+      const tableStyles = getPdfTableStyles();
+
+      // 1. Cabecera Institucional Página 1
+      let y = drawPdfHeader(doc, true, 'Informe Ejecutivo: Red de Intersecciones Semafóricas');
+
+      // Metadatos
+      const metaItems = [
+        { label: 'Fecha de Emisión', value: new Date().toLocaleString('es-PE') },
+        { label: 'Usuario', value: user?.usuario || 'Administrador' },
+      ];
+      if (filters.distrito) metaItems.push({ label: 'Distrito', value: filters.distrito });
+      if (filters.estado !== '') metaItems.push({ label: 'Estado', value: filters.estado === 'true' ? 'Activos' : 'Inactivos' });
+      if (filters.search) metaItems.push({ label: 'Búsqueda', value: `"${filters.search}"` });
+
+      y = drawPdfMetadata(doc, y, metaItems);
+
+      // 2. Tarjetas / Cajas de Indicadores Generales (KPIs)
+      const kpis = [
+        { label: 'TOTAL CRUCES', value: `${resumen.totales.total.toLocaleString()}`, sub: '100% de la red', color: PDF_COLORS.primary },
+        { label: 'CON PLANOS TÉCNICOS', value: `${resumen.totales.conPlanosTotal.toLocaleString()}`, sub: `${((resumen.totales.conPlanosTotal / (resumen.totales.total || 1)) * 100).toFixed(1)}% documentados`, color: PDF_COLORS.secondary },
+        { label: 'CON PERIFÉRICOS', value: `${resumen.totales.conPerifericos.toLocaleString()}`, sub: 'Cámaras y Sensores', color: PDF_COLORS.warning },
+        { label: 'REDES DE CONECTIVIDAD', value: `${resumen.porTipoComunicacion.length.toLocaleString()}`, sub: 'Tipologías de red', color: PDF_COLORS.success },
+        { label: 'ADMINISTRADORES', value: `${resumen.porAdministrador.length.toLocaleString()}`, sub: 'Entidades a cargo', color: PDF_COLORS.primary },
+      ];
+
+      y = drawPdfKpiCards(doc, y, kpis);
+
+      // 3. Tabla: Resumen por Tipo de Comunicación / Red
+      doc.setFont('helvetica', 'bold');
+      doc.setFontSize(10);
+      doc.setTextColor(PDF_COLORS.primary[0], PDF_COLORS.primary[1], PDF_COLORS.primary[2]);
+      doc.text('1. Distribución por Tipo de Comunicación y Conectividad', 14, y);
+      y += 3;
+
+      const totalComs = resumen.porTipoComunicacion.reduce((acc: number, item: any) => acc + item.cantidad, 0);
+
+      const tableComData = resumen.porTipoComunicacion.map((item: any) => [
+        item.nombre,
+        item.cantidad.toLocaleString(),
+        `${item.porcentaje}%`,
+      ]);
+
+      tableComData.push([
+        'TOTAL CONECTIVIDAD',
+        totalComs.toLocaleString(),
+        '100.0%',
+      ]);
+
+      autoTable(doc, {
+        ...tableStyles,
+        startY: y,
+        head: [['Tipo de Comunicación / Red', 'Cantidad', '% Participación']],
+        body: tableComData,
+        columnStyles: {
+          0: { cellWidth: 90, halign: 'left' },
+          1: { halign: 'center' },
+          2: { halign: 'center', fontStyle: 'bold' },
+        },
+        didParseCell: (data) => {
+          if (data.row.index === tableComData.length - 1) {
+            data.cell.styles.fontStyle = 'bold';
+            data.cell.styles.fillColor = [240, 244, 248];
+          }
+        },
+      });
+
+      y = (doc as any).lastAutoTable.finalY + 8;
+
+      // 4. Tabla: Resumen por Administrador
+      doc.setFont('helvetica', 'bold');
+      doc.setFontSize(10);
+      doc.setTextColor(PDF_COLORS.primary[0], PDF_COLORS.primary[1], PDF_COLORS.primary[2]);
+      doc.text('2. Distribución por Administrador', 14, y);
+      y += 3;
+
+      const totalAdm = resumen.porAdministrador.reduce((acc: number, item: any) => acc + item.cantidad, 0);
+
+      const tableAdmData = resumen.porAdministrador.map((item: any) => [
+        item.nombre,
+        item.cantidad.toLocaleString(),
+        `${item.porcentaje}%`,
+      ]);
+
+      tableAdmData.push([
+        'TOTAL ADMINISTRACIÓN',
+        totalAdm.toLocaleString(),
+        '100.0%',
+      ]);
+
+      autoTable(doc, {
+        ...tableStyles,
+        startY: y,
+        head: [['Administrador', 'Total Intersecciones', '% Participación']],
+        body: tableAdmData,
+        columnStyles: {
+          0: { cellWidth: 90, halign: 'left' },
+          1: { halign: 'center' },
+          2: { halign: 'center', fontStyle: 'bold' },
+        },
+        didParseCell: (data) => {
+          if (data.row.index === tableAdmData.length - 1) {
+            data.cell.styles.fontStyle = 'bold';
+            data.cell.styles.fillColor = [240, 244, 248];
+          }
+        },
+      });
+
+      y = (doc as any).lastAutoTable.finalY + 8;
+
+      // Si nos acercamos al final de la página 1, añadir página
+      const pageHeight = doc.internal.pageSize.getHeight();
+      if (y > pageHeight - 65) {
+        doc.addPage();
+        y = drawPdfHeader(doc, false, 'Informe Ejecutivo: Red de Intersecciones Semafóricas', 'Cobertura Distrital');
+      }
+
+      // 5. Tabla: Distribución por Distritos (Cobertura de Red)
+      doc.setFont('helvetica', 'bold');
+      doc.setFontSize(10);
+      doc.setTextColor(PDF_COLORS.primary[0], PDF_COLORS.primary[1], PDF_COLORS.primary[2]);
+      doc.text('3. Cobertura Semafórica por Distritos (Top 25)', 14, y);
+      y += 3;
+
+      const topDistritos = resumen.porDistrito.slice(0, 25);
+      const totalDist = resumen.porDistrito.reduce((acc: number, item: any) => acc + item.cantidad, 0);
+
+      const tableDistData = topDistritos.map((item: any, idx: number) => [
+        (idx + 1).toString(),
+        item.distrito,
+        item.provincia,
+        item.cantidad.toLocaleString(),
+        `${item.porcentaje}%`,
+      ]);
+
+      if (resumen.porDistrito.length > 25) {
+        const otrosDist = resumen.porDistrito.slice(25);
+        const otrosCant = otrosDist.reduce((acc: number, item: any) => acc + item.cantidad, 0);
+        const otrosPorc = ((otrosCant / (resumen.totales.total || 1)) * 100).toFixed(1);
+        tableDistData.push([
+          '-',
+          `Otros (${otrosDist.length} distritos)`,
+          'LIMA',
+          otrosCant.toLocaleString(),
+          `${otrosPorc}%`,
+        ]);
+      }
+
+      tableDistData.push([
+        '',
+        'TOTAL COBERTURA DISTRITAL',
+        '',
+        totalDist.toLocaleString(),
+        '100.0%',
+      ]);
+
+      autoTable(doc, {
+        ...tableStyles,
+        startY: y,
+        head: [['N°', 'Distrito', 'Provincia', 'Total Cruces', '% Cobertura']],
+        body: tableDistData,
+        styles: {
+          fontSize: 7.5,
+          cellPadding: 1.5,
+          textColor: [50, 50, 50],
+        },
+        columnStyles: {
+          0: { cellWidth: 12, halign: 'center' },
+          1: { cellWidth: 65, halign: 'left' },
+          2: { cellWidth: 35, halign: 'left' },
+          3: { halign: 'center' },
+          4: { halign: 'center', fontStyle: 'bold' },
+        },
+        didParseCell: (data) => {
+          if (data.row.index === tableDistData.length - 1) {
+            data.cell.styles.fontStyle = 'bold';
+            data.cell.styles.fillColor = [240, 244, 248];
+          }
+        },
+      });
+
+      // 6. Pie de Página y Numeración en todas las páginas
+      applyPdfFooters(doc);
+
+      const fecha = new Date().toISOString().split('T')[0];
+      doc.save(`informe_ejecutivo_intersecciones_${fecha}.pdf`);
+      toast.success('Reporte ejecutivo en PDF generado exitosamente');
+    } catch (error: any) {
+      console.error('Error al generar PDF:', error);
+      toast.error(`Error al generar PDF: ${error.message || 'Error desconocido'}`);
+    } finally {
+      setExportingPDF(false);
+    }
+  };
+
   return (
     <div className="container-fluid p-3">
       <PageHeader
@@ -143,7 +375,45 @@ export function CrucesList() {
         title="Gestión de Intersecciones"
         subtitle="Administración de intersecciones semafóricas, planos técnicos y periféricos"
         actions={
-          <div className="d-flex gap-2">
+          <div className="d-flex gap-2 align-items-center flex-wrap">
+            <button 
+              className="btn btn-sm btn-outline-success"
+              onClick={handleExportExcel}
+              disabled={exportingExcel}
+              title="Exportar listado completo con todos los datos a Excel"
+            >
+              {exportingExcel ? (
+                <>
+                  <span className="spinner-border spinner-border-sm me-1" role="status"></span>
+                  Exportando...
+                </>
+              ) : (
+                <>
+                  <i className="fa-solid fa-file-excel me-1"></i>
+                  Exportar Excel
+                </>
+              )}
+            </button>
+
+            <button 
+              className="btn btn-sm btn-outline-danger"
+              onClick={handleExportPDF}
+              disabled={exportingPDF}
+              title="Generar reporte ejecutivo institucional en PDF"
+            >
+              {exportingPDF ? (
+                <>
+                  <span className="spinner-border spinner-border-sm me-1" role="status"></span>
+                  Generando PDF...
+                </>
+              ) : (
+                <>
+                  <i className="fa-solid fa-file-pdf me-1"></i>
+                  Reporte Ejecutivo PDF
+                </>
+              )}
+            </button>
+
             <button 
               className={`btn btn-sm ${showFilters ? 'btn-secondary' : 'btn-outline-secondary'}`}
               onClick={() => setShowFilters(!showFilters)}
@@ -151,6 +421,7 @@ export function CrucesList() {
               <i className="fa-solid fa-filter me-1"></i>
               {showFilters ? 'Ocultar Filtros' : 'Filtros'}
             </button>
+
             <button 
               className="btn btn-sm btn-primary"
               onClick={() => {

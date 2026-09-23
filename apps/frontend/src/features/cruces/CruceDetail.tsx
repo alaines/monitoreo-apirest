@@ -9,6 +9,7 @@ import { getMapImage } from '../../utils/getMapImage';
 import { useNavigate, useParams } from 'react-router-dom';
 import { crucesService, perifericosService, Cruce, Periferico, CrucePeriferico } from '../../services/cruces.service';
 import { tiposService, Tipo } from '../../services/tipos.service';
+import { drawPdfHeader, applyPdfFooters, getPdfTableStyles, PDF_COLORS } from '../../utils/pdfReportHelper';
 
 interface CruceDetailProps {
   cruceId?: number;
@@ -19,7 +20,8 @@ export function CruceDetail({ cruceId, onClose }: CruceDetailProps) {
     // Exportar ficha PDF
     const handleExportPDF = async () => {
       if (!cruce) return;
-      const doc = new jsPDF();
+      const doc = new jsPDF('p', 'mm', 'a4');
+      const tableStyles = getPdfTableStyles();
 
       // Utilidades para mostrar nombre de tipo
       const getTipoNombrePDF = (id: number | undefined | null) => {
@@ -28,29 +30,16 @@ export function CruceDetail({ cruceId, onClose }: CruceDetailProps) {
         return tipo?.name || 'N/A';
       };
 
-      // Encabezado
-      doc.setFontSize(18);
-      doc.text('Sistema de Monitoreo de Semáforos', 105, 15, { align: 'center' });
+      // Encabezado Página 1
+      let y = drawPdfHeader(doc, true, 'Ficha Técnica de Intersección Semafórica');
 
-      doc.setFontSize(13);
-      doc.text('Ficha de Intersección', 105, 24, { align: 'center' });
-      if (cruce.nombre) {
-        doc.setFontSize(12);
-        doc.text(cruce.nombre, 105, 32, { align: 'center' });
-      }
-      doc.setLineWidth(0.5);
-      doc.line(10, 36, 200, 36);
-      let y = 42;
-
-      // Footer con número de página
-      const addFooter = (doc: any) => {
-        const pageCount = doc.internal.getNumberOfPages();
-        for (let i = 1; i <= pageCount; i++) {
-          doc.setPage(i);
-          doc.setFontSize(9);
-          doc.text(`Página ${i} de ${pageCount}`, 200 - 20, 290, { align: 'right' });
-        }
-      };
+      // Título del cruce
+      doc.setFont('helvetica', 'bold');
+      doc.setFontSize(11);
+      doc.setTextColor(PDF_COLORS.primary[0], PDF_COLORS.primary[1], PDF_COLORS.primary[2]);
+      const cruceTitulo = `${cruce.codigo ? `[${cruce.codigo}] ` : ''}${cruce.nombre || 'INTERSECCIÓN'}`;
+      doc.text(cruceTitulo, 14, y);
+      y += 5;
 
       // Mapa centrado, tamaño más pequeño y zoom ajustado
       if (cruce.latitud && cruce.longitud) {
@@ -58,8 +47,7 @@ export function CruceDetail({ cruceId, onClose }: CruceDetailProps) {
           const pageWidth = doc.internal.pageSize.getWidth();
           const margin = 14;
           const mapWidthMM = Math.min(pageWidth - margin * 2, 120); // máximo 120mm de ancho
-          const mapHeightMM = Math.round(mapWidthMM * 0.6); // relación 5:3
-          // Convertir mm a píxeles para la API (1mm ≈ 3.78px a 96 DPI)
+          const mapHeightMM = Math.round(mapWidthMM * 0.55); // relación ajustada
           const mapWidthPx = Math.round(mapWidthMM * 4);
           const mapHeightPx = Math.round(mapHeightMM * 4);
           const mapImg = await getMapImage({ 
@@ -70,12 +58,19 @@ export function CruceDetail({ cruceId, onClose }: CruceDetailProps) {
             zoom: 16 
           });
           const x = (pageWidth - mapWidthMM) / 2;
-          doc.text('Ubicación:', pageWidth / 2, y, { align: 'center' });
+          
+          doc.setFontSize(8);
+          doc.setFont('helvetica', 'bold');
+          doc.setTextColor(PDF_COLORS.textMuted[0], PDF_COLORS.textMuted[1], PDF_COLORS.textMuted[2]);
+          doc.text(`Ubicación Georreferenciada (${cruce.latitud.toFixed(6)}, ${cruce.longitud.toFixed(6)}):`, pageWidth / 2, y, { align: 'center' });
+          
           doc.addImage(mapImg.dataUrl, mapImg.type, x, y + 2, mapWidthMM, mapHeightMM);
-          y += mapHeightMM + 8;
+          y += mapHeightMM + 7;
         } catch (e) {
-          doc.text('No se pudo cargar el mapa.', 14, y);
-          y += 8;
+          doc.setFontSize(8.5);
+          doc.setTextColor(PDF_COLORS.textMuted[0], PDF_COLORS.textMuted[1], PDF_COLORS.textMuted[2]);
+          doc.text('Ubicación Georreferenciada: Mapa no disponible.', 14, y);
+          y += 6;
         }
       }
 
@@ -94,64 +89,70 @@ export function CruceDetail({ cruceId, onClose }: CruceDetailProps) {
       const detalleDer = [
         ['Tipo de Estructura', getTipoNombrePDF(cruce.tipoEstructura)],
         ['Administrador', cruce.administrador?.nombre || 'N/A'],
-        ['Año Implementación', cruce.anoImplementacion || 'N/A'],
+        ['Año Implementación', cruce.anoImplementacion ? cruce.anoImplementacion.toString() : 'N/A'],
         ['Empresa Eléctrica', cruce.electricoEmpresa || 'N/A'],
         ['N° de Suministro', cruce.electricoSuministro || 'N/A'],
-        ['Latitud', cruce.latitud || 'N/A'],
-        ['Longitud', cruce.longitud || 'N/A'],
+        ['Latitud', cruce.latitud ? cruce.latitud.toString() : 'N/A'],
+        ['Longitud', cruce.longitud ? cruce.longitud.toString() : 'N/A'],
+        ['Estado Operativo', cruce.estado ? 'ACTIVO' : 'INACTIVO'],
       ];
 
       // Tabla en dos columnas
       const pageWidth = doc.internal.pageSize.getWidth();
-      const columnWidth = (pageWidth - 30) / 2;
+      const columnWidth = (pageWidth - 31) / 2;
       
       autoTable(doc, {
+        ...tableStyles,
         startY: y,
-        head: [['Campo', 'Valor']],
+        head: [['Parámetro', 'Especificación']],
         body: detalleIzq,
-        theme: 'grid',
-        headStyles: { fillColor: [41, 128, 185] },
-        styles: { fontSize: 9, cellPadding: 2 },
         tableWidth: columnWidth,
         margin: { left: 14 },
       });
 
       autoTable(doc, {
+        ...tableStyles,
         startY: y,
-        head: [['Campo', 'Valor']],
+        head: [['Parámetro', 'Especificación']],
         body: detalleDer,
-        theme: 'grid',
-        headStyles: { fillColor: [41, 128, 185] },
-        styles: { fontSize: 9, cellPadding: 2 },
         tableWidth: columnWidth,
-        margin: { left: 14 + columnWidth + 2 },
+        margin: { left: 14 + columnWidth + 3 },
       });
 
       y = Math.max((doc as any).lastAutoTable.finalY) + 6;
 
       // Observaciones (si existen)
       if (cruce.observaciones) {
-        doc.setFontSize(10);
-        doc.setFont('helvetica', 'bold');
-        doc.text('Observaciones:', 14, y);
-        doc.setFont('helvetica', 'normal');
         doc.setFontSize(9);
+        doc.setFont('helvetica', 'bold');
+        doc.setTextColor(PDF_COLORS.primary[0], PDF_COLORS.primary[1], PDF_COLORS.primary[2]);
+        doc.text('Observaciones Registradas:', 14, y);
+        y += 4;
+        
+        doc.setFont('helvetica', 'normal');
+        doc.setFontSize(8);
+        doc.setTextColor(71, 85, 105);
         const observacionesLines = doc.splitTextToSize(cruce.observaciones, pageWidth - 28);
-        doc.text(observacionesLines, 14, y + 5);
-        y += 5 + (observacionesLines.length * 4);
+        doc.text(observacionesLines, 14, y);
+        y += (observacionesLines.length * 4) + 4;
       }
 
-      // Periféricos en nueva página
+      // Periféricos en tabla
       if (perifericos.length > 0) {
-        doc.addPage();
-        y = 20;
-        doc.setFontSize(14);
+        const pageHeight = doc.internal.pageSize.getHeight();
+        if (y > pageHeight - 50) {
+          doc.addPage();
+          y = drawPdfHeader(doc, false, 'Ficha Técnica de Intersección Semafórica', cruce.codigo || 'Periféricos');
+        }
+        
+        doc.setFontSize(9.5);
         doc.setFont('helvetica', 'bold');
-        doc.text('Periféricos Instalados', 14, y);
-        doc.setFont('helvetica', 'normal');
-        y += 8;
+        doc.setTextColor(PDF_COLORS.primary[0], PDF_COLORS.primary[1], PDF_COLORS.primary[2]);
+        doc.text('Periféricos y Dispositivos Instalados', 14, y);
+        y += 3;
         
         autoTable(doc, {
+          ...tableStyles,
           startY: y,
           head: [['Tipo', 'Fabricante', 'Modelo', 'N° Serie', 'IP', 'Estado', 'Garantía']],
           body: perifericos.map(cp => [
@@ -163,14 +164,21 @@ export function CruceDetail({ cruceId, onClose }: CruceDetailProps) {
             cp.periferico?.estado || 'N/A',
             cp.periferico?.enGarantia ? 'Sí' : 'No',
           ]),
-          theme: 'striped',
-          headStyles: { fillColor: [39, 174, 96], fontSize: 9 },
-          styles: { fontSize: 8, cellPadding: 2 },
+          columnStyles: {
+            0: { halign: 'left' },
+            1: { halign: 'left' },
+            2: { halign: 'left' },
+            3: { halign: 'center' },
+            4: { halign: 'center' },
+            5: { halign: 'center' },
+            6: { halign: 'center' },
+          },
         });
       }
 
-      addFooter(doc);
-      doc.save(`ficha-interseccion-${cruce.codigo || cruce.id}.pdf`);
+      applyPdfFooters(doc);
+      doc.save(`ficha_interseccion_${cruce.codigo || cruce.id}.pdf`);
+      toast.success('Ficha técnica en PDF exportada exitosamente');
     };
   const navigate = useNavigate();
   const params = useParams();

@@ -125,6 +125,24 @@ export class CrucesController {
     return this.crucesService.findAll(query);
   }
 
+  @Get('export/excel')
+  @ApiOperation({ summary: 'Exportar lista de cruces con todas las columnas a Excel' })
+  @ApiResponse({ status: 200, description: 'Archivo Excel generado exitosamente' })
+  async exportarExcel(@Query() query: QueryCrucesDto, @Res() res: Response) {
+    const buffer = await this.crucesService.generarExcel(query);
+    const fecha = new Date().toISOString().split('T')[0];
+    res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
+    res.setHeader('Content-Disposition', `attachment; filename=intersecciones_${fecha}.xlsx`);
+    res.send(buffer);
+  }
+
+  @Get('resumen-ejecutivo')
+  @ApiOperation({ summary: 'Obtener resumen ejecutivo e indicadores de intersecciones' })
+  @ApiResponse({ status: 200, description: 'Resumen ejecutivo obtenido exitosamente' })
+  getResumenEjecutivo(@Query() query: QueryCrucesDto) {
+    return this.crucesService.getResumenEjecutivo(query);
+  }
+
   @Get('search')
   @ApiOperation({ summary: 'Buscar cruces para autocomplete' })
   @ApiResponse({ status: 200, description: 'Resultados de búsqueda' })

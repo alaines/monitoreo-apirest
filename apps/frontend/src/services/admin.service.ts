@@ -282,6 +282,7 @@ export interface Menu {
   nombre: string;
   modulo: string;
   url?: string;
+  ruta?: string;
   icono?: string;
   orden?: number;
   activo?: boolean;
@@ -330,6 +331,11 @@ export const permisosService = {
 
   async bulkCreate(dto: BulkPermisosDto) {
     const { data } = await api.post(`/permisos/bulk-save`, dto);
+    return data;
+  },
+
+  async assignToGrupo(grupoId: number, permisos: Array<{ menuId: number; accionId: number }>) {
+    const { data } = await api.post(`/permisos/bulk-save`, { grupoId, permisos });
     return data;
   },
 

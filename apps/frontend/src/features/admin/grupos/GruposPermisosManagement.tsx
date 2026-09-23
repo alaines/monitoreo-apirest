@@ -155,7 +155,7 @@ export function GruposPermisosManagement() {
       setTimeout(() => setSuccess(''), 3000);
     } catch (error: any) {
       console.error('❌ Error al guardar permisos:', error);
-      const msg = error.response?.data?.message || 'Error al guardar permisos';
+      const msg = error.response?.data?.message || error.message || 'Error al guardar permisos';
       setErrors(msg);
       toast.error(msg);
     } finally {
@@ -175,7 +175,7 @@ export function GruposPermisosManagement() {
       setPermisosMatrix(matrix);
       toast.success('Permisos copiados. Recuerde hacer clic en "Guardar Cambios" para confirmar.');
     } catch (error: any) {
-      const msg = error.response?.data?.message || 'Error al copiar permisos';
+      const msg = error.response?.data?.message || error.message || 'Error al copiar permisos';
       setErrors(msg);
       toast.error(msg);
     }

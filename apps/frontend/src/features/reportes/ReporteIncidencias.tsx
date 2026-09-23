@@ -8,6 +8,7 @@ import { reportesService, PeriodoReporte, FiltrosReporte, EstadisticasReporte } 
 import { incidentsService } from '../../services/incidents.service';
 import { administradoresService, Administrador } from '../../services/administradores.service';
 import { PageHeader } from '../../components/ui/PageHeader';
+import { drawPdfHeader, applyPdfFooters, drawPdfMetadata, drawPdfKpiCards, getPdfTableStyles, PDF_COLORS } from '../../utils/pdfReportHelper';
 
 export function ReporteIncidencias() {
   const [loading, setLoading] = useState(false);
@@ -115,144 +116,188 @@ export function ReporteIncidencias() {
         return;
       }
 
-      const doc = new jsPDF();
-      
-      // Encabezado
-      doc.setFontSize(18);
-      doc.text('Sistema de Monitoreo de Semáforos', 105, 15, { align: 'center' });
-      doc.setFontSize(14);
-      doc.text('Reporte de Incidencias', 105, 24, { align: 'center' });
+      const doc = new jsPDF('p', 'mm', 'a4');
+      const tableStyles = getPdfTableStyles();
       
       // Información del periodo
-      doc.setFontSize(10);
       let periodoTexto = '';
       if (periodo === PeriodoReporte.MES) {
         const nombreMes = meses.find(m => m.value === mes)?.label || '';
-        periodoTexto = `Periodo: ${nombreMes} ${anio}`;
+        periodoTexto = `${nombreMes} ${anio}`;
       } else if (periodo === PeriodoReporte.ANIO) {
-        periodoTexto = `Periodo: Año ${anio}`;
+        periodoTexto = `Año ${anio}`;
       } else if (periodo === PeriodoReporte.DIA) {
-        periodoTexto = `Periodo: Hoy`;
+        periodoTexto = `Hoy (${new Date().toLocaleDateString('es-PE')})`;
       } else if (periodo === PeriodoReporte.PERSONALIZADO && fechaInicio && fechaFin) {
-        periodoTexto = `Periodo: ${fechaInicio} a ${fechaFin}`;
+        periodoTexto = `${fechaInicio} a ${fechaFin}`;
       }
-      
-      doc.text(periodoTexto, 105, 32, { align: 'center' });
-      doc.text(`Total de incidencias: ${estadisticas.total}`, 105, 38, { align: 'center' });
-      doc.text(`Fecha de generación: ${new Date().toLocaleString('es-PE')}`, 105, 44, { align: 'center' });
-      
-      doc.setLineWidth(0.5);
-      doc.line(10, 48, 200, 48);
-      
-      let y = 54;
-      
-      // Resumen por Tipo
-      doc.setFontSize(12);
+
+      // Encabezado institucional de la Página 1
+      let y = drawPdfHeader(doc, true, 'Reporte de Gestión de Incidencias y Averías');
+
+      // Metadatos
+      const metaItems = [
+        { label: 'Período de Análisis', value: periodoTexto },
+        { label: 'Fecha de Emisión', value: new Date().toLocaleString('es-PE') },
+      ];
+      if (tipoIncidencia) {
+        const tipo = tiposIncidencia.find(t => t.id === tipoIncidencia);
+        if (tipo) metaItems.push({ label: 'Tipo de Incidencia', value: tipo.nombre || tipo.name });
+      }
+      if (estadoId) {
+        const est = tiposEstado.find(e => e.id === estadoId);
+        if (est) metaItems.push({ label: 'Estado', value: est.nombre || est.name });
+      }
+      if (administradorId) {
+        const adm = administradores.find(a => a.id === administradorId);
+        if (adm) metaItems.push({ label: 'Administrador', value: adm.nombre });
+      }
+
+      y = drawPdfMetadata(doc, y, metaItems);
+
+      // Cajas de KPIs
+      const kpis = [
+        { label: 'TOTAL INCIDENCIAS', value: (estadisticas.total || 0).toLocaleString(), sub: '100% registros', color: PDF_COLORS.primary },
+        { label: 'TIPOS DISTINTOS', value: (estadisticas.porTipo?.length || 0).toString(), sub: 'Tipologías atendidas', color: PDF_COLORS.secondary },
+        { label: 'ESTADOS DE GESTIÓN', value: (estadisticas.porEstado?.length || 0).toString(), sub: 'Flujo de atención', color: PDF_COLORS.warning },
+        { label: 'ADMINISTRADORES', value: (estadisticas.porAdministrador?.length || 0).toString(), sub: 'Contratistas / Zonas', color: PDF_COLORS.success },
+      ];
+
+      y = drawPdfKpiCards(doc, y, kpis);
+
+      // 1. Resumen por Tipo de Incidencia
+      doc.setFontSize(10);
       doc.setFont('helvetica', 'bold');
-      doc.text('Resumen por Tipo de Incidencia', 14, y);
-      doc.setFont('helvetica', 'normal');
-      y += 6;
+      doc.setTextColor(PDF_COLORS.primary[0], PDF_COLORS.primary[1], PDF_COLORS.primary[2]);
+      doc.text('1. Distribución por Tipo de Incidencia y Avería', 14, y);
+      y += 3;
       
       autoTable(doc, {
+        ...tableStyles,
         startY: y,
-        head: [['Tipo', 'Cantidad', 'Porcentaje']],
-        body: estadisticas.porTipo.map(item => [
+        head: [['N°', 'Tipo de Incidencia / Avería', 'Cantidad', '% del Total']],
+        body: (estadisticas.porTipo || []).map((item, idx) => [
+          (idx + 1).toString(),
           item.tipo,
-          item.cantidad.toString(),
+          item.cantidad.toLocaleString(),
           `${item.porcentaje}%`
         ]),
-        theme: 'grid',
-        headStyles: { fillColor: [41, 128, 185] },
-        styles: { fontSize: 9, cellPadding: 2 },
+        columnStyles: {
+          0: { cellWidth: 12, halign: 'center' },
+          1: { halign: 'left' },
+          2: { cellWidth: 26, halign: 'center' },
+          3: { cellWidth: 26, halign: 'center' },
+        },
       });
       
-      y = (doc as any).lastAutoTable.finalY + 10;
+      y = (doc as any).lastAutoTable.finalY + 8;
       
-      // Resumen por Estado
-      doc.setFontSize(12);
-      doc.setFont('helvetica', 'bold');
-      doc.text('Resumen por Estado', 14, y);
-      doc.setFont('helvetica', 'normal');
-      y += 6;
-      
-      autoTable(doc, {
-        startY: y,
-        head: [['Estado', 'Cantidad', 'Porcentaje']],
-        body: estadisticas.porEstado.map(item => [
-          item.estado,
-          item.cantidad.toString(),
-          `${item.porcentaje}%`
-        ]),
-        theme: 'grid',
-        headStyles: { fillColor: [41, 128, 185] },
-        styles: { fontSize: 9, cellPadding: 2 },
-      });
-      
-      y = (doc as any).lastAutoTable.finalY + 10;
-      
-      // Si hay espacio, agregar por administrador, si no, nueva página
-      if (y > 240) {
+      // 2. Resumen por Estado
+      if (y > 230) {
         doc.addPage();
-        y = 20;
+        y = drawPdfHeader(doc, false, 'Reporte de Gestión de Incidencias', `Período: ${periodoTexto}`);
       }
-      
-      // Resumen por Administrador
-      doc.setFontSize(12);
+
+      doc.setFontSize(10);
       doc.setFont('helvetica', 'bold');
-      doc.text('Resumen por Administrador', 14, y);
-      doc.setFont('helvetica', 'normal');
-      y += 6;
+      doc.setTextColor(PDF_COLORS.primary[0], PDF_COLORS.primary[1], PDF_COLORS.primary[2]);
+      doc.text('2. Distribución por Estado de Incidencias', 14, y);
+      y += 3;
       
       autoTable(doc, {
+        ...tableStyles,
         startY: y,
-        head: [['Administrador', 'Cantidad']],
-        body: estadisticas.porAdministrador.map(item => [
-          item.administrador,
-          item.cantidad.toString()
+        head: [['N°', 'Estado de la Incidencia', 'Cantidad', '% del Total']],
+        body: (estadisticas.porEstado || []).map((item, idx) => [
+          (idx + 1).toString(),
+          item.estado,
+          item.cantidad.toLocaleString(),
+          `${item.porcentaje}%`
         ]),
-        theme: 'grid',
-        headStyles: { fillColor: [39, 174, 96] },
-        styles: { fontSize: 9, cellPadding: 2 },
+        columnStyles: {
+          0: { cellWidth: 12, halign: 'center' },
+          1: { halign: 'left' },
+          2: { cellWidth: 26, halign: 'center' },
+          3: { cellWidth: 26, halign: 'center' },
+        },
       });
       
-      y = (doc as any).lastAutoTable.finalY + 10;
+      y = (doc as any).lastAutoTable.finalY + 8;
       
-      // Si hay datos por mes, agregarlos
-      if (estadisticas.porMes.length > 0) {
-        if (y > 240) {
+      // 3. Resumen por Administrador
+      if (estadisticas.porAdministrador && estadisticas.porAdministrador.length > 0) {
+        if (y > 230) {
           doc.addPage();
-          y = 20;
+          y = drawPdfHeader(doc, false, 'Reporte de Gestión de Incidencias', `Período: ${periodoTexto}`);
         }
         
-        doc.setFontSize(12);
+        doc.setFontSize(10);
         doc.setFont('helvetica', 'bold');
-        doc.text('Resumen por Mes', 14, y);
-        doc.setFont('helvetica', 'normal');
-        y += 6;
+        doc.setTextColor(PDF_COLORS.primary[0], PDF_COLORS.primary[1], PDF_COLORS.primary[2]);
+        doc.text('3. Desglose por Administrador / Contratista', 14, y);
+        y += 3;
         
+        const totalAdmin = estadisticas.porAdministrador.reduce((acc, it) => acc + it.cantidad, 0);
         autoTable(doc, {
+          ...tableStyles,
           startY: y,
-          head: [['Mes', 'Cantidad']],
-          body: estadisticas.porMes.map(item => [
-            item.mes,
-            item.cantidad.toString()
+          head: [['N°', 'Administrador / Entidad a Cargo', 'Cantidad de Incidencias', '% Participación']],
+          body: estadisticas.porAdministrador.map((item, idx) => [
+            (idx + 1).toString(),
+            item.administrador,
+            item.cantidad.toLocaleString(),
+            totalAdmin > 0 ? `${((item.cantidad / totalAdmin) * 100).toFixed(1)}%` : '0%'
           ]),
-          theme: 'grid',
-          headStyles: { fillColor: [243, 156, 18] },
-          styles: { fontSize: 9, cellPadding: 2 },
+          columnStyles: {
+            0: { cellWidth: 12, halign: 'center' },
+            1: { halign: 'left' },
+            2: { cellWidth: 38, halign: 'center' },
+            3: { cellWidth: 32, halign: 'center' },
+          },
+        });
+
+        y = (doc as any).lastAutoTable.finalY + 8;
+      }
+      
+      // 4. Resumen por Mes (si existe)
+      if (estadisticas.porMes && estadisticas.porMes.length > 0) {
+        if (y > 230) {
+          doc.addPage();
+          y = drawPdfHeader(doc, false, 'Reporte de Gestión de Incidencias', `Período: ${periodoTexto}`);
+        }
+        
+        doc.setFontSize(10);
+        doc.setFont('helvetica', 'bold');
+        doc.setTextColor(PDF_COLORS.primary[0], PDF_COLORS.primary[1], PDF_COLORS.primary[2]);
+        doc.text('4. Evolución Mensual de Incidencias', 14, y);
+        y += 3;
+        
+        const totalMes = estadisticas.porMes.reduce((acc, it) => acc + it.cantidad, 0);
+        autoTable(doc, {
+          ...tableStyles,
+          startY: y,
+          head: [['N°', 'Mes / Período', 'Cantidad de Incidencias', '% del Total']],
+          body: estadisticas.porMes.map((item, idx) => [
+            (idx + 1).toString(),
+            item.mes,
+            item.cantidad.toLocaleString(),
+            totalMes > 0 ? `${((item.cantidad / totalMes) * 100).toFixed(1)}%` : '0%'
+          ]),
+          columnStyles: {
+            0: { cellWidth: 12, halign: 'center' },
+            1: { halign: 'left' },
+            2: { cellWidth: 38, halign: 'center' },
+            3: { cellWidth: 32, halign: 'center' },
+          },
         });
       }
       
-      // Footer
-      const pageCount = (doc as any).internal.getNumberOfPages();
-      for (let i = 1; i <= pageCount; i++) {
-        doc.setPage(i);
-        doc.setFontSize(9);
-        doc.text(`Página ${i} de ${pageCount}`, 200 - 20, 290, { align: 'right' });
-      }
+      // Footer institucional en todas las páginas
+      applyPdfFooters(doc);
       
-      doc.save(`reporte_incidencias_${new Date().toISOString().split('T')[0]}.pdf`);
-      toast.success('PDF descargado exitosamente');
+      const fecha = new Date().toISOString().split('T')[0];
+      doc.save(`reporte_incidencias_${fecha}.pdf`);
+      toast.success('Reporte PDF descargado exitosamente');
     } catch (error: any) {
       console.error('Error exporting to PDF:', error);
       toast.error(`Error al exportar a PDF: ${error.message}`);

@@ -211,6 +211,7 @@ export class PermisosService {
 
       await this.prisma.grupoMenu.createMany({
         data: permisosData,
+        skipDuplicates: true,
       });
     }
 
