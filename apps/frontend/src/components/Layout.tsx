@@ -69,37 +69,37 @@ const DEFAULT_FALLBACK_MENUS: Menu[] = [
     codigo: 'reportes',
     submenus: [
       {
-        id: 8,
+        id: 67,
         nombre: 'Reporte de Incidencias',
         ruta: '/reportes/incidencias',
         icono: 'fa-solid fa-file-invoice',
         orden: 1,
         menuPadreId: 6,
-        codigo: 'reportes-generar',
+        codigo: 'reportes-incidencias',
         submenus: []
       },
       {
-        id: 30,
+        id: 68,
         nombre: 'Gráficos Estadísticos',
         ruta: '/reportes/grafico',
         icono: 'fa-solid fa-chart-pie',
         orden: 2,
         menuPadreId: 6,
-        codigo: 'estadisticas',
+        codigo: 'reportes-graficos',
         submenus: []
       },
       {
-        id: 31,
+        id: 69,
         nombre: 'Mapa de Calor',
         ruta: '/reportes/mapa',
         icono: 'fa-solid fa-fire',
         orden: 3,
         menuPadreId: 6,
-        codigo: 'mapa-calor',
+        codigo: 'reportes-mapa-calor',
         submenus: []
       },
       {
-        id: 99,
+        id: 70,
         nombre: 'Dashboard Ejecutivo BI',
         ruta: '/reportes/bi-dashboard',
         icono: 'fa-solid fa-chart-line',
@@ -379,7 +379,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
           <div className="row align-items-center">
             <div className="col-md-6">
               <p className="mb-0 text-muted" style={{ fontSize: '13px' }}>
-                © {new Date().getFullYear()} Sistema de Monitoreo <span className="ms-2 badge bg-primary">v1.4.4</span>
+                © {new Date().getFullYear()} Sistema de Monitoreo <span className="ms-2 badge bg-primary">v1.4.6</span>
               </p>
             </div>
             <div className="col-md-6 text-md-end">

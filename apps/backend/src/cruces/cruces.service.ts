@@ -152,6 +152,56 @@ export class CrucesService {
     };
   }
 
+  /**
+   * Obtiene lista liviana y optimizada de cruces georreferenciados para visualización en mapa.
+   * Reduce drásticamente el payload a solo campos indispensables con proyección directa.
+   */
+  async getMapaCruces(query: QueryCrucesDto) {
+    const where = this.buildWhereClause(query);
+    where.latitud = { not: null };
+    where.longitud = { not: null };
+
+    const cruces = await this.prisma.cruce.findMany({
+      where,
+      select: {
+        id: true,
+        codigo: true,
+        nombre: true,
+        latitud: true,
+        longitud: true,
+        administradorId: true,
+        tipoGestion: true,
+        tipoComunicacion: true,
+        ubigeo: {
+          select: {
+            distrito: true,
+          },
+        },
+        administrador: {
+          select: {
+            nombre: true,
+          },
+        },
+      },
+      orderBy: { id: 'asc' },
+    });
+
+    return cruces.map((c) => ({
+      id: c.id,
+      codigo: c.codigo || '',
+      nombre: c.nombre || '',
+      latitud: c.latitud,
+      longitud: c.longitud,
+      administradorId: c.administradorId,
+      tipoGestion: c.tipoGestion,
+      tipoComunicacion: c.tipoComunicacion,
+      distrito: c.ubigeo?.distrito || '',
+      administradorNombre: c.administrador?.nombre || '',
+      ubigeo: c.ubigeo ? { distrito: c.ubigeo.distrito } : undefined,
+      administrador: c.administrador ? { nombre: c.administrador.nombre } : undefined,
+    }));
+  }
+
   async getResumenEjecutivo(query: QueryCrucesDto) {
     const where = this.buildWhereClause(query);
 

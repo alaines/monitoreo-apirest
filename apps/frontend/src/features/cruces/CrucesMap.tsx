@@ -158,19 +158,15 @@ export function CrucesMap() {
   const loadData = async () => {
     try {
       const [crucesData, tiposData, adminsData] = await Promise.all([
-        crucesService.getCruces({ limit: 10000 }),
+        crucesService.getCrucesMapa(),
         tiposService.getTipos(),
         administradoresService.getAdministradores()
       ]);
       
-      console.log('Datos cargados:', {
-        cruces: crucesData,
-        tipos: tiposData,
-        administradores: adminsData
-      });
+      const rawList = Array.isArray(crucesData) ? crucesData : (crucesData.data || []);
       
-      // Filtrar solo cruces con coordenadas
-      const crucesConCoordenadas = crucesData.data.filter(
+      // Filtrar solo cruces con coordenadas válidas
+      const crucesConCoordenadas = rawList.filter(
         (cruce: Cruce) => cruce.latitud !== null && cruce.longitud !== null
       );
       

@@ -4,11 +4,15 @@ import { SwaggerModule, DocumentBuilder } from '@nestjs/swagger';
 import { AppModule } from './app.module';
 import { NestExpressApplication } from '@nestjs/platform-express';
 import { join } from 'path';
+import compression from 'compression';
 import { formatValidationErrors } from './common/utils/validation-i18n';
 import { HttpExceptionFilter } from './common/filters/http-exception.filter';
 
 async function bootstrap() {
   const app = await NestFactory.create<NestExpressApplication>(AppModule);
+
+  // Compresión HTTP (GZIP / Deflate) para optimización masiva de payloads JSON
+  app.use(compression());
 
   // Servir archivos estáticos de uploads
   app.useStaticAssets(join(__dirname, '..', 'uploads'), {
@@ -17,12 +21,7 @@ async function bootstrap() {
 
   // CORS
   app.enableCors({
-    origin: [
-      'http://localhost:5173',
-      'http://192.168.18.230:5173',
-      'http://apps.movingenia.com',
-      'https://apps.movingenia.com',
-    ],
+    origin: true,
     credentials: true,
   });
 

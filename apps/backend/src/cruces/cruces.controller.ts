@@ -136,6 +136,13 @@ export class CrucesController {
     res.send(buffer);
   }
 
+  @Get('mapa')
+  @ApiOperation({ summary: 'Obtener datos livianos y optimizados para el mapa de intersecciones' })
+  @ApiResponse({ status: 200, description: 'Lista de cruces optimizada para mapas obtenida exitosamente' })
+  getMapaCruces(@Query() query: QueryCrucesDto) {
+    return this.crucesService.getMapaCruces(query);
+  }
+
   @Get('resumen-ejecutivo')
   @ApiOperation({ summary: 'Obtener resumen ejecutivo e indicadores de intersecciones' })
   @ApiResponse({ status: 200, description: 'Resumen ejecutivo obtenido exitosamente' })

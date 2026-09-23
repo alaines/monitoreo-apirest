@@ -16,7 +16,11 @@ DB_USER="${DB_USER:-transito}"
 DB_PASS="${DB_PASS:-transito}"
 
 # Directorio de migraciones
-MIGRATIONS_DIR="$(dirname "$0")/database/migrations"
+if [ -d "$(dirname "$0")/../database/migrations" ]; then
+    MIGRATIONS_DIR="$(dirname "$0")/../database/migrations"
+else
+    MIGRATIONS_DIR="$(dirname "$0")/database/migrations"
+fi
 
 # Parsear argumentos
 while [[ $# -gt 0 ]]; do
@@ -129,6 +133,19 @@ if [ "$menu_count" -eq 10 ]; then
     echo -e "${GREEN}✓ ($menu_count/10 menús)${NC}"
 else
     echo -e "${YELLOW}⚠ ($menu_count/10 menús)${NC}"
+fi
+
+# Verificar menús de reportes
+echo -n "  Verificando menús de reportes... "
+reportes_menu_count=$(PGPASSWORD=$DB_PASS psql -U $DB_USER -d $DB_NAME -h $DB_HOST -p $DB_PORT -t -c "
+SELECT COUNT(*) FROM menus 
+WHERE codigo IN ('reportes', 'reportes-incidencias', 'reportes-graficos', 'reportes-mapa-calor', 'reportes-bi') AND estado = true
+" 2>/dev/null | tr -d ' ')
+
+if [ "$reportes_menu_count" -ge 5 ]; then
+    echo -e "${GREEN}✓ ($reportes_menu_count/5 menús de reportes)${NC}"
+else
+    echo -e "${YELLOW}⚠ ($reportes_menu_count/5 menús de reportes)${NC}"
 fi
 
 # Verificar permisos

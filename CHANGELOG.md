@@ -5,6 +5,27 @@ Todos los cambios notables de este proyecto serán documentados en este archivo.
 El formato está basado en [Keep a Changelog](https://keepachangelog.com/es-ES/1.0.0/),
 y este proyecto adhiere a [Semantic Versioning](https://semver.org/lang/es/).
 
+## [1.4.6] - 2026-09-23
+
+### Mejorado (Changed)
+- **Optimización de Rendimiento y Consumo de Datos en Mapa de Intersecciones (`/cruces/mapa`)**:
+  - **Endpoint Ligero Dedicado (`GET /api/cruces/mapa`)**: Creación de endpoint con proyección SQL estricta de campos esenciales (`id`, `codigo`, `nombre`, `latitud`, `longitud`, `administradorId`, `tipoGestion`, `tipoComunicacion`, `distrito`, `administradorNombre`) filtrando directamente en base de datos únicamente registros georreferenciados válidos.
+  - **Compresión HTTP GZIP/Deflate**: Habilitación del middleware `compression` en NestJS (`main.ts`), reduciendo el tamaño de transferencia de datos de **2.12 MB** a solo **~50 KB** (reducción del **97.6%**).
+  - **Optimización de Carga en Frontend (`CrucesMap.tsx`)**: Migración de `crucesService.getCruces({ limit: 10000 })` a `crucesService.getCrucesMapa()`, eliminando latencia de red y sobrecarga de memoria en el navegador.
+
+## [1.4.5] - 2026-09-23
+
+### Agregado (Added)
+- **Migración 010 de Estructuración de Menús de Reportes (`010-estructurar-menus-reportes.sql`)**:
+  - Estandarización persistente en base de datos de los 4 submódulos analíticos bajo el menú principal `Reportes`:
+    1. *Reporte de Incidencias* (`/reportes/incidencias`)
+    2. *Gráficos Estadísticos* (`/reportes/grafico`)
+    3. *Mapa de Calor* (`/reportes/mapa`)
+    4. *Dashboard Ejecutivo BI* (`/reportes/bi-dashboard`)
+  - Asignación automática de permisos completos para perfiles `ADMINISTRADOR` y `SUPER_ADMIN`, y permisos de lectura para perfiles `SUPERVISOR`, `OPERADOR` y `CONSULTAS`.
+  - Desactivación limpia de menús y ramas obsoletas (`Conteos`, nodos contenedores antiguos).
+  - Actualización del script de despliegue y migraciones automáticas `scripts/ejecutar-migraciones.sh` con verificación de menús analíticos.
+
 ## [1.4.4] - 2026-09-22
 
 ### Corregido (Fixed)

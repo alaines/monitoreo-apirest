@@ -60,6 +60,9 @@ prisma/migrations/
 *.bak
 backups/
 *.sql
+!database/**/*.sql
+!scripts/**/*.sql
+
 
 # OS
 Thumbs.db

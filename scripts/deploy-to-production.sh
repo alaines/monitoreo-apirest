@@ -76,8 +76,12 @@ fi
 echo "⚙️  Configurando .env.production del frontend..."
 echo 'VITE_API_URL=https://apps.movingenia.com/api' > apps/frontend/.env.production
 
+echo "🗄️  Ejecutando migraciones de base de datos..."
+cd ~/monitoreo-apirest
+bash scripts/ejecutar-migraciones.sh || echo "⚠️  Revisar logs de migraciones"
+
 echo "🔧 Generando Prisma Client..."
-cd apps/backend
+cd ~/monitoreo-apirest/apps/backend
 npx prisma generate
 
 echo "📋 Copiando archivos de Prisma Client..."

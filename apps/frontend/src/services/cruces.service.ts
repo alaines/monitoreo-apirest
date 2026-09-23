@@ -90,6 +90,11 @@ export const crucesService = {
     return response.data;
   },
 
+  async getCrucesMapa(params?: QueryCrucesParams) {
+    const response = await api.get('/cruces/mapa', { params });
+    return response.data;
+  },
+
   async exportarExcel(params?: QueryCrucesParams) {
     const response = await api.get('/cruces/export/excel', {
       params,
