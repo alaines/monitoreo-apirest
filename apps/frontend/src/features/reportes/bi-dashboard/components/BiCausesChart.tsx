@@ -111,7 +111,7 @@ export const BiCausesChart: React.FC<BiCausesChartProps> = ({ data, loading }) =
             No se registraron incidencias en este período
           </div>
         ) : (
-          <div id="chart-wrapper-bi-causes">
+          <div id="chart-wrapper-bi-causes" key={data.map((d) => `${d.id}-${d.total}`).join('-')}>
             <Chart options={options} series={series} type="bar" height={340} />
           </div>
         )}

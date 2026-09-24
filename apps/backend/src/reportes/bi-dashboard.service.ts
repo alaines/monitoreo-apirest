@@ -168,15 +168,21 @@ export class BiDashboardService {
       }),
       // Promedio de tiempo de resolución (horas)
       this.prisma.$queryRawUnsafe<Array<{ avg_hours: number | null }>>(`
-        SELECT AVG(EXTRACT(EPOCH FROM (modified - created)) / 3600.0) AS avg_hours
-        FROM tickets
-        WHERE estado_id = 4
-          AND created IS NOT NULL 
-          AND modified IS NOT NULL
-          AND modified >= created
-          ${where.createdAt?.gte ? `AND created >= '${where.createdAt.gte.toISOString()}'` : ''}
-          ${where.createdAt?.lt ? `AND created < '${where.createdAt.lt.toISOString()}'` : ''}
-          ${where.equipoId ? `AND equipo_id = ${where.equipoId}` : ''}
+        SELECT AVG(EXTRACT(EPOCH FROM (t.modified - t.created)) / 3600.0) AS avg_hours
+        FROM tickets t
+        LEFT JOIN incidencias i ON t.incidencia_id = i.id
+        LEFT JOIN cruces c ON t.cruce_id = c.id
+        LEFT JOIN ubigeos u ON c.ubigeo_id = u.id
+        WHERE t.estado_id = 4
+          AND t.created IS NOT NULL 
+          AND t.modified IS NOT NULL
+          AND t.modified >= t.created
+          ${where.createdAt?.gte ? `AND t.created >= '${where.createdAt.gte.toISOString()}'` : ''}
+          ${where.createdAt?.lt ? `AND t.created < '${where.createdAt.lt.toISOString()}'` : ''}
+          ${query.caracteristica ? `AND i.caracteristica = '${query.caracteristica}'` : ''}
+          ${where.equipoId ? `AND t.equipo_id = ${where.equipoId}` : ''}
+          ${query.administradorId ? `AND c.administrador_id = ${Number(query.administradorId)}` : ''}
+          ${query.distrito ? `AND u.distrito ILIKE '%${query.distrito}%'` : ''}
       `),
     ]);
 
@@ -198,52 +204,141 @@ export class BiDashboardService {
     };
   }
 
-  async getMonthlyTrend(query: QueryBiDashboardDto) {
+  async getTrend(query: QueryBiDashboardDto) {
     const targetYear = query.anho ? Number(query.anho) : new Date().getFullYear();
+    const targetMonth = query.mes ? Number(query.mes) : undefined;
 
-    const stats = await this.prisma.$queryRawUnsafe<Array<{
-      mes: number;
-      total: number;
-      incidencias: number;
-      mantenimientos: number;
-      resueltos: number;
-      avg_hours: number | null;
-    }>>(`
-      SELECT 
-        EXTRACT(MONTH FROM t.created)::integer AS mes,
-        COUNT(*)::integer AS total,
-        COUNT(CASE WHEN i.caracteristica = 'I' OR i.caracteristica IS NULL THEN 1 END)::integer AS incidencias,
-        COUNT(CASE WHEN i.caracteristica = 'T' THEN 1 END)::integer AS mantenimientos,
-        COUNT(CASE WHEN t.estado_id = 4 THEN 1 END)::integer AS resueltos,
-        AVG(CASE WHEN t.estado_id = 4 AND t.modified >= t.created THEN EXTRACT(EPOCH FROM (t.modified - t.created)) / 3600.0 END) AS avg_hours
-      FROM tickets t
-      LEFT JOIN incidencias i ON t.incidencia_id = i.id
-      LEFT JOIN cruces c ON t.cruce_id = c.id
-      WHERE t.created >= '${targetYear}-01-01T00:00:00.000Z'
-        AND t.created < '${targetYear + 1}-01-01T00:00:00.000Z'
-        ${query.equipoId ? `AND t.equipo_id = ${Number(query.equipoId)}` : ''}
-        ${query.administradorId ? `AND c.administrador_id = ${Number(query.administradorId)}` : ''}
-      GROUP BY EXTRACT(MONTH FROM t.created)
-      ORDER BY mes ASC
-    `);
+    if (targetMonth) {
+      // Evolución Diaria cuando se selecciona un mes
+      const daysInMonth = new Date(targetYear, targetMonth, 0).getDate();
+      const monthStr = String(targetMonth).padStart(2, '0');
+      const nextMonth = targetMonth === 12 ? 1 : targetMonth + 1;
+      const nextYear = targetMonth === 12 ? targetYear + 1 : targetYear;
+      const nextMonthStr = String(nextMonth).padStart(2, '0');
 
-    // Asegurar los 12 meses
-    const fullMonths = Array.from({ length: 12 }, (_, idx) => {
-      const mesNum = idx + 1;
-      const found = stats.find(s => s.mes === mesNum);
+      const startDate = `${targetYear}-${monthStr}-01T00:00:00.000Z`;
+      const endDate = `${nextYear}-${nextMonthStr}-01T00:00:00.000Z`;
+
+      const stats = await this.prisma.$queryRawUnsafe<Array<{
+        dia: number;
+        total: number;
+        incidencias: number;
+        mantenimientos: number;
+        resueltos: number;
+        avg_hours: number | null;
+      }>>(`
+        SELECT 
+          EXTRACT(DAY FROM t.created)::integer AS dia,
+          COUNT(*)::integer AS total,
+          COUNT(CASE WHEN i.caracteristica = 'I' OR i.caracteristica IS NULL THEN 1 END)::integer AS incidencias,
+          COUNT(CASE WHEN i.caracteristica = 'T' THEN 1 END)::integer AS mantenimientos,
+          COUNT(CASE WHEN t.estado_id = 4 THEN 1 END)::integer AS resueltos,
+          AVG(CASE WHEN t.estado_id = 4 AND t.modified >= t.created THEN EXTRACT(EPOCH FROM (t.modified - t.created)) / 3600.0 END) AS avg_hours
+        FROM tickets t
+        LEFT JOIN incidencias i ON t.incidencia_id = i.id
+        LEFT JOIN cruces c ON t.cruce_id = c.id
+        LEFT JOIN ubigeos u ON c.ubigeo_id = u.id
+        WHERE t.created >= '${startDate}'
+          AND t.created < '${endDate}'
+          ${query.caracteristica ? `AND i.caracteristica = '${query.caracteristica}'` : ''}
+          ${query.equipoId ? `AND t.equipo_id = ${Number(query.equipoId)}` : ''}
+          ${query.administradorId ? `AND c.administrador_id = ${Number(query.administradorId)}` : ''}
+          ${query.distrito ? `AND u.distrito ILIKE '%${query.distrito}%'` : ''}
+        GROUP BY EXTRACT(DAY FROM t.created)
+        ORDER BY dia ASC
+      `);
+
+      const mesNombre = MONTH_NAMES[targetMonth - 1];
+
+      const fullDays = Array.from({ length: daysInMonth }, (_, idx) => {
+        const diaNum = idx + 1;
+        const found = stats.find(s => s.dia === diaNum);
+        const diaStr = String(diaNum).padStart(2, '0');
+        return {
+          periodo: diaNum,
+          dia: diaNum,
+          mes: targetMonth,
+          mesNombre,
+          mesCorto: MONTH_SHORT_NAMES[targetMonth - 1],
+          etiqueta: diaStr,
+          nombreCompleto: `${diaStr} de ${mesNombre}`,
+          total: found ? Number(found.total) : 0,
+          incidencias: found ? Number(found.incidencias) : 0,
+          mantenimientos: found ? Number(found.mantenimientos) : 0,
+          resueltos: found ? Number(found.resueltos) : 0,
+          tiempoPromedioHoras: found && found.avg_hours ? Math.round(Number(found.avg_hours) * 10) / 10 : 0,
+        };
+      });
+
       return {
-        mes: mesNum,
-        mesNombre: MONTH_NAMES[idx],
-        mesCorto: MONTH_SHORT_NAMES[idx],
-        total: found ? Number(found.total) : 0,
-        incidencias: found ? Number(found.incidencias) : 0,
-        mantenimientos: found ? Number(found.mantenimientos) : 0,
-        resueltos: found ? Number(found.resueltos) : 0,
-        tiempoPromedioHoras: found && found.avg_hours ? Math.round(Number(found.avg_hours) * 10) / 10 : 0,
+        trendType: 'diario' as const,
+        trendLabel: `Evolución Diaria: ${mesNombre} ${targetYear}`,
+        mes: targetMonth,
+        mesNombre,
+        anho: targetYear,
+        data: fullDays,
       };
-    });
+    } else {
+      // Evolución Mensual cuando no hay mes seleccionado (todos los meses)
+      const stats = await this.prisma.$queryRawUnsafe<Array<{
+        mes: number;
+        total: number;
+        incidencias: number;
+        mantenimientos: number;
+        resueltos: number;
+        avg_hours: number | null;
+      }>>(`
+        SELECT 
+          EXTRACT(MONTH FROM t.created)::integer AS mes,
+          COUNT(*)::integer AS total,
+          COUNT(CASE WHEN i.caracteristica = 'I' OR i.caracteristica IS NULL THEN 1 END)::integer AS incidencias,
+          COUNT(CASE WHEN i.caracteristica = 'T' THEN 1 END)::integer AS mantenimientos,
+          COUNT(CASE WHEN t.estado_id = 4 THEN 1 END)::integer AS resueltos,
+          AVG(CASE WHEN t.estado_id = 4 AND t.modified >= t.created THEN EXTRACT(EPOCH FROM (t.modified - t.created)) / 3600.0 END) AS avg_hours
+        FROM tickets t
+        LEFT JOIN incidencias i ON t.incidencia_id = i.id
+        LEFT JOIN cruces c ON t.cruce_id = c.id
+        LEFT JOIN ubigeos u ON c.ubigeo_id = u.id
+        WHERE t.created >= '${targetYear}-01-01T00:00:00.000Z'
+          AND t.created < '${targetYear + 1}-01-01T00:00:00.000Z'
+          ${query.caracteristica ? `AND i.caracteristica = '${query.caracteristica}'` : ''}
+          ${query.equipoId ? `AND t.equipo_id = ${Number(query.equipoId)}` : ''}
+          ${query.administradorId ? `AND c.administrador_id = ${Number(query.administradorId)}` : ''}
+          ${query.distrito ? `AND u.distrito ILIKE '%${query.distrito}%'` : ''}
+        GROUP BY EXTRACT(MONTH FROM t.created)
+        ORDER BY mes ASC
+      `);
 
-    return fullMonths;
+      const fullMonths = Array.from({ length: 12 }, (_, idx) => {
+        const mesNum = idx + 1;
+        const found = stats.find(s => s.mes === mesNum);
+        return {
+          periodo: mesNum,
+          mes: mesNum,
+          mesNombre: MONTH_NAMES[idx],
+          mesCorto: MONTH_SHORT_NAMES[idx],
+          etiqueta: MONTH_SHORT_NAMES[idx],
+          nombreCompleto: MONTH_NAMES[idx],
+          total: found ? Number(found.total) : 0,
+          incidencias: found ? Number(found.incidencias) : 0,
+          mantenimientos: found ? Number(found.mantenimientos) : 0,
+          resueltos: found ? Number(found.resueltos) : 0,
+          tiempoPromedioHoras: found && found.avg_hours ? Math.round(Number(found.avg_hours) * 10) / 10 : 0,
+        };
+      });
+
+      return {
+        trendType: 'mensual' as const,
+        trendLabel: `Evolución Mensual: Año ${targetYear}`,
+        anho: targetYear,
+        data: fullMonths,
+      };
+    }
+  }
+
+  async getMonthlyTrend(query: QueryBiDashboardDto) {
+    const result = await this.getTrend(query);
+    return result.data;
   }
 
   async getCausesBreakdown(query: QueryBiDashboardDto) {
@@ -307,8 +402,10 @@ export class BiDashboardService {
       FROM tickets t
       JOIN cruces c ON t.cruce_id = c.id
       LEFT JOIN ubigeos u ON c.ubigeo_id = u.id
+      LEFT JOIN incidencias i ON t.incidencia_id = i.id
       WHERE t.created >= '${where.createdAt?.gte?.toISOString() || `${targetYear}-01-01T00:00:00.000Z`}'
         AND t.created < '${where.createdAt?.lt?.toISOString() || `${targetYear + 1}-01-01T00:00:00.000Z`}'
+        ${query.caracteristica ? `AND i.caracteristica = '${query.caracteristica}'` : ''}
         ${query.administradorId ? `AND c.administrador_id = ${Number(query.administradorId)}` : ''}
         ${query.equipoId ? `AND t.equipo_id = ${Number(query.equipoId)}` : ''}
       GROUP BY u.distrito
@@ -347,9 +444,13 @@ export class BiDashboardService {
       FROM tickets t
       LEFT JOIN equipos e ON t.equipo_id = e.id
       LEFT JOIN cruces c ON t.cruce_id = c.id
+      LEFT JOIN ubigeos u ON c.ubigeo_id = u.id
+      LEFT JOIN incidencias i ON t.incidencia_id = i.id
       WHERE t.created >= '${where.createdAt?.gte?.toISOString() || `${targetYear}-01-01T00:00:00.000Z`}'
         AND t.created < '${where.createdAt?.lt?.toISOString() || `${targetYear + 1}-01-01T00:00:00.000Z`}'
+        ${query.caracteristica ? `AND i.caracteristica = '${query.caracteristica}'` : ''}
         ${query.administradorId ? `AND c.administrador_id = ${Number(query.administradorId)}` : ''}
+        ${query.distrito ? `AND u.distrito ILIKE '%${query.distrito}%'` : ''}
       GROUP BY e.id, e.nombre
       ORDER BY total DESC
     `);
@@ -384,9 +485,13 @@ export class BiDashboardService {
           COUNT(t.id)::integer AS total
         FROM tickets t
         LEFT JOIN incidencias i ON t.incidencia_id = i.id
+        LEFT JOIN cruces c ON t.cruce_id = c.id
+        LEFT JOIN ubigeos u ON c.ubigeo_id = u.id
         WHERE t.created >= '${where.createdAt?.gte?.toISOString() || `${targetYear}-01-01T00:00:00.000Z`}'
           AND t.created < '${where.createdAt?.lt?.toISOString() || `${targetYear + 1}-01-01T00:00:00.000Z`}'
           ${where.equipoId ? `AND t.equipo_id = ${where.equipoId}` : ''}
+          ${query.administradorId ? `AND c.administrador_id = ${Number(query.administradorId)}` : ''}
+          ${query.distrito ? `AND u.distrito ILIKE '%${query.distrito}%'` : ''}
         GROUP BY i.caracteristica
       `),
     ]);
@@ -421,9 +526,9 @@ export class BiDashboardService {
   }
 
   async getFullDashboardData(query: QueryBiDashboardDto) {
-    const [kpis, monthlyTrend, causes, districts, teams, breakdown] = await Promise.all([
+    const [kpis, trendResult, causes, districts, teams, breakdown] = await Promise.all([
       this.getExecutiveKpis(query),
-      this.getMonthlyTrend(query),
+      this.getTrend(query),
       this.getCausesBreakdown(query),
       this.getDistrictsAnalytics(query),
       this.getTeamsWorkload(query),
@@ -432,7 +537,10 @@ export class BiDashboardService {
 
     return {
       kpis,
-      monthlyTrend,
+      trendType: trendResult.trendType,
+      trendLabel: trendResult.trendLabel,
+      monthlyTrend: trendResult.data,
+      trend: trendResult.data,
       causes,
       districts,
       teams,

@@ -112,7 +112,7 @@ export const BiStatusPieChart: React.FC<BiStatusPieChartProps> = ({ breakdown, l
             Sin datos de estados para este rango
           </div>
         ) : (
-          <div id="chart-wrapper-bi-status">
+          <div id="chart-wrapper-bi-status" key={statusSeries.join('-')}>
             <Chart options={options} series={statusSeries} type="donut" height={300} />
           </div>
         )}

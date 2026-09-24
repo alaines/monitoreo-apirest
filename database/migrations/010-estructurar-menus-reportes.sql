@@ -8,6 +8,8 @@
 --   4. Dashboard Ejecutivo BI   (/reportes/bi-dashboard)
 -- ====================================================================
 
+SET client_encoding TO 'UTF8';
+
 -- 1. Asegurar la existencia y metadatos del menú raíz 'Reportes'
 INSERT INTO menus (name, codigo, url, icono, modulo, orden, estado, created, modified)
 VALUES ('Reportes', 'reportes', '#', 'fa-solid fa-chart-column', 'Reportes', 3, true, NOW(), NOW())

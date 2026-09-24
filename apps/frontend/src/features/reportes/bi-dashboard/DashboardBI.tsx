@@ -33,6 +33,7 @@ export const DashboardBI: React.FC = () => {
 
   const [filters, setFilters] = useState<QueryBiDashboardDto>({
     anho: new Date().getFullYear(),
+    caracteristica: 'I',
   });
 
   const [dashboardData, setDashboardData] = useState<FullBiDashboardData | null>(null);
@@ -110,12 +111,25 @@ export const DashboardBI: React.FC = () => {
       const doc = new jsPDF('p', 'mm', 'a4');
       const tableStyles = getPdfTableStyles();
 
-      // Page 1: Header + Meta + KPIs + Monthly Trend + Status Pie
+      const mesSeleccionado = filterOptions.months.find((m) => m.id === filters.mes);
+      const isDailyView = Boolean(filters.mes);
+      const caracLabel =
+        filters.caracteristica === 'I'
+          ? 'Incidencias (I)'
+          : filters.caracteristica === 'T'
+          ? 'Trabajos / Rutinarias (T)'
+          : 'Todos (I + T)';
+
+      // Page 1: Header + Meta + KPIs + Monthly/Daily Trend + Status Pie
       let y = drawPdfHeader(doc, true, 'Dashboard Ejecutivo de Gestión y Monitoreo');
 
       // Metadatos
       y = drawPdfMetadata(doc, y, [
-        { label: 'Período', value: `Año ${filters.anho || 'Todos'}${filters.mes ? ` / Mes ${filters.mes}` : ''}` },
+        {
+          label: 'Período',
+          value: `Año ${filters.anho || 'Todos'}${mesSeleccionado ? ` / ${mesSeleccionado.name}` : ''}`,
+        },
+        { label: 'Característica', value: caracLabel },
         { label: 'Distrito', value: filters.distrito || 'Todos los Distritos' },
         { label: 'Fecha Emisión', value: new Date().toLocaleString('es-PE') },
       ]);
@@ -123,7 +137,7 @@ export const DashboardBI: React.FC = () => {
       // KPI boxes
       const kpis = dashboardData.kpis;
       const kpiItems = [
-        { label: 'TOTAL INCIDENCIAS', value: kpis.totalIncidencias.toLocaleString(), color: PDF_COLORS.primary },
+        { label: 'TOTAL REGISTROS', value: kpis.totalIncidencias.toLocaleString(), color: PDF_COLORS.primary },
         { label: 'ATENDIDAS', value: kpis.incidenciasAtendidas.toLocaleString(), color: PDF_COLORS.success },
         { label: '% RESOLUCIÓN', value: `${kpis.tasaResolucion}%`, color: PDF_COLORS.success },
         { label: 'INTERSECCIONES', value: kpis.interseccionesAfectadas.toLocaleString(), color: PDF_COLORS.secondary },
@@ -133,13 +147,16 @@ export const DashboardBI: React.FC = () => {
 
       y = drawPdfKpiCards(doc, y, kpiItems);
 
-      // Chart 1: Monthly Trend
+      // Chart 1: Trend (Monthly or Daily)
       const imgMonthly = await getChartImageUri('bi-chart-monthly-trend');
       if (imgMonthly) {
         doc.setFontSize(9.5);
         doc.setFont('helvetica', 'bold');
         doc.setTextColor(PDF_COLORS.primary[0], PDF_COLORS.primary[1], PDF_COLORS.primary[2]);
-        doc.text('1. Evolución Mensual: Volumen de Incidencias vs Tiempo de Atención', 14, y);
+        const chart1Title = isDailyView
+          ? `1. Evolución Diaria: Volumen vs Tiempo de Atención (${mesSeleccionado?.name || `Mes ${filters.mes}`} ${filters.anho})`
+          : '1. Evolución Mensual: Volumen de Incidencias vs Tiempo de Atención';
+        doc.text(chart1Title, 14, y);
         y += 3;
         doc.addImage(imgMonthly, 'PNG', 14, y, 182, 65);
         y += 70;
@@ -209,7 +226,7 @@ export const DashboardBI: React.FC = () => {
       // Footers
       applyPdfFooters(doc);
 
-      const fileName = `dashboard_ejecutivo_bi_${filters.anho || 'todos'}_${new Date().toISOString().split('T')[0]}.pdf`;
+      const fileName = `dashboard_ejecutivo_bi_${filters.anho || 'todos'}_${filters.mes ? `mes_${filters.mes}_` : ''}${new Date().toISOString().split('T')[0]}.pdf`;
       doc.save(fileName);
       toast.dismiss(toastId);
       toast.success('Reporte Ejecutivo BI exportado exitosamente');
@@ -227,7 +244,7 @@ export const DashboardBI: React.FC = () => {
     if (!dashboardData) return;
 
     let csvContent = 'data:text/csv;charset=utf-8,';
-    csvContent += 'Distrito,Total Incidencias,Porcentaje Total,Intersecciones Afectadas,Resueltas,Tasa Resolucion\n';
+    csvContent += 'Distrito,Total Registros,Porcentaje Total,Intersecciones Afectadas,Resueltas,Tasa Resolucion\n';
 
     dashboardData.districts.forEach((d) => {
       csvContent += `"${d.distrito}",${d.total},${d.porcentajeTotal}%,${d.crucesAfectados},${d.resueltos},${d.tasaResolucion}%\n`;
@@ -255,6 +272,8 @@ export const DashboardBI: React.FC = () => {
     tiempoPromedioDias: 0,
     incidenciasCriticas: 0,
   };
+
+  const mesSeleccionadoObj = filterOptions.months.find((m) => m.id === filters.mes);
 
   return (
     <div className="container-fluid p-3">
@@ -365,10 +384,15 @@ export const DashboardBI: React.FC = () => {
 
       {/* Main Charts & Analytics Grid */}
       <div className="row g-3 mb-3">
-        {/* Monthly Trend (Volumen vs Tiempo) */}
+        {/* Monthly / Daily Trend (Volumen vs Tiempo) */}
         <div className="col-12 col-xl-8">
           <BiMonthlyTrendChart
-            data={dashboardData?.monthlyTrend || []}
+            data={dashboardData?.trend || dashboardData?.monthlyTrend || []}
+            trendType={dashboardData?.trendType || (filters.mes ? 'diario' : 'mensual')}
+            trendLabel={dashboardData?.trendLabel}
+            selectedMonth={filters.mes}
+            selectedYear={filters.anho}
+            mesNombre={mesSeleccionadoObj?.name}
             loading={loading}
           />
         </div>

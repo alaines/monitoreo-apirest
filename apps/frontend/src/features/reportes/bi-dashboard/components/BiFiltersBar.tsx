@@ -25,7 +25,7 @@ export const BiFiltersBar: React.FC<BiFiltersBarProps> = ({
   const equipos = filterOptions?.equipos || [];
 
   const handleReset = () => {
-    onFilterChange({ anho: currentYear });
+    onFilterChange({ anho: currentYear, caracteristica: 'I' });
   };
 
   const hasActiveFilters = Boolean(
@@ -34,8 +34,14 @@ export const BiFiltersBar: React.FC<BiFiltersBarProps> = ({
     filters.administradorId ||
     filters.equipoId ||
     filters.prioridadId ||
-    filters.caracteristica
+    (filters.caracteristica && filters.caracteristica !== 'I')
   );
+
+  const caracteristicaOptions = [
+    { value: 'I', label: 'Incidencias (I)' },
+    { value: 'T', label: 'Trabajos / Rutinarias (T)' },
+    { value: '', label: 'Todos los tipos (I + T)' },
+  ];
 
   return (
     <div className="card mb-3 border shadow-sm">
@@ -56,7 +62,7 @@ export const BiFiltersBar: React.FC<BiFiltersBarProps> = ({
             className="btn btn-sm btn-outline-secondary"
             onClick={handleReset}
             disabled={loading}
-            title="Limpiar filtros"
+            title="Restablecer filtros por defecto"
             style={{ fontSize: '12px' }}
           >
             <i className="fa-solid fa-eraser me-1"></i> Restablecer Filtros
@@ -66,7 +72,7 @@ export const BiFiltersBar: React.FC<BiFiltersBarProps> = ({
       <div className="card-body p-3">
         <div className="row g-2">
           {/* Año */}
-          <div className="col-md-2 col-sm-6">
+          <div className="col-xl-2 col-md-4 col-sm-6">
             <label className="form-label mb-1 text-muted small fw-semibold">Año</label>
             <Select
               options={years.map((y) => ({ value: y, label: y.toString() }))}
@@ -84,7 +90,7 @@ export const BiFiltersBar: React.FC<BiFiltersBarProps> = ({
           </div>
 
           {/* Mes */}
-          <div className="col-md-2 col-sm-6">
+          <div className="col-xl-2 col-md-4 col-sm-6">
             <label className="form-label mb-1 text-muted small fw-semibold">Mes</label>
             <Select
               options={[
@@ -111,8 +117,32 @@ export const BiFiltersBar: React.FC<BiFiltersBarProps> = ({
             />
           </div>
 
+          {/* Tipo / Característica */}
+          <div className="col-xl-2 col-md-4 col-sm-6">
+            <label className="form-label mb-1 text-muted small fw-semibold">Característica</label>
+            <Select
+              options={caracteristicaOptions}
+              value={
+                filters.caracteristica === 'T'
+                  ? caracteristicaOptions[1]
+                  : filters.caracteristica === ''
+                  ? caracteristicaOptions[2]
+                  : caracteristicaOptions[0]
+              }
+              onChange={(opt) => {
+                const val = opt?.value !== undefined ? opt.value : 'I';
+                onFilterChange({ ...filters, caracteristica: val });
+              }}
+              menuPortalTarget={typeof document !== 'undefined' ? document.body : undefined}
+              menuPosition="fixed"
+              styles={customSelectStylesSmall}
+              isSearchable={false}
+              isDisabled={loading}
+            />
+          </div>
+
           {/* Distrito */}
-          <div className="col-md-3 col-sm-6">
+          <div className="col-xl-2 col-md-4 col-sm-6">
             <label className="form-label mb-1 text-muted small fw-semibold">Distrito</label>
             <Select
               options={[
@@ -138,7 +168,7 @@ export const BiFiltersBar: React.FC<BiFiltersBarProps> = ({
           </div>
 
           {/* Administrador */}
-          <div className="col-md-2 col-sm-6">
+          <div className="col-xl-2 col-md-4 col-sm-6">
             <label className="form-label mb-1 text-muted small fw-semibold">Administrador</label>
             <Select
               options={[
@@ -168,7 +198,7 @@ export const BiFiltersBar: React.FC<BiFiltersBarProps> = ({
           </div>
 
           {/* Equipo Responsable */}
-          <div className="col-md-3 col-sm-6">
+          <div className="col-xl-2 col-md-4 col-sm-6">
             <label className="form-label mb-1 text-muted small fw-semibold">Equipo de Trabajo</label>
             <Select
               options={[

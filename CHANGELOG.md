@@ -5,6 +5,31 @@ Todos los cambios notables de este proyecto serán documentados en este archivo.
 El formato está basado en [Keep a Changelog](https://keepachangelog.com/es-ES/1.0.0/),
 y este proyecto adhiere a [Semantic Versioning](https://semver.org/lang/es/).
 
+## [1.4.8] - 2026-09-23
+
+### Corregido (Fixed)
+- **Codificación y Acentos en Menú Lateral (`Gráficos Estadísticos`)**:
+  - Corrección de la codificación de caracteres UTF-8 en la base de datos para el menú `reportes-graficos` (`Gráficos Estadísticos`), `areas_mant` (`Áreas`) y módulos de administración, eliminando los caracteres corruptos `??`.
+  - Inclusión de `SET client_encoding TO 'UTF8'` en los scripts de migración de base de datos.
+- **Iconos y Marcadores en Tooltip del Gráfico de Evolución (`BiMonthlyTrendChart.tsx`)**:
+  - Sustitución de etiquetas de fuentes en el tooltip personalizado de ApexCharts por marcadores geométricos de color HTML con estilos en línea (recuadros para series de barras y círculos para series de líneas), garantizando un renderizado visual perfecto y consistente en todos los navegadores sin fallas de glifos.
+
+## [1.4.7] - 2026-09-23
+
+### Agregado (Added)
+- **Filtro por Característica en Dashboard Ejecutivo BI (`/reportes/bi-dashboard`)**:
+  - Implementación del filtro desplegable por tipo de característica de incidencia:
+    - `Incidencias (I)` (por defecto): Filtra exclusivamente fallas, averías y eventos operativos de semáforos.
+    - `Trabajos / Rutinarias (T)`: Tareas preventivas y acciones de rutina.
+    - `Todos los tipos (I + T)`: Registro integral consolidado.
+  - Sincronización del filtro de característica en todas las consultas de KPIs, series temporales, top causas, distritos, equipos y desglose de estados.
+
+- **Evolución Diaria Dinámica en Series Temporales (`BiMonthlyTrendChart.tsx`)**:
+  - Transición automática del gráfico de tendencias al seleccionar un mes específico en la barra de filtros:
+    - **Sin mes seleccionado ("Todos los meses")**: Muestra la *Evolución Mensual* agrupada por los 12 meses del año.
+    - **Con mes seleccionado**: Cambia dinámicamente a *Evolución Diaria* mostrando todos los días calendario del mes (1..28/29/30/31) con volumen de eventos registrados, resueltos y tiempo promedio de atención en horas.
+  - Actualización de títulos y metadatos dinámicos tanto en pantalla como en el informe exportado en PDF institucional.
+
 ## [1.4.6] - 2026-09-23
 
 ### Mejorado (Changed)

@@ -31,16 +31,22 @@ export interface ExecutiveKpis {
   incidenciasCriticas: number;
 }
 
-export interface MonthlyTrendItem {
-  mes: number;
-  mesNombre: string;
-  mesCorto: string;
+export interface TrendItem {
+  periodo: number; // 1..12 (mes) o 1..31 (dia)
+  dia?: number;
+  mes?: number;
+  mesNombre?: string;
+  mesCorto?: string;
+  etiqueta: string;
+  nombreCompleto?: string;
   total: number;
   incidencias: number;
   mantenimientos: number;
   resueltos: number;
   tiempoPromedioHoras: number;
 }
+
+export type MonthlyTrendItem = TrendItem;
 
 export interface CauseItem {
   id: number;
@@ -78,7 +84,10 @@ export interface BreakdownData {
 
 export interface FullBiDashboardData {
   kpis: ExecutiveKpis;
-  monthlyTrend: MonthlyTrendItem[];
+  trendType: 'mensual' | 'diario';
+  trendLabel: string;
+  monthlyTrend: TrendItem[];
+  trend: TrendItem[];
   causes: CauseItem[];
   districts: DistrictItem[];
   teams: TeamWorkloadItem[];
@@ -101,7 +110,7 @@ class BiDashboardService {
     return response.data;
   }
 
-  async getMonthlyTrend(query?: QueryBiDashboardDto): Promise<MonthlyTrendItem[]> {
+  async getMonthlyTrend(query?: QueryBiDashboardDto): Promise<TrendItem[]> {
     const response = await api.get('/reportes/bi-dashboard/monthly-trend', { params: query });
     return response.data;
   }
@@ -123,3 +132,4 @@ class BiDashboardService {
 }
 
 export const biDashboardService = new BiDashboardService();
+

@@ -123,7 +123,7 @@ export const BiTeamsChart: React.FC<BiTeamsChartProps> = ({ data, loading }) => 
             Sin asignaciones a cuadrillas registradas
           </div>
         ) : (
-          <div id="chart-wrapper-bi-teams">
+          <div id="chart-wrapper-bi-teams" key={data.map((d) => `${d.equipoId}-${d.total}-${d.resueltos}`).join('-')}>
             <Chart options={options} series={series} type="bar" height={300} />
           </div>
         )}
