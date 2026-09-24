@@ -1,6 +1,6 @@
 {
   "name": "monitoreo-apirest",
-  "version": "1.4.8",
+  "version": "1.4.9",
   "description": "Sistema de Gestión de Incidencias de Semáforos - Monorepo",
   "private": true,
   "workspaces": [

@@ -5,6 +5,15 @@ Todos los cambios notables de este proyecto serán documentados en este archivo.
 El formato está basado en [Keep a Changelog](https://keepachangelog.com/es-ES/1.0.0/),
 y este proyecto adhiere a [Semantic Versioning](https://semver.org/lang/es/).
 
+## [1.4.9] - 2026-09-24
+
+### Corregido (Fixed)
+- **Estructuración y Limpieza del Menú Lateral (Sidebar)**:
+  - Consolidación limpia de los 5 módulos oficiales del sistema (*Incidencias*, *Intersecciones*, *Reportes*, *Mantenimientos*, *Panel de Control*) y desactivación de elementos secundarios huérfanos heredados de CakePHP.
+  - Creación de la migración `database/migrations/011-estructurar-sidebar-y-permisos-replicacion.sql` para persistir la jerarquía y permisos en despliegues futuros.
+  - Corrección en `menus.service.ts` para tolerar y unificar permisos por acción granular (`view`) y permisos directos por ID.
+  - Creación de trigger en PostgreSQL (`trg_set_default_accion`) para auto-asignar acción de lectura a cualquier registro replicado desde la base de datos de producción.
+
 ## [1.4.8] - 2026-09-23
 
 ### Corregido (Fixed)

@@ -421,9 +421,10 @@ export class MenusService {
         gruposMenus: {
           some: {
             grupoId: grupoId,
-            accion: {
-              codigo: 'view',
-            },
+            OR: [
+              { accion: { codigo: 'view' } },
+              { accionId: 1 },
+            ],
           },
         },
       },

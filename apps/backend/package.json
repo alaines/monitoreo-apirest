@@ -1,6 +1,6 @@
 {
   "name": "@monitoreo/backend",
-  "version": "1.4.8",
+  "version": "1.4.9",
   "description": "Backend API REST con NestJS",
   "private": true,
   "scripts": {
