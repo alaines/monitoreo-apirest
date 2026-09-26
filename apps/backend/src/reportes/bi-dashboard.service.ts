@@ -83,12 +83,12 @@ export class BiDashboardService {
 
   async getAvailableFilterOptions() {
     const [yearsResult, administradores, equipos, distritosResult] = await Promise.all([
-      this.prisma.$queryRawUnsafe<Array<{ anho: number }>>(`
+      (this.prisma.$queryRawUnsafe(`
         SELECT DISTINCT EXTRACT(YEAR FROM created)::integer AS anho
         FROM tickets
         WHERE created IS NOT NULL
         ORDER BY anho DESC
-      `),
+      `) as Promise<Array<{ anho: number }>>),
       this.prisma.administrador.findMany({
         where: { estado: true },
         select: { id: true, nombre: true },
@@ -99,13 +99,13 @@ export class BiDashboardService {
         select: { id: true, nombre: true },
         orderBy: { nombre: 'asc' },
       }),
-      this.prisma.$queryRawUnsafe<Array<{ distrito: string }>>(`
+      (this.prisma.$queryRawUnsafe(`
         SELECT DISTINCT u.distrito
         FROM cruces c
         JOIN ubigeos u ON c.ubigeo_id = u.id
         WHERE u.distrito IS NOT NULL AND u.distrito != ''
         ORDER BY u.distrito ASC
-      `),
+      `) as Promise<Array<{ distrito: string }>>),
     ]);
 
     const currentYear = new Date().getFullYear();
@@ -167,7 +167,7 @@ export class BiDashboardService {
         where: { ...where, cruceId: { not: null }, estadoId: 4 },
       }),
       // Promedio de tiempo de resolución (horas)
-      this.prisma.$queryRawUnsafe<Array<{ avg_hours: number | null }>>(`
+      (this.prisma.$queryRawUnsafe(`
         SELECT AVG(EXTRACT(EPOCH FROM (t.modified - t.created)) / 3600.0) AS avg_hours
         FROM tickets t
         LEFT JOIN incidencias i ON t.incidencia_id = i.id
@@ -183,7 +183,7 @@ export class BiDashboardService {
           ${where.equipoId ? `AND t.equipo_id = ${where.equipoId}` : ''}
           ${query.administradorId ? `AND c.administrador_id = ${Number(query.administradorId)}` : ''}
           ${query.distrito ? `AND u.distrito ILIKE '%${query.distrito}%'` : ''}
-      `),
+      `) as Promise<Array<{ avg_hours: number | null }>>),
     ]);
 
     const tasaResolucion = total > 0 ? Math.round((resueltos / total) * 1000) / 10 : 0;
@@ -219,14 +219,7 @@ export class BiDashboardService {
       const startDate = `${targetYear}-${monthStr}-01T00:00:00.000Z`;
       const endDate = `${nextYear}-${nextMonthStr}-01T00:00:00.000Z`;
 
-      const stats = await this.prisma.$queryRawUnsafe<Array<{
-        dia: number;
-        total: number;
-        incidencias: number;
-        mantenimientos: number;
-        resueltos: number;
-        avg_hours: number | null;
-      }>>(`
+      const stats = (await this.prisma.$queryRawUnsafe(`
         SELECT 
           EXTRACT(DAY FROM t.created)::integer AS dia,
           COUNT(*)::integer AS total,
@@ -246,7 +239,14 @@ export class BiDashboardService {
           ${query.distrito ? `AND u.distrito ILIKE '%${query.distrito}%'` : ''}
         GROUP BY EXTRACT(DAY FROM t.created)
         ORDER BY dia ASC
-      `);
+      `)) as Array<{
+        dia: number;
+        total: number;
+        incidencias: number;
+        mantenimientos: number;
+        resueltos: number;
+        avg_hours: number | null;
+      }>;
 
       const mesNombre = MONTH_NAMES[targetMonth - 1];
 
@@ -280,14 +280,7 @@ export class BiDashboardService {
       };
     } else {
       // Evolución Mensual cuando no hay mes seleccionado (todos los meses)
-      const stats = await this.prisma.$queryRawUnsafe<Array<{
-        mes: number;
-        total: number;
-        incidencias: number;
-        mantenimientos: number;
-        resueltos: number;
-        avg_hours: number | null;
-      }>>(`
+      const stats = (await this.prisma.$queryRawUnsafe(`
         SELECT 
           EXTRACT(MONTH FROM t.created)::integer AS mes,
           COUNT(*)::integer AS total,
@@ -307,7 +300,14 @@ export class BiDashboardService {
           ${query.distrito ? `AND u.distrito ILIKE '%${query.distrito}%'` : ''}
         GROUP BY EXTRACT(MONTH FROM t.created)
         ORDER BY mes ASC
-      `);
+      `)) as Array<{
+        mes: number;
+        total: number;
+        incidencias: number;
+        mantenimientos: number;
+        resueltos: number;
+        avg_hours: number | null;
+      }>;
 
       const fullMonths = Array.from({ length: 12 }, (_, idx) => {
         const mesNum = idx + 1;
@@ -367,7 +367,7 @@ export class BiDashboardService {
       },
     });
 
-    const infoMap = new Map(incidenciasInfo.map(i => [i.id, i]));
+    const infoMap = new Map<number, any>(incidenciasInfo.map(i => [i.id, i]));
 
     return causes.map(c => {
       const info = infoMap.get(c.incidenciaId);
@@ -388,12 +388,7 @@ export class BiDashboardService {
   async getDistrictsAnalytics(query: QueryBiDashboardDto) {
     const { where, targetYear } = this.buildWhereClause(query);
 
-    const districtData = await this.prisma.$queryRawUnsafe<Array<{
-      distrito: string;
-      total: number;
-      cruces_count: number;
-      resueltos: number;
-    }>>(`
+    const districtData = (await this.prisma.$queryRawUnsafe(`
       SELECT 
         COALESCE(u.distrito, 'Sin Distrito') AS distrito,
         COUNT(t.id)::integer AS total,
@@ -411,7 +406,12 @@ export class BiDashboardService {
       GROUP BY u.distrito
       ORDER BY total DESC
       LIMIT 15
-    `);
+    `)) as Array<{
+      distrito: string;
+      total: number;
+      cruces_count: number;
+      resueltos: number;
+    }>;
 
     const totalGeneral = districtData.reduce((acc, curr) => acc + Number(curr.total), 0);
 
@@ -428,13 +428,7 @@ export class BiDashboardService {
   async getTeamsWorkload(query: QueryBiDashboardDto) {
     const { where, targetYear } = this.buildWhereClause(query);
 
-    const teamsData = await this.prisma.$queryRawUnsafe<Array<{
-      equipo_id: number;
-      equipo_nombre: string;
-      total: number;
-      resueltos: number;
-      avg_hours: number | null;
-    }>>(`
+    const teamsData = (await this.prisma.$queryRawUnsafe(`
       SELECT 
         COALESCE(e.id, 0)::integer AS equipo_id,
         COALESCE(e.nombre, 'Sin Asignar') AS equipo_nombre,
@@ -453,7 +447,13 @@ export class BiDashboardService {
         ${query.distrito ? `AND u.distrito ILIKE '%${query.distrito}%'` : ''}
       GROUP BY e.id, e.nombre
       ORDER BY total DESC
-    `);
+    `)) as Array<{
+      equipo_id: number;
+      equipo_nombre: string;
+      total: number;
+      resueltos: number;
+      avg_hours: number | null;
+    }>;
 
     return teamsData.map(t => ({
       equipoId: Number(t.equipo_id),
@@ -479,7 +479,7 @@ export class BiDashboardService {
         where,
         _count: { id: true },
       }),
-      this.prisma.$queryRawUnsafe<Array<{ caracteristica: string; total: number }>>(`
+      (this.prisma.$queryRawUnsafe(`
         SELECT 
           COALESCE(i.caracteristica, 'I') AS caracteristica,
           COUNT(t.id)::integer AS total
@@ -493,7 +493,7 @@ export class BiDashboardService {
           ${query.administradorId ? `AND c.administrador_id = ${Number(query.administradorId)}` : ''}
           ${query.distrito ? `AND u.distrito ILIKE '%${query.distrito}%'` : ''}
         GROUP BY i.caracteristica
-      `),
+      `) as Promise<Array<{ caracteristica: string; total: number }>>),
     ]);
 
     const estadosCatalog = await this.prisma.estado.findMany({

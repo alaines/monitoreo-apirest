@@ -55,4 +55,7 @@ export class ReporteIncidenciasDto {
   @Type(() => Number)
   @IsNumber()
   cruceId?: number;
+
+  @IsOptional()
+  caracteristica?: string;
 }

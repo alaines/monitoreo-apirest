@@ -17,6 +17,7 @@ export interface FiltrosReporte {
   estadoId?: number;
   administradorId?: number;
   cruceId?: number;
+  caracteristica?: string;
 }
 
 export interface EstadisticasReporte {

@@ -1,11 +1,11 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import Select from 'react-select';
 import { customSelectStylesSmall } from '../../styles/react-select-custom';
 import toast from 'react-hot-toast';
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
 import { reportesService, PeriodoReporte, FiltrosReporte, EstadisticasReporte } from '../../services/reportes.service';
-import { incidentsService } from '../../services/incidents.service';
+import { incidentsService, IncidenciaCatalog, EstadoCatalog } from '../../services/incidents.service';
 import { administradoresService, Administrador } from '../../services/administradores.service';
 import { PageHeader } from '../../components/ui/PageHeader';
 import { drawPdfHeader, applyPdfFooters, drawPdfMetadata, drawPdfKpiCards, getPdfTableStyles, PDF_COLORS } from '../../utils/pdfReportHelper';
@@ -17,8 +17,8 @@ export function ReporteIncidencias() {
   const [showFilters, setShowFilters] = useState(true);
   
   // Catálogos
-  const [tiposIncidencia, setTiposIncidencia] = useState<any[]>([]);
-  const [tiposEstado, setTiposEstado] = useState<any[]>([]);
+  const [tiposIncidencia, setTiposIncidencia] = useState<IncidenciaCatalog[]>([]);
+  const [tiposEstado, setTiposEstado] = useState<EstadoCatalog[]>([]);
   const [administradores, setAdministradores] = useState<Administrador[]>([]);
   
   // Filtros
@@ -27,9 +27,44 @@ export function ReporteIncidencias() {
   const [anio, setAnio] = useState<number>(new Date().getFullYear());
   const [fechaInicio, setFechaInicio] = useState<string>('');
   const [fechaFin, setFechaFin] = useState<string>('');
+  const [caracteristica, setCaracteristica] = useState<string>('I');
   const [tipoIncidencia, setTipoIncidencia] = useState<number | undefined>(undefined);
   const [estadoId, setEstadoId] = useState<number | undefined>(undefined);
   const [administradorId, setAdministradorId] = useState<number | undefined>(undefined);
+
+  const opcionesCaracteristica = [
+    { value: 'I', label: 'Incidencias / Averías (I)' },
+    { value: 'T', label: 'Trabajos Programados (T)' },
+    { value: '', label: 'Todos (I + T)' },
+  ];
+
+  // Filtrar tipos de incidencia según la característica seleccionada
+  const tiposFiltrados = useMemo(() => {
+    if (!caracteristica) return tiposIncidencia;
+    if (caracteristica === 'I') {
+      return tiposIncidencia.filter(t => !t.caracteristica || t.caracteristica === 'I');
+    }
+    if (caracteristica === 'T') {
+      return tiposIncidencia.filter(t => t.caracteristica === 'T');
+    }
+    return tiposIncidencia;
+  }, [tiposIncidencia, caracteristica]);
+
+  const handleCaracteristicaChange = (nuevaCaracteristica: string) => {
+    setCaracteristica(nuevaCaracteristica);
+    if (tipoIncidencia) {
+      const sigueExistiendo = tiposIncidencia.some(t => {
+        if (t.id !== tipoIncidencia) return false;
+        if (!nuevaCaracteristica) return true;
+        if (nuevaCaracteristica === 'I') return !t.caracteristica || t.caracteristica === 'I';
+        if (nuevaCaracteristica === 'T') return t.caracteristica === 'T';
+        return true;
+      });
+      if (!sigueExistiendo) {
+        setTipoIncidencia(undefined);
+      }
+    }
+  };
 
   useEffect(() => {
     cargarCatalogos();
@@ -37,20 +72,21 @@ export function ReporteIncidencias() {
 
   useEffect(() => {
     cargarReporte();
-  }, [periodo, mes, anio, fechaInicio, fechaFin, tipoIncidencia, estadoId, administradorId]);
+  }, [periodo, mes, anio, fechaInicio, fechaFin, caracteristica, tipoIncidencia, estadoId, administradorId]);
 
   const cargarCatalogos = async () => {
     try {
       const [tiposIncRes, estadosRes, adminRes] = await Promise.all([
-        incidentsService.getTiposIncidencias(),
-        incidentsService.getEstadosIncidencia(),
-        administradoresService.getAll(),
+        incidentsService.getIncidenciasCatalog(),
+        incidentsService.getEstadosCatalog(),
+        administradoresService.getAdministradores(),
       ]);
       setTiposIncidencia(tiposIncRes || []);
       setTiposEstado(estadosRes || []);
       setAdministradores(adminRes || []);
     } catch (error) {
       console.error('Error loading catalogs:', error);
+      toast.error('Error al cargar catálogos de filtros');
     }
   };
 
@@ -86,6 +122,7 @@ export function ReporteIncidencias() {
       filtros.anio = new Date().getFullYear();
     }
 
+    if (caracteristica) filtros.caracteristica = caracteristica;
     if (tipoIncidencia) filtros.tipoIncidencia = tipoIncidencia;
     if (estadoId) filtros.estadoId = estadoId;
     if (administradorId) filtros.administradorId = administradorId;
@@ -140,13 +177,19 @@ export function ReporteIncidencias() {
         { label: 'Período de Análisis', value: periodoTexto },
         { label: 'Fecha de Emisión', value: new Date().toLocaleString('es-PE') },
       ];
+      if (caracteristica) {
+        metaItems.push({
+          label: 'Característica',
+          value: caracteristica === 'I' ? 'Incidencias / Averías (I)' : caracteristica === 'T' ? 'Trabajos Programados (T)' : 'Todas (I + T)',
+        });
+      }
       if (tipoIncidencia) {
         const tipo = tiposIncidencia.find(t => t.id === tipoIncidencia);
-        if (tipo) metaItems.push({ label: 'Tipo de Incidencia', value: tipo.nombre || tipo.name });
+        if (tipo) metaItems.push({ label: 'Tipo de Incidencia', value: tipo.tipo });
       }
       if (estadoId) {
         const est = tiposEstado.find(e => e.id === estadoId);
-        if (est) metaItems.push({ label: 'Estado', value: est.nombre || est.name });
+        if (est) metaItems.push({ label: 'Estado', value: est.nombre });
       }
       if (administradorId) {
         const adm = administradores.find(a => a.id === administradorId);
@@ -312,6 +355,7 @@ export function ReporteIncidencias() {
     setAnio(new Date().getFullYear());
     setFechaInicio('');
     setFechaFin('');
+    setCaracteristica('I');
     setTipoIncidencia(undefined);
     setEstadoId(undefined);
     setAdministradorId(undefined);
@@ -380,7 +424,7 @@ export function ReporteIncidencias() {
             </h6>
           </div>
           <div className="card-body py-3">
-            {/* Primera fila: Periodo */}
+            {/* Primera fila: Periodo y Característica */}
             <div className="row g-2 mb-2">
               <div className="col-md-3">
                 <label className="form-label small fw-bold text-muted mb-1">
@@ -456,20 +500,33 @@ export function ReporteIncidencias() {
                   </div>
                 </>
               )}
+
+              <div className="col-md-3">
+                <label className="form-label small fw-bold text-muted mb-1">
+                  <i className="fa-solid fa-tag me-1"></i> Característica
+                </label>
+                <Select
+                  options={opcionesCaracteristica}
+                  value={opcionesCaracteristica.find(o => o.value === caracteristica) || opcionesCaracteristica[0]}
+                  onChange={(option) => handleCaracteristicaChange(option?.value ?? '')}
+                  styles={customSelectStylesSmall}
+                />
+              </div>
             </div>
 
-            {/* Segunda fila: Filtros adicionales */}
+            {/* Segunda fila: Tipo, Estado, Administrador y Limpiar */}
             <div className="row g-2">
               <div className="col-md-3">
                 <label className="form-label small fw-bold text-muted mb-1">Tipo de Incidencia</label>
                 <Select
                   options={[
                     { value: undefined, label: 'Todos' },
-                    ...tiposIncidencia.map(tipo => ({ value: tipo.id, label: tipo.tipo }))
+                    ...tiposFiltrados.map(tipo => ({ value: tipo.id, label: tipo.tipo }))
                   ]}
-                  value={tipoIncidencia ? tiposIncidencia.find(t => t.id === tipoIncidencia) ? { value: tipoIncidencia, label: tiposIncidencia.find(t => t.id === tipoIncidencia)?.tipo || '' } : { value: undefined, label: 'Todos' } : { value: undefined, label: 'Todos' }}
+                  value={tipoIncidencia ? tiposFiltrados.find(t => t.id === tipoIncidencia) ? { value: tipoIncidencia, label: tiposFiltrados.find(t => t.id === tipoIncidencia)?.tipo || '' } : { value: undefined, label: 'Todos' } : { value: undefined, label: 'Todos' }}
                   onChange={(option) => setTipoIncidencia(option?.value)}
                   isClearable
+                  placeholder="Todos"
                   styles={customSelectStylesSmall}
                 />
               </div>
@@ -484,6 +541,7 @@ export function ReporteIncidencias() {
                   value={estadoId ? tiposEstado.find(e => e.id === estadoId) ? { value: estadoId, label: tiposEstado.find(e => e.id === estadoId)?.nombre || '' } : { value: undefined, label: 'Todos' } : { value: undefined, label: 'Todos' }}
                   onChange={(option) => setEstadoId(option?.value)}
                   isClearable
+                  placeholder="Todos"
                   styles={customSelectStylesSmall}
                 />
               </div>
@@ -498,6 +556,7 @@ export function ReporteIncidencias() {
                   value={administradorId ? administradores.find(a => a.id === administradorId) ? { value: administradorId, label: administradores.find(a => a.id === administradorId)?.nombre || '' } : { value: undefined, label: 'Todos' } : { value: undefined, label: 'Todos' }}
                   onChange={(option) => setAdministradorId(option?.value)}
                   isClearable
+                  placeholder="Todos"
                   styles={customSelectStylesSmall}
                 />
               </div>

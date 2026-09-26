@@ -25,6 +25,21 @@ export class ReportesService {
       };
     }
 
+    // Filtro por característica (I = Incidencia, T = Trabajo / Mantenimiento)
+    if (filtros.caracteristica) {
+      if (filtros.caracteristica === 'I') {
+        where.incidencia = {
+          ...where.incidencia,
+          OR: [{ caracteristica: 'I' }, { caracteristica: null }],
+        };
+      } else if (filtros.caracteristica === 'T') {
+        where.incidencia = {
+          ...where.incidencia,
+          caracteristica: 'T',
+        };
+      }
+    }
+
     // Otros filtros
     if (filtros.tipoIncidencia) {
       where.incidenciaId = filtros.tipoIncidencia;
@@ -271,11 +286,23 @@ export class ReportesService {
 
   // Nuevo método para reporte gráfico consolidado
   async getReporteGrafico(filtros: ReporteIncidenciasDto) {
-    const where: any = {
-      incidencia: {
-        caracteristica: 'I',
-      },
-    };
+    const where: any = {};
+
+    // Filtro por característica (I = Incidencia, T = Trabajo / Mantenimiento)
+    const caracteristica = filtros.caracteristica !== undefined ? filtros.caracteristica : 'I';
+    if (caracteristica) {
+      if (caracteristica === 'I') {
+        where.incidencia = {
+          ...where.incidencia,
+          OR: [{ caracteristica: 'I' }, { caracteristica: null }],
+        };
+      } else if (caracteristica === 'T') {
+        where.incidencia = {
+          ...where.incidencia,
+          caracteristica: 'T',
+        };
+      }
+    }
 
     // Aplicar filtros de fecha
     if (filtros.periodo) {
@@ -327,7 +354,7 @@ export class ReportesService {
       },
     });
 
-    // Buscar el registro padre "PROBLEMA - CRUCE"
+    // Buscar el registro padre "PROBLEMA - CRUCE" si aplica para incidencias
     const problemaCruceParent = await this.prisma.incidencia.findFirst({
       where: { 
         tipo: 'PROBLEMA - CRUCE',
@@ -335,13 +362,25 @@ export class ReportesService {
       },
     });
 
-    // Obtener todos los tipos de incidencias únicos que son hijos de "PROBLEMA - CRUCE" y con característica "I"
+    // Configurar consulta de tipos de incidencias según la característica
+    const whereTipos: any = { estado: true };
+    if (caracteristica === 'T') {
+      whereTipos.caracteristica = 'T';
+      whereTipos.parentId = { not: null };
+    } else if (caracteristica === 'I') {
+      whereTipos.caracteristica = 'I';
+      if (problemaCruceParent) {
+        whereTipos.parentId = problemaCruceParent.id;
+      } else {
+        whereTipos.parentId = { not: null };
+      }
+    } else {
+      whereTipos.parentId = { not: null };
+    }
+
+    // Obtener todos los tipos de incidencias únicos según la característica
     const tiposIncidencias = await this.prisma.incidencia.findMany({
-      where: { 
-        estado: true,
-        caracteristica: 'I',
-        parentId: problemaCruceParent?.id || null,
-      },
+      where: whereTipos,
       orderBy: { tipo: 'asc' },
       select: {
         id: true,
@@ -498,11 +537,10 @@ export class ReportesService {
     }));
 
     // Top 5 tipos de averías con atendidas vs por atender
-    // Solo considerar incidencias bajo "PROBLEMA - CRUCE"
     const tiposProblemasCruceIds = new Set(tiposIncidencias.map(t => t.id));
-    const ticketsProblemasCruce = tickets.filter(t => 
-      t.incidenciaId && tiposProblemasCruceIds.has(t.incidenciaId)
-    );
+    const ticketsProblemasCruce = tiposProblemasCruceIds.size > 0 
+      ? tickets.filter(t => t.incidenciaId && tiposProblemasCruceIds.has(t.incidenciaId))
+      : tickets;
     
     const rankingAverias: Record<string, { total: number; atendidas: number; porAtender: number }> = {};
     
@@ -584,6 +622,12 @@ export class ReportesService {
     } else {
       periodoTexto = `Todos los registros`;
     }
+    const caracteristica = filtros.caracteristica !== undefined ? filtros.caracteristica : 'I';
+    const caracTexto = caracteristica === 'I' 
+      ? 'Incidencias / Averías (I)' 
+      : caracteristica === 'T' 
+      ? 'Trabajos Programados (T)' 
+      : 'Todas (I + T)';
     const fechaEmision = new Date().toLocaleString('es-PE');
 
     // =========================================================================
@@ -610,10 +654,10 @@ export class ReportesService {
     r2.alignment = { vertical: 'middle', horizontal: 'center' };
     hojaConsolidada.getRow(2).height = 20;
 
-    // Fila 3: Metadatos (Período, Fecha, Totales)
+    // Fila 3: Metadatos (Período, Característica, Fecha, Totales)
     hojaConsolidada.mergeCells(3, 1, 3, totalCols1);
     const r3 = hojaConsolidada.getCell(3, 1);
-    r3.value = `Período de Análisis: ${periodoTexto}   |   Fecha de Emisión: ${fechaEmision}   |   Total Incidencias: ${datos.resumen.totalIncidencias}   |   Cruces Afectados: ${datos.resumen.totalCruces}`;
+    r3.value = `Período: ${periodoTexto}   |   Característica: ${caracTexto}   |   Fecha de Emisión: ${fechaEmision}   |   Total Incidencias: ${datos.resumen.totalIncidencias}   |   Cruces Afectados: ${datos.resumen.totalCruces}`;
     r3.font = { name: 'Arial', size: 9.5, italic: true, color: { argb: 'FF334155' } };
     r3.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFF1F5F9' } };
     r3.alignment = { vertical: 'middle', horizontal: 'center' };

@@ -22,6 +22,7 @@ interface Filtros {
   dia?: number;
   mes?: number;
   anio: number;
+  caracteristica?: string;
 }
 
 // Paleta de colores estilo Admindek
@@ -45,7 +46,14 @@ export const ReporteGrafico: React.FC = () => {
     periodo: 'MES',
     mes: currentDate.getMonth() + 1,
     anio: currentDate.getFullYear(),
+    caracteristica: 'I',
   });
+
+  const opcionesCaracteristica = [
+    { value: 'I', label: 'Incidencias / Averías (I)' },
+    { value: 'T', label: 'Trabajos Programados (T)' },
+    { value: '', label: 'Todas las Características' },
+  ];
 
   const [datos, setDatos] = useState<ReporteGraficoResponse | null>(null);
   const [loading, setLoading] = useState(false);
@@ -181,11 +189,18 @@ export const ReporteGrafico: React.FC = () => {
         periodoTexto = `${filtros.dia}/${filtros.mes}/${filtros.anio}`;
       }
 
+      const caracTexto = filtros.caracteristica === 'I' 
+        ? 'Incidencias / Averías (I)' 
+        : filtros.caracteristica === 'T' 
+        ? 'Trabajos Programados (T)' 
+        : 'Todas (I + T)';
+
       // Página 1: Encabezado + Metadatos + Cajas KPI
       let y = drawPdfHeader(doc, true, 'Reporte Estadístico de Incidencias y Averías');
 
       y = drawPdfMetadata(doc, y, [
         { label: 'Período de Análisis', value: periodoTexto },
+        { label: 'Característica', value: caracTexto },
         { label: 'Fecha de Emisión', value: new Date().toLocaleString('es-PE') },
       ]);
 
@@ -752,7 +767,7 @@ export const ReporteGrafico: React.FC = () => {
             <form onSubmit={handleBuscar}>
               <div className="row g-2 align-items-end">
                 {/* Periodo */}
-                <div className="col-md-3">
+                <div className="col-lg-2 col-md-3 col-sm-6">
                   <label className="form-label small fw-bold text-muted mb-1">
                     <i className="fa-solid fa-calendar me-1"></i> Periodo
                   </label>
@@ -776,9 +791,30 @@ export const ReporteGrafico: React.FC = () => {
                   />
                 </div>
 
+                {/* Característica */}
+                <div className="col-lg-3 col-md-3 col-sm-6">
+                  <label className="form-label small fw-bold text-muted mb-1">
+                    <i className="fa-solid fa-filter me-1"></i> Característica
+                  </label>
+                  <Select
+                    options={opcionesCaracteristica}
+                    value={
+                      opcionesCaracteristica.find((o) => o.value === (filtros.caracteristica ?? 'I')) ||
+                      opcionesCaracteristica[0]
+                    }
+                    onChange={(option) =>
+                      setFiltros({
+                        ...filtros,
+                        caracteristica: option?.value ?? '',
+                      })
+                    }
+                    styles={customSelectStylesSmall}
+                  />
+                </div>
+
                 {/* Día */}
                 {filtros.periodo === 'DIA' && (
-                  <div className="col-md-3">
+                  <div className="col-lg-2 col-md-2 col-sm-6">
                     <label className="form-label small fw-bold text-muted mb-1">
                       <i className="fa-solid fa-calendar-day me-1"></i> Día
                     </label>
@@ -800,7 +836,7 @@ export const ReporteGrafico: React.FC = () => {
 
                 {/* Mes */}
                 {(filtros.periodo === 'DIA' || filtros.periodo === 'MES') && (
-                  <div className="col-md-3">
+                  <div className="col-lg-2 col-md-2 col-sm-6">
                     <label className="form-label small fw-bold text-muted mb-1">
                       <i className="fa-solid fa-calendar-days me-1"></i> Mes
                     </label>
@@ -852,7 +888,7 @@ export const ReporteGrafico: React.FC = () => {
                 )}
 
                 {/* Año */}
-                <div className="col-md-3">
+                <div className="col-lg-2 col-md-2 col-sm-6">
                   <label className="form-label small fw-bold text-muted mb-1">
                     <i className="fa-solid fa-calendar-week me-1"></i> Año
                   </label>
@@ -873,7 +909,7 @@ export const ReporteGrafico: React.FC = () => {
                 </div>
 
                 {/* Botón Consultar */}
-                <div className="col-md-3 d-flex">
+                <div className="col-lg-3 col-md-2 col-sm-12 d-flex">
                   <button type="submit" className="btn btn-sm btn-primary w-100 py-1" disabled={loading}>
                     {loading ? (
                       <>
@@ -897,7 +933,7 @@ export const ReporteGrafico: React.FC = () => {
       {/* Resumen / Widgets estilo Admindek */}
       {datos && (
         <div className="row g-2 mb-3">
-          <div className="col-xl-3 col-md-6">
+          <div className="col-xl-4 col-md-4 col-12">
             <div className="card card-widget mb-0 h-100 border shadow-sm">
               <div className="card-body p-2 px-3">
                 <div className="d-flex justify-content-between align-items-center mb-1">
@@ -917,7 +953,7 @@ export const ReporteGrafico: React.FC = () => {
               </div>
             </div>
           </div>
-          <div className="col-xl-3 col-md-6">
+          <div className="col-xl-4 col-md-4 col-12">
             <div className="card card-widget mb-0 h-100 border shadow-sm">
               <div className="card-body p-2 px-3">
                 <div className="d-flex justify-content-between align-items-center mb-1">
@@ -937,7 +973,7 @@ export const ReporteGrafico: React.FC = () => {
               </div>
             </div>
           </div>
-          <div className="col-xl-3 col-md-6">
+          <div className="col-xl-4 col-md-4 col-12">
             <div className="card card-widget mb-0 h-100 border shadow-sm">
               <div className="card-body p-2 px-3">
                 <div className="d-flex justify-content-between align-items-center mb-1">
@@ -952,27 +988,7 @@ export const ReporteGrafico: React.FC = () => {
                   {datos.resumen.totalTipos}
                 </div>
                 <small className="text-muted d-block" style={{ fontSize: '10px' }}>
-                  Categorías de fallas detectadas
-                </small>
-              </div>
-            </div>
-          </div>
-          <div className="col-xl-3 col-md-6">
-            <div className="card card-widget mb-0 h-100 border shadow-sm">
-              <div className="card-body p-2 px-3">
-                <div className="d-flex justify-content-between align-items-center mb-1">
-                  <div className="widget-subheading text-uppercase text-muted fw-bold" style={{ fontSize: '11px' }}>
-                    PANEL DE VISUALIZACIÓN
-                  </div>
-                  <div className="widget-icon-box text-success" style={{ width: '32px', height: '32px' }}>
-                    <i className="fa-solid fa-chart-pie"></i>
-                  </div>
-                </div>
-                <div className="widget-numbers text-success mb-0" style={{ fontSize: '22px' }}>
-                  5 Gráficos
-                </div>
-                <small className="text-muted d-block" style={{ fontSize: '10px' }}>
-                  ApexCharts interactivo activo
+                  Categorías detectadas en el período
                 </small>
               </div>
             </div>

@@ -5,6 +5,29 @@ Todos los cambios notables de este proyecto serán documentados en este archivo.
 El formato está basado en [Keep a Changelog](https://keepachangelog.com/es-ES/1.0.0/),
 y este proyecto adhiere a [Semantic Versioning](https://semver.org/lang/es/).
 
+## [1.4.11] - 2026-09-25
+
+### Mejorado (Changed)
+- **Reporte Gráfico de Incidencias (`ReporteGrafico.tsx` y `reportes.service.ts`)**:
+  - Eliminación de la tarjeta redundante *Panel de Visualización* en los widgets superiores de métricas, redistribuyendo de manera uniforme las 3 tarjetas clave (*Total Incidencias*, *Intersecciones Afectadas*, *Tipos Diferentes*) en la cuadrícula responsiva (`col-md-4`).
+  - Incorporación del filtro por **Característica de Incidencia** (`"I"` para *Incidencias / Averías*, `"T"` para *Trabajos Programados / Mantenimientos* y `"Todas"` para consulta consolidada).
+  - Soporte integral del filtro por característica en el backend (`getReporteGrafico`, `generarExcelGrafico`), frontend, exportación a Excel y exportación a PDF.
+
+## [1.4.10] - 2026-09-24
+
+### Corregido (Fixed)
+- **Carga de Catálogos en Reporte de Incidencias (`/reportes/incidencias`)**:
+  - Corrección de llamadas a métodos de `incidentsService` (`getIncidenciasCatalog`, `getEstadosCatalog`) y `administradoresService.getAdministradores()`, resolviendo el problema donde los selects de *Tipo de Incidencia*, *Estado* y *Administrador* no se poblaban.
+
+### Agregado (Added)
+- **Filtro por Característica en Reporte de Incidencias (`ReporteIncidencias.tsx`)**:
+  - Incorporación del selector de característica con soporte para:
+    - `Incidencias / Averías (I)`: Filtra exclusivamente fallas y averías semafóricas.
+    - `Trabajos Programados (T)`: Mantenimientos rutinarios y trabajos programados.
+    - `Todos (I + T)`: Registro integral consolidado.
+  - Filtrado reactivo del select de *Tipo de Incidencia* según la característica seleccionada.
+  - Sincronización completa del filtro en backend (`ReporteIncidenciasDto` y `ReportesService`), frontend (`FiltrosReporte`), KPIs, exportación a Excel y PDF institucional.
+
 ## [1.4.9] - 2026-09-24
 
 ### Corregido (Fixed)
