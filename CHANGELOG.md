@@ -508,3 +508,7 @@ y este proyecto adhiere a [Semantic Versioning](https://semver.org/lang/es/).
 ## Enlaces
 
 - [Documentación](docs/README.md)
+
+## [1.4.14] - 2026-10-01
+### Corregido (Fixed)
+- Actualizado el widget "Pendientes Hoy" en el dashboard para incluir los tickets en estado "En Proceso" (estadoId 2), además de los "Asignados" (estadoId 1), solucionando la discrepancia en el conteo de atención diaria reportada por los usuarios.

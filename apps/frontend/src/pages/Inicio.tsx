@@ -157,7 +157,7 @@ export function Inicio() {
         return createdDateStr === todayStr;
       });
 
-      const todayOpenTickets = todayIncidents.filter((t: Incident) => t.estadoId === 1).length;
+      const todayOpenTickets = todayIncidents.filter((t: Incident) => t.estadoId === 1 || t.estadoId === 2).length;
       const todayInProgressTickets = todayIncidents.filter((t: Incident) => t.estadoId === 2).length;
       const todayClosedTickets = todayIncidents.filter((t: Incident) => t.estadoId === 3 || t.estadoId === 4).length;
 
@@ -296,7 +296,7 @@ export function Inicio() {
               <div className="widget-numbers text-dark mb-0" style={{ fontSize: '20px' }}>
                 {loading ? <span className="placeholder col-6"></span> : (stats?.todayOpenTickets || 0)}
               </div>
-              <small className="text-muted d-block" style={{ fontSize: '10px' }}>Tickets sin atender del día</small>
+              <small className="text-muted d-block" style={{ fontSize: '10px' }}>Tickets sin atender / en proceso del día</small>
             </div>
           </div>
         </div>
