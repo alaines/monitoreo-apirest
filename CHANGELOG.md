@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.5.0] - 2026-10-01
+### Mejorado
+- Los filtros de búsqueda en la Gestión de Incidencias ahora están visibles por defecto.
+- Se reordenó y ajustó el diseño de los filtros para una mejor visualización.
+### Agregado
+- Nuevo filtro de búsqueda por "Nº Ticket" (ID) en la lista de incidencias.
+
 Todos los cambios notables de este proyecto serán documentados en este archivo.
 
 El formato está basado en [Keep a Changelog](https://keepachangelog.com/es-ES/1.0.0/),

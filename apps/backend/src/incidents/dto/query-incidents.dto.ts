@@ -21,6 +21,12 @@ export class QueryIncidentsDto {
   @IsOptional()
   estadoId?: number | string;
 
+  @ApiPropertyOptional({ description: 'ID del ticket' })
+  @Type(() => Number)
+  @IsInt()
+  @IsOptional()
+  id?: number;
+
   @ApiPropertyOptional({ description: 'ID de la incidencia (tipo)' })
   @Type(() => Number)
   @IsInt()

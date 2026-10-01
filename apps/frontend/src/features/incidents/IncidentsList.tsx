@@ -34,7 +34,7 @@ export function IncidentsList() {
   
   // Filtros
   const [filters, setFilters] = useState<Filters>({});
-  const [showFilters, setShowFilters] = useState(false);
+  const [showFilters, setShowFilters] = useState(true);
   
   // Ordenamiento
   const [sortField, setSortField] = useState<SortField>('fecha');
@@ -128,6 +128,7 @@ export function IncidentsList() {
         limit: pageSize,
       };
 
+      if (filters.id) params.id = filters.id;
       if (filters.incidenciaId) params.incidenciaId = filters.incidenciaId;
       if (filters.cruceId) params.cruceId = filters.cruceId;
       if (filters.estadoId && filters.estadoId.length > 0) {
@@ -341,7 +342,23 @@ export function IncidentsList() {
           </div>
           <div className="card-body p-3">
             <div className="row g-2">
-              <div className="col-md-3">
+              <div className="col-md-2">
+                <label className="form-label mb-1">Nº Ticket</label>
+                <div className="input-group input-group-sm">
+                  <span className="input-group-text"><i className="fa-solid fa-hashtag"></i></span>
+                  <input
+                    type="number"
+                    className="form-control form-control-sm"
+                    placeholder="Ej. 62779"
+                    value={filters.id || ''}
+                    onChange={(e) => {
+                      const val = e.target.value ? parseInt(e.target.value) : undefined;
+                      applyFilters({ ...filters, id: val });
+                    }}
+                  />
+                </div>
+              </div>
+              <div className="col-md-2">
                 <label className="form-label mb-1">Tipo de Incidencia</label>
                 <Select
                   options={tiposIncidencia.map(inc => ({ value: inc.id, label: inc.tipo }))}
@@ -386,7 +403,7 @@ export function IncidentsList() {
                   noOptionsMessage={() => "No hay opciones"}
                 />
               </div>
-              <div className="col-md-3">
+              <div className="col-md-2">
                 <label className="form-label mb-1">Intersección</label>
                 <Select
                   options={cruces.map(cruce => ({ 

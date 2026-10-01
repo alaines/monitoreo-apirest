@@ -71,10 +71,14 @@ export class IncidentsService {
   }
 
   async findAll(query: QueryIncidentsDto) {
-    const { page = 1, limit = 10, estadoId, incidenciaId, equipoId, cruceId, administradorId, anho, search, fechaDesde, fechaHasta } = query as any;
+    const { page = 1, limit = 10, id, estadoId, incidenciaId, equipoId, cruceId, administradorId, anho, search, fechaDesde, fechaHasta } = query as any;
     const skip = (page - 1) * limit;
 
     const where: any = {};
+
+    if (id) {
+      where.id = Number(id);
+    }
 
     if (estadoId) {
       if (typeof estadoId === 'string') {
