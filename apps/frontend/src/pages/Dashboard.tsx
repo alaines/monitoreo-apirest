@@ -266,10 +266,10 @@ export function Dashboard() {
               <div className="card-body">
                 <div className="d-flex justify-content-between align-items-start mb-2">
                   <h6 className="text-muted mb-0">Tiempo Promedio</h6>
-                  <i className="fas fa-clock" style={{ fontSize: '24px', color: '#28a745' }}></i>
+                  <i className="fa-solid fa-clock" style={{ fontSize: '24px', color: '#28a745' }}></i>
                 </div>
-                <h2 className="mb-0">{stats?.avgResolutionTime.toFixed(1)}h</h2>
-                <small className="text-muted">Resolución</small>
+                <h2 className="mb-0">{stats ? `${stats.avgResolutionTime.toFixed(1)}h` : '0.0h'}</h2>
+                <small className="text-muted">Resolución {stats ? `(aprox. ${(stats.avgResolutionTime / 24).toFixed(1)} días)` : ''}</small>
               </div>
             </div>
           </div>

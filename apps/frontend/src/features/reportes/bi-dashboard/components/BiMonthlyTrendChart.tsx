@@ -40,7 +40,7 @@ export const BiMonthlyTrendChart: React.FC<BiMonthlyTrendChartProps> = ({
       data: seriesResueltos,
     },
     {
-      name: 'Tiempo Prom. (Horas)',
+      name: 'Tiempo Prom. (Horas / Días)',
       type: 'line',
       data: seriesTiempo,
     },
@@ -113,12 +113,12 @@ export const BiMonthlyTrendChart: React.FC<BiMonthlyTrendChartProps> = ({
       {
         opposite: true,
         title: {
-          text: 'Tiempo Prom. Atención (Horas)',
+          text: 'Tiempo Prom. Atención (Horas / Días)',
           style: { color: '#f59e0b', fontSize: '11px', fontWeight: 600 },
         },
         labels: {
           style: { colors: '#64748b', fontSize: '11px' },
-          formatter: (val) => `${val.toFixed(1)}h`,
+          formatter: (val) => `${val.toFixed(1)}h (${(val / 24).toFixed(1)}d)`,
         },
         min: 0,
       },
@@ -140,10 +140,13 @@ export const BiMonthlyTrendChart: React.FC<BiMonthlyTrendChartProps> = ({
         const title = item.nombreCompleto || item.mesNombre || (isDaily ? `Día ${item.etiqueta}` : item.etiqueta);
         const total = item.total || 0;
         const resueltos = item.resueltos || 0;
-        const tiempo = item.tiempoPromedioHoras !== undefined ? item.tiempoPromedioHoras.toFixed(1) : '0.0';
+        const horas = item.tiempoPromedioHoras !== undefined ? Number(item.tiempoPromedioHoras) : 0;
+        const dias = item.tiempoPromedioDias !== undefined ? Number(item.tiempoPromedioDias) : Math.round((horas / 24) * 10) / 10;
+        const tiempoH = horas.toFixed(1);
+        const tiempoD = dias.toFixed(1);
 
         return `
-          <div class="p-2" style="font-size: 12px; min-width: 175px;">
+          <div class="p-2" style="font-size: 12px; min-width: 195px;">
             <div class="fw-bold border-bottom pb-1 mb-2 text-dark">${title}</div>
             <div class="d-flex justify-content-between align-items-center mb-1">
               <span class="d-inline-flex align-items-center" style="color: #334155;">
@@ -164,7 +167,7 @@ export const BiMonthlyTrendChart: React.FC<BiMonthlyTrendChartProps> = ({
                 <span style="display:inline-block;width:10px;height:10px;background-color:#f59e0b;border-radius:50%;margin-right:6px;flex-shrink:0;"></span>
                 Tiempo Prom.:
               </span>
-              <span class="fw-bold" style="color: #d97706;">${tiempo}h</span>
+              <span class="fw-bold" style="color: #d97706;">${tiempoH}h (${tiempoD} días)</span>
             </div>
           </div>
         `;

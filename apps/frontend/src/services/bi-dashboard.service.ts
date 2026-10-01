@@ -44,6 +44,7 @@ export interface TrendItem {
   mantenimientos: number;
   resueltos: number;
   tiempoPromedioHoras: number;
+  tiempoPromedioDias?: number;
 }
 
 export type MonthlyTrendItem = TrendItem;
@@ -74,6 +75,7 @@ export interface TeamWorkloadItem {
   resueltos: number;
   tasaResolucion: number;
   tiempoPromedioHoras: number;
+  tiempoPromedioDias?: number;
 }
 
 export interface BreakdownData {

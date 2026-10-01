@@ -187,7 +187,9 @@ export class ReportesService {
         estado: ticket.estado?.nombre || ultimoSeguimiento?.estado?.nombre || 'PENDIENTE',
         dia: fechaCreacion.toLocaleDateString('es-PE', { weekday: 'long' }),
         mes: fechaCreacion.toLocaleDateString('es-PE', { month: 'long' }),
-        tiempoAtencion: fechaCierre ? Math.round((fechaCierre.getTime() - fechaCreacion.getTime()) / (1000 * 60)) + ' min' : 'N/A',
+        tiempoAtencion: fechaCierre 
+          ? `${(Math.round(((fechaCierre.getTime() - fechaCreacion.getTime()) / (1000 * 60 * 60)) * 10) / 10)}h (${(Math.round(((fechaCierre.getTime() - fechaCreacion.getTime()) / (1000 * 60 * 60 * 24)) * 10) / 10)}d)` 
+          : 'N/A',
         administrador: ticket.cruce?.administrador?.nombre || 'N/A',
         distrito: ticket.cruce?.ubigeo?.distrito || 'N/A',
       });

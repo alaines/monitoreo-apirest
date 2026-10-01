@@ -5,6 +5,35 @@ Todos los cambios notables de este proyecto serán documentados en este archivo.
 El formato está basado en [Keep a Changelog](https://keepachangelog.com/es-ES/1.0.0/),
 y este proyecto adhiere a [Semantic Versioning](https://semver.org/lang/es/).
 
+## [1.4.13] - 2026-09-30
+
+### Mejorado (Changed)
+- **Rediseño de la Página de Inicio de Sesión (`LoginPage.tsx`)**:
+  - Implementación de interfaz responsiva de pantalla dividida (*Split-Screen Layout*) con fondo fotográfico *hero* completo a la derecha y formulario centrado y limpio a la izquierda.
+  - Agrupación estilizada de campos de entrada (*Usuario* y *Contraseña*) con bordes suaves, iconos integrados de FontAwesome 6 y botón interactivo para mostrar u ocultar la contraseña.
+  - Persistencia funcional del checkbox **Recuérdame**: almacena y restaura de forma automática y controlada las credenciales en el almacenamiento local del navegador (`localStorage`), limpiándolas de inmediato si el usuario desmarca la opción.
+  - Optimización responsiva en dispositivos móviles y tablets para visualización enfocada al 100% de ancho sin pérdida de proporción.
+
+## [1.4.12] - 2026-09-25
+
+### Mejorado (Changed)
+- **Representación Dual de Tiempo Promedio de Atención (Horas y Días)**:
+  - **Dashboard Ejecutivo BI (`DashboardBI.tsx` y `BiKpiCard.tsx`)**:
+    - Tarjeta KPI de *Tiempo Prom. Atención*: además del valor en horas (`95.1h`), se añadió la visualización clara y destacada de su equivalente en días mediante un badge lateral (`4.0 d`) y subtítulo descriptivo (`Equivale a 4.0 días`).
+    - Mejora en `BiKpiCard.tsx` con soporte para variantes de color semánticas (`warning`, `success`, `primary`, etc.), mapeo de fondos/iconos estilizados y badges personalizables.
+    - Exportación a PDF: se sincronizó la tarjeta KPI de *Tiempo Prom. Atención* mostrando `${horas}h (${dias} días)`.
+  - **Gráfico de Evolución Mensual / Diaria (`BiMonthlyTrendChart.tsx`)**:
+    - Tooltip interactivo mejorado para mostrar el tiempo promedio tanto en horas como en días: `${tiempoH}h (${tiempoD} días)`.
+    - Eje Y secundario y leyenda actualizados a *Tiempo Prom. (Horas / Días)* con formateador `${val}h (${(val/24)}d)`.
+  - **Gráfico de Rendimiento por Equipo (`BiTeamsChart.tsx`)**:
+    - Tooltip enriquecido para mostrar tiempo promedio de atención por cuadrilla en horas y días (`Prom: Xh / Yd`).
+  - **Exportación a Excel (`reportes.service.ts`)**:
+    - Columna *Tiempo de Atención* enriquecida con formato `${horas}h (${dias}d)` en lugar de sólo minutos.
+  - **Dashboard Principal (`Dashboard.tsx`)**:
+    - Tarjeta de *Tiempo Promedio*: se añadió el texto complementario de equivalencia en días y se estandarizó el icono a FontAwesome 6 (`fa-solid fa-clock`).
+  - **Backend BI (`bi-dashboard.service.ts` y tipos de frontend)**:
+    - Inclusión del cálculo `tiempoPromedioDias` en los datasets de tendencias y rendimiento de equipos.
+
 ## [1.4.11] - 2026-09-25
 
 ### Mejorado (Changed)

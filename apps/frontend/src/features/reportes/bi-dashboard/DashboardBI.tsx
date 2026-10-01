@@ -141,7 +141,7 @@ export const DashboardBI: React.FC = () => {
         { label: 'ATENDIDAS', value: kpis.incidenciasAtendidas.toLocaleString(), color: PDF_COLORS.success },
         { label: '% RESOLUCIÓN', value: `${kpis.tasaResolucion}%`, color: PDF_COLORS.success },
         { label: 'INTERSECCIONES', value: kpis.interseccionesAfectadas.toLocaleString(), color: PDF_COLORS.secondary },
-        { label: 'TIEMPO ATENCIÓN', value: `${kpis.tiempoPromedioHoras}h (${kpis.tiempoPromedioDias}d)`, color: PDF_COLORS.warning },
+        { label: 'TIEMPO ATENCIÓN', value: `${kpis.tiempoPromedioHoras}h (${kpis.tiempoPromedioDias} días)`, color: PDF_COLORS.warning },
         { label: 'CRÍTICAS', value: kpis.incidenciasCriticas.toLocaleString(), color: PDF_COLORS.danger },
       ];
 
@@ -368,7 +368,9 @@ export const DashboardBI: React.FC = () => {
             value={`${kpis.tiempoPromedioHoras}h`}
             icon="fa-solid fa-clock-rotate-left"
             colorVariant="warning"
-            subtext={`Aprox. ${kpis.tiempoPromedioDias} días`}
+            badgeText={`${kpis.tiempoPromedioDias} d`}
+            badgeBg="bg-warning text-dark fw-semibold"
+            subtext={`Equivale a ${kpis.tiempoPromedioDias} días`}
           />
         </div>
         <div className="col-12 col-sm-6 col-md-4 col-xl-2">

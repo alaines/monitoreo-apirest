@@ -93,7 +93,9 @@ export const BiTeamsChart: React.FC<BiTeamsChartProps> = ({ data, loading }) => 
         formatter: (val, opts) => {
           const item = data[opts.dataPointIndex];
           if (item && opts.seriesIndex === 1) {
-            return `${val} resueltas (${item.tasaResolucion}% de efectividad)`;
+            const horas = item.tiempoPromedioHoras !== undefined ? item.tiempoPromedioHoras : 0;
+            const dias = item.tiempoPromedioDias !== undefined ? item.tiempoPromedioDias : Math.round((horas / 24.0) * 10) / 10;
+            return `${val} resueltas (${item.tasaResolucion}% efectividad | Prom: ${horas}h / ${dias}d)`;
           }
           return `${val} asignadas`;
         },

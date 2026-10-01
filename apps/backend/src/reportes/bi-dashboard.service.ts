@@ -267,6 +267,7 @@ export class BiDashboardService {
           mantenimientos: found ? Number(found.mantenimientos) : 0,
           resueltos: found ? Number(found.resueltos) : 0,
           tiempoPromedioHoras: found && found.avg_hours ? Math.round(Number(found.avg_hours) * 10) / 10 : 0,
+          tiempoPromedioDias: found && found.avg_hours ? Math.round((Number(found.avg_hours) / 24.0) * 10) / 10 : 0,
         };
       });
 
@@ -324,6 +325,7 @@ export class BiDashboardService {
           mantenimientos: found ? Number(found.mantenimientos) : 0,
           resueltos: found ? Number(found.resueltos) : 0,
           tiempoPromedioHoras: found && found.avg_hours ? Math.round(Number(found.avg_hours) * 10) / 10 : 0,
+          tiempoPromedioDias: found && found.avg_hours ? Math.round((Number(found.avg_hours) / 24.0) * 10) / 10 : 0,
         };
       });
 
@@ -462,6 +464,7 @@ export class BiDashboardService {
       resueltos: Number(t.resueltos),
       tasaResolucion: Number(t.total) > 0 ? Math.round((Number(t.resueltos) / Number(t.total)) * 1000) / 10 : 0,
       tiempoPromedioHoras: t.avg_hours ? Math.round(Number(t.avg_hours) * 10) / 10 : 0,
+      tiempoPromedioDias: t.avg_hours ? Math.round((Number(t.avg_hours) / 24.0) * 10) / 10 : 0,
     }));
   }
 
