@@ -14,14 +14,12 @@ export class ResponsablesController {
   constructor(private readonly responsablesService: ResponsablesService) {}
 
   @Get()
-  @RequirePermission('responsables', 'view')
   @ApiOperation({ summary: 'Listar todos los responsables' })
   async findAll(): Promise<ResponsableResponseDto[]> {
     return this.responsablesService.findAll();
   }
 
   @Get('equipo/:equipoId')
-  @RequirePermission('responsables', 'view')
   @ApiOperation({ summary: 'Listar responsables por equipo' })
   async findByEquipo(@Param('equipoId', ParseIntPipe) equipoId: number): Promise<ResponsableResponseDto[]> {
     return this.responsablesService.findByEquipo(equipoId);

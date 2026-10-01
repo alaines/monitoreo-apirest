@@ -5,6 +5,10 @@ Todos los cambios notables de este proyecto serán documentados en este archivo.
 El formato está basado en [Keep a Changelog](https://keepachangelog.com/es-ES/1.0.0/),
 y este proyecto adhiere a [Semantic Versioning](https://semver.org/lang/es/).
 
+## [1.4.15] - 2026-10-01
+### Corregido (Fixed)
+- Se eliminó el requisito de permiso estricto `responsables:view` para los endpoints de catálogos (`GET /responsables` y `GET /responsables/equipo/:equipoId`). Esto permite que perfiles como OPERADOR (que no tienen acceso a la gestión de responsables) puedan cargar correctamente la lista de responsables en los formularios de seguimiento de incidencias.
+
 ## [1.4.13] - 2026-09-30
 
 ### Mejorado (Changed)
