@@ -36,4 +36,13 @@ export class CreateIncidentDto {
   @IsInt()
   @IsOptional()
   reportadorId?: number;
+  @ApiPropertyOptional({ description: 'ID del equipo asignado' })
+  @IsInt()
+  @IsOptional()
+  equipoId?: number;
+
+  @ApiPropertyOptional({ description: 'ID del responsable asignado' })
+  @IsInt()
+  @IsOptional()
+  responsableId?: number;
 }

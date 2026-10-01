@@ -23,8 +23,9 @@ export class IncidentsService {
       `INSERT INTO tickets (
         incidencia_id, prioridade_id, cruce_id, descripcion,
         reportadore_nombres, reportadore_dato_contacto, reportadore_id,
+        equipo_id, responsable_id,
         usuario_registra, created, modified
-      ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, NOW(), NOW())
+      ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, NOW(), NOW())
       RETURNING id`,
       createIncidentDto.incidenciaId,
       createIncidentDto.prioridadId || null,
@@ -33,6 +34,8 @@ export class IncidentsService {
       createIncidentDto.reportadorNombres || null,
       createIncidentDto.reportadorDatoContacto || null,
       createIncidentDto.reportadorId || null,
+      createIncidentDto.equipoId || null,
+      createIncidentDto.responsableId || null,
       usuario,
     );
 

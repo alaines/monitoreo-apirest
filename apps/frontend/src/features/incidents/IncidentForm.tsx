@@ -11,6 +11,7 @@ import {
   CruceCatalog,
   EquipoCatalog,
   ReportadorCatalog,
+  ResponsableCatalog,
 } from '../../services/incidents.service';
 import { useAuthStore } from '../auth/authStore';
 
@@ -32,6 +33,7 @@ export function IncidentForm({ incidentId, onClose, onSave }: IncidentFormProps)
   const [cruces, setCruces] = useState<CruceCatalog[]>([]);
   const [equipos, setEquipos] = useState<EquipoCatalog[]>([]);
   const [reportadores, setReportadores] = useState<ReportadorCatalog[]>([]);
+  const [responsables, setResponsables] = useState<ResponsableCatalog[]>([]);
   const [incidentLocation, setIncidentLocation] = useState<{ latitude: number; longitude: number } | null>(null);
   
   // Para autocomplete de cruces
@@ -56,6 +58,7 @@ export function IncidentForm({ incidentId, onClose, onSave }: IncidentFormProps)
     reportadorId: '',
     reportadorNombres: '',
     reportadorDatoContacto: '',
+    responsableId: '',
   });
 
   useEffect(() => {
@@ -102,6 +105,15 @@ export function IncidentForm({ incidentId, onClose, onSave }: IncidentFormProps)
     }
   }, [incidenciaSearch, incidencias]);
 
+  useEffect(() => {
+    if (formData.equipoId) {
+      incidentsService.getResponsablesCatalog(parseInt(formData.equipoId)).then(setResponsables).catch(console.error);
+    } else {
+      setResponsables([]);
+      setFormData((prev: any) => ({ ...prev, responsableId: '' }));
+    }
+  }, [formData.equipoId]);
+
   const loadCatalogs = async () => {
     try {
       const [incidenciasData, prioridadesData, estadosData, crucesData, equiposData, reportadoresData] = await Promise.all([
@@ -138,6 +150,7 @@ export function IncidentForm({ incidentId, onClose, onSave }: IncidentFormProps)
         reportadorId: incident.reportador?.id?.toString() || '',
         reportadorNombres: incident.reportadorNombres || '',
         reportadorDatoContacto: incident.reportadorDatoContacto || '',
+        responsableId: incident.responsableId?.toString() || '',
       });
       
       // Cargar cruce seleccionado
@@ -236,12 +249,13 @@ export function IncidentForm({ incidentId, onClose, onSave }: IncidentFormProps)
         reportadorId: formData.reportadorId ? parseInt(formData.reportadorId) : undefined,
         reportadorNombres: formData.reportadorNombres,
         reportadorDatoContacto: formData.reportadorDatoContacto,
+        equipoId: formData.equipoId ? parseInt(formData.equipoId) : undefined,
+        responsableId: formData.responsableId ? parseInt(formData.responsableId) : undefined,
       };
 
       if (isEditing && incidentId) {
         await incidentsService.updateIncident(incidentId, {
           ...data,
-          equipoId: formData.equipoId ? parseInt(formData.equipoId) : undefined,
           estadoId: formData.estadoId ? parseInt(formData.estadoId) : undefined,
         });
       } else {
@@ -384,6 +398,23 @@ export function IncidentForm({ incidentId, onClose, onSave }: IncidentFormProps)
                       isClearable
                       styles={customSelectStyles}
                     />
+                  </div>
+                  <div className="col-md-6 mb-3">
+                    <label className="form-label">Responsable del equipo</label>
+                    <Select
+                      options={[
+                        { value: '', label: 'Sin responsable asignado' },
+                        ...responsables.map(resp => ({ value: resp.id.toString(), label: resp.nombre }))
+                      ]}
+                      value={formData.responsableId ? responsables.find(r => r.id.toString() === formData.responsableId) ? { value: formData.responsableId, label: responsables.find(r => r.id.toString() === formData.responsableId)?.nombre || '' } : { value: '', label: 'Sin responsable asignado' } : { value: '', label: 'Sin responsable asignado' }}
+                      onChange={(option) => handleChange({ target: { name: 'responsableId', value: option?.value || '' } } as any)}
+                      isClearable
+                      isDisabled={!formData.equipoId || responsables.length === 0}
+                      styles={customSelectStyles}
+                    />
+                    {formData.equipoId && responsables.length === 0 && (
+                      <small className="text-muted">No hay responsables para este equipo</small>
+                    )}
                   </div>
 
                   {isEditing && (

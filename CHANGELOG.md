@@ -5,6 +5,10 @@ Todos los cambios notables de este proyecto serán documentados en este archivo.
 El formato está basado en [Keep a Changelog](https://keepachangelog.com/es-ES/1.0.0/),
 y este proyecto adhiere a [Semantic Versioning](https://semver.org/lang/es/).
 
+## [1.4.16] - 2026-10-01
+### Añadido (Added)
+- Se añadió el selector de "Responsable del equipo" en el formulario de creación de incidencias ("Nueva Incidencia") que permite a los operadores asignar también un responsable inicial a la incidencia de forma inmediata en conjunto con la asignación del equipo.
+
 ## [1.4.15] - 2026-10-01
 ### Corregido (Fixed)
 - Se eliminó el requisito de permiso estricto `responsables:view` para los endpoints de catálogos (`GET /responsables` y `GET /responsables/equipo/:equipoId`). Esto permite que perfiles como OPERADOR (que no tienen acceso a la gestión de responsables) puedan cargar correctamente la lista de responsables en los formularios de seguimiento de incidencias.
