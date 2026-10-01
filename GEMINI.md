@@ -26,3 +26,8 @@ En CADA cambio funcional, corrección o nueva característica que se implemente:
 - **Registro en CHANGELOG.md**:
   - Documentar bajo la versión y fecha correspondiente las secciones `### Agregado (Added)`, `### Corregido (Fixed)` o `### Mejorado (Changed)` siguiendo el estándar *Keep a Changelog*.
 
+## 4. Regla de Despliegue a Desarrollo antes que Producción
+En CADA cambio que se realice, el flujo OBLIGATORIO será el siguiente:
+1. **Desarrollo Primero**: Realizar, compilar y desplegar (o reiniciar) los cambios ÚNICAMENTE en el servidor de desarrollo (`192.168.10.244`).
+2. **Validación**: Esperar a que el usuario valide los cambios en desarrollo y dé explícitamente la instrucción "pásalo a producción".
+3. **Pase a Producción**: SÓLO una vez recibida la instrucción, se procederá a subir los cambios a la rama principal (commit y push), hacer el pull en el servidor de producción (`192.168.10.241`) y reiniciar/compilar sus respectivos servicios.

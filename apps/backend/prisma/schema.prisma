@@ -147,6 +147,7 @@ model Ticket {
   prioridadId            Int?                     @map("prioridade_id")
   cruceId                Int?                     @map("cruce_id")
   equipoId               Int?                     @map("equipo_id")
+  responsableId          Int?                     @map("responsable_id")
   descripcion            String?
   createdAt              DateTime?                @map("created") @db.Timestamp(6)
   usuarioRegistra        String?                  @map("usuario_registra") @db.VarChar(255)
@@ -165,6 +166,7 @@ model Ticket {
   incidencia             Incidencia               @relation(fields: [incidenciaId], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "Tickets_to_incidencias")
   reportador             Reportador?              @relation(fields: [reportadorId], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "Tickets_to_reportadores")
   estado                 Estado?                  @relation(fields: [estadoId], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "Tickets_to_estados")
+  responsable            Responsable?             @relation(fields: [responsableId], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "Tickets_to_responsables")
 
   @@index([createdAt])
   @@index([estadoId], map: "tickets_estado_idx")
@@ -254,6 +256,7 @@ model Responsable {
   estado       Boolean             @default(true)
   equipo       Equipo?             @relation(fields: [equipoId], references: [id], onDelete: Cascade, map: "Reponsables_to_equipos")
   seguimientos TicketSeguimiento[]
+  tickets      Ticket[]
 
   @@map("responsables")
 }

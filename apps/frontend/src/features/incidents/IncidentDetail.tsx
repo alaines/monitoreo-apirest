@@ -39,6 +39,7 @@ export function IncidentDetail({ incidentId: propIncidentId, onClose }: Incident
     equipoId: undefined,
     responsableId: undefined,
   });
+  const [editingTrackingId, setEditingTrackingId] = useState<number | null>(null);
 
   useEffect(() => {
     if (incidentId) {
@@ -96,18 +97,47 @@ export function IncidentDetail({ incidentId: propIncidentId, onClose }: Incident
     }
 
     try {
-      await incidentsService.createTracking(incidentId, trackingForm);
-      toast.success('Seguimiento registrado exitosamente');
+      if (editingTrackingId) {
+        await incidentsService.updateTracking(incidentId, editingTrackingId, trackingForm);
+        toast.success('Seguimiento actualizado exitosamente');
+      } else {
+        await incidentsService.createTracking(incidentId, trackingForm);
+        toast.success('Seguimiento registrado exitosamente');
+      }
       setTrackingForm({ reporte: '', estadoId: undefined, equipoId: undefined, responsableId: undefined });
       setShowTrackingForm(false);
+      setEditingTrackingId(null);
       setResponsables([]);
       loadTrackings();
       loadIncident(incidentId); // Recargar para actualizar el estado
     } catch (error: any) {
       console.error('Error creating tracking:', error);
-      const errorMessage = error.response?.data?.message || error.message || 'Error al crear el seguimiento';
+      const errorMessage = error.response?.data?.message || error.message || 'Error al guardar el seguimiento';
       toast.error(errorMessage);
     }
+  };
+
+  const handleEditTracking = async (tracking: IncidentTracking) => {
+    if (tracking.equipoId) {
+      try {
+        const responsablesData = await incidentsService.getResponsablesCatalog(tracking.equipoId);
+        setResponsables(responsablesData);
+      } catch (error) {
+        console.error('Error loading responsables:', error);
+        setResponsables([]);
+      }
+    } else {
+      setResponsables([]);
+    }
+
+    setTrackingForm({
+      reporte: tracking.reporte,
+      estadoId: tracking.estadoId,
+      equipoId: tracking.equipoId,
+      responsableId: tracking.responsableId,
+    });
+    setEditingTrackingId(tracking.id);
+    setShowTrackingForm(true);
   };
 
   const handleEquipoChange = async (equipoId: number | undefined) => {
@@ -230,13 +260,13 @@ export function IncidentDetail({ incidentId: propIncidentId, onClose }: Incident
                 <div className="col-md-6">
                   <label className="form-label text-muted small mb-1">Prioridad</label>
                   <div>
-                    {incident.prioridad?.nombre ? (
+                    {incident.incidencia?.prioridad?.nombre ? (
                       <span className={`badge ${
-                        incident.prioridadId === 1 ? 'bg-danger' :
-                        incident.prioridadId === 2 ? 'bg-warning text-dark' :
+                        (incident.prioridadId || incident.incidencia.prioridad.id) === 1 ? 'bg-danger' :
+                        (incident.prioridadId || incident.incidencia.prioridad.id) === 2 ? 'bg-warning text-dark' :
                         'bg-success'
                       }`}>
-                        {incident.prioridad.nombre}
+                        {incident.incidencia.prioridad.nombre}
                       </span>
                     ) : (
                       <span className="text-muted">Sin prioridad</span>
@@ -247,10 +277,18 @@ export function IncidentDetail({ incidentId: propIncidentId, onClose }: Incident
                   <label className="form-label text-muted small mb-1">Equipo Asignado</label>
                   <div>
                     {incident.equipo?.nombre ? (
-                      <span className="badge bg-info text-dark">
-                        <i className="fa-solid fa-users me-1"></i>
-                        {incident.equipo.nombre}
-                      </span>
+                      <div>
+                        <span className="badge bg-info text-dark me-2">
+                          <i className="fa-solid fa-users me-1"></i>
+                          {incident.equipo.nombre}
+                        </span>
+                        {incident.responsable?.nombre && (
+                          <span className="badge bg-secondary">
+                            <i className="fa-solid fa-user-tie me-1"></i>
+                            {incident.responsable.nombre}
+                          </span>
+                        )}
+                      </div>
                     ) : (
                       <span className="text-muted">Sin equipo</span>
                     )}
@@ -393,8 +431,8 @@ export function IncidentDetail({ incidentId: propIncidentId, onClose }: Incident
               {showTrackingForm && incident.estadoId !== 4 && (
                 <div className="mb-4 p-3 border rounded bg-light">
                   <h6 className="mb-3">
-                    <i className="fa-solid fa-circle-plus me-2"></i>
-                    Nuevo Seguimiento
+                    <i className={editingTrackingId ? "fa-solid fa-pen-to-square me-2" : "fa-solid fa-circle-plus me-2"}></i>
+                    {editingTrackingId ? 'Editar Seguimiento' : 'Nuevo Seguimiento'}
                   </h6>
                   <form onSubmit={handleSubmitTracking}>
                     <div className="row mb-3">
@@ -465,13 +503,14 @@ export function IncidentDetail({ incidentId: propIncidentId, onClose }: Incident
                     <div className="d-flex gap-2">
                       <button type="submit" className="btn btn-primary">
                         <i className="fa-solid fa-floppy-disk me-2"></i>
-                        Guardar Seguimiento
+                        {editingTrackingId ? 'Actualizar Seguimiento' : 'Guardar Seguimiento'}
                       </button>
                       <button
                         type="button"
                         className="btn btn-outline-secondary"
                         onClick={() => {
                           setShowTrackingForm(false);
+                          setEditingTrackingId(null);
                           setTrackingForm({ reporte: '', estadoId: undefined, equipoId: undefined });
                         }}
                       >
@@ -512,11 +551,22 @@ export function IncidentDetail({ incidentId: propIncidentId, onClose }: Incident
                                 {new Date(tracking.createdAt).toLocaleString('es-PE')}
                               </small>
                             </div>
-                            {tracking.estado && (
-                              <div>
-                                {getStatusBadge(tracking.estadoId)}
-                              </div>
-                            )}
+                            <div className="d-flex align-items-center gap-2">
+                              {tracking.estado && (
+                                <div>
+                                  {getStatusBadge(tracking.estadoId)}
+                                </div>
+                              )}
+                              {incident.estadoId !== 4 && (
+                                <button
+                                  className="btn btn-sm btn-outline-secondary py-0 px-2"
+                                  onClick={() => handleEditTracking(tracking)}
+                                  title="Editar seguimiento"
+                                >
+                                  <i className="fa-solid fa-pen"></i>
+                                </button>
+                              )}
+                            </div>
                           </div>
                           {tracking.equipo && (
                             <div className="mb-2">
@@ -566,19 +616,6 @@ export function IncidentDetail({ incidentId: propIncidentId, onClose }: Incident
                 <i className="fa-solid fa-xmark me-2"></i>
                 Cerrar
               </button>
-              {incident.estadoId !== 4 && (
-                <button 
-                  type="button" 
-                  className="btn btn-primary"
-                  onClick={() => {
-                    handleClose();
-                    navigate(`/incidents/${incident.id}/edit`);
-                  }}
-                >
-                  <i className="fa-solid fa-pen-to-square me-2"></i>
-                  Editar Incidencia
-                </button>
-              )}
             </div>
           </div>
         </div>
@@ -597,14 +634,6 @@ export function IncidentDetail({ incidentId: propIncidentId, onClose }: Incident
             <button className="btn btn-sm btn-outline-secondary" onClick={handleClose}>
               <i className="fa-solid fa-arrow-left me-1"></i> Volver
             </button>
-            {incident.estadoId !== 4 && (
-              <button 
-                className="btn btn-sm btn-primary"
-                onClick={() => navigate(`/incidents/${incident.id}/edit`)}
-              >
-                <i className="fa-solid fa-pen-to-square me-1"></i> Editar Incidencia
-              </button>
-            )}
           </div>
         }
       />

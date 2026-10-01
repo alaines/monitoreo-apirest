@@ -220,6 +220,7 @@ export class IncidentsService {
           },
         },
         equipo: true,
+        responsable: true,
         reportador: true,
         seguimientos: {
           orderBy: { createdAt: 'desc' },
@@ -713,6 +714,51 @@ export class IncidentsService {
     }
 
     return seguimiento;
+  }
+
+  async updateTracking(ticketId: number, trackingId: number, updateTrackingDto: any) {
+    const tracking = await this.prisma.ticketSeguimiento.findUnique({
+      where: { id: trackingId },
+    });
+
+    if (!tracking || tracking.ticketId !== ticketId) {
+      throw new NotFoundException(`Seguimiento con ID ${trackingId} no encontrado para la incidencia ${ticketId}`);
+    }
+
+    const { equipoId, responsableId, reporte, estadoId } = updateTrackingDto;
+    
+    const updateData: any = {
+      updatedAt: new Date(),
+    };
+
+    if (reporte !== undefined) updateData.reporte = reporte;
+    if (equipoId !== undefined) updateData.equipoId = equipoId;
+    if (responsableId !== undefined) updateData.responsableId = responsableId;
+    if (estadoId !== undefined) updateData.estadoId = estadoId;
+
+    const updatedTracking = await this.prisma.ticketSeguimiento.update({
+      where: { id: trackingId },
+      data: updateData,
+      include: {
+        estado: true,
+        equipo: true,
+        responsable: {
+          select: {
+            id: true,
+            nombre: true,
+          },
+        },
+      },
+    });
+
+    try {
+      const updatedTicket = await this.findOne(ticketId);
+      this.notificationsGateway.broadcastIncidentUpdated(updatedTicket);
+    } catch (error) {
+      console.error('Error broadcasting tracking update:', error);
+    }
+
+    return updatedTracking;
   }
 
   private async getCoordinates(ticketId: number): Promise<{ latitude: number; longitude: number } | null> {

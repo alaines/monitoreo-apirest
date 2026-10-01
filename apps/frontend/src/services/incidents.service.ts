@@ -271,6 +271,11 @@ class IncidentsService {
     const response = await api.post(`/incidents/${incidentId}/trackings`, data);
     return response.data;
   }
+
+  async updateTracking(incidentId: number, trackingId: number, data: Partial<CreateTrackingDto>): Promise<IncidentTracking> {
+    const response = await api.patch(`/incidents/${incidentId}/trackings/${trackingId}`, data);
+    return response.data;
+  }
 }
 
 export const incidentsService = new IncidentsService();

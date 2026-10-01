@@ -16,6 +16,7 @@ import { CreateIncidentDto } from './dto/create-incident.dto';
 import { UpdateIncidentDto } from './dto/update-incident.dto';
 import { QueryIncidentsDto } from './dto/query-incidents.dto';
 import { CreateTrackingDto } from './dto/create-tracking.dto';
+import { UpdateTrackingDto } from './dto/update-tracking.dto';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { CurrentUser } from '../common/decorators/current-user.decorator';
 
@@ -128,6 +129,18 @@ export class IncidentsController {
     @CurrentUser() user: any,
   ) {
     return this.incidentsService.createTracking(id, createTrackingDto, user.usuario);
+  }
+
+  @Patch(':id/trackings/:trackingId')
+  @ApiOperation({ summary: 'Actualizar un seguimiento de una incidencia' })
+  @ApiResponse({ status: 200, description: 'Seguimiento actualizado exitosamente' })
+  @ApiResponse({ status: 404, description: 'Incidencia o seguimiento no encontrado' })
+  updateTracking(
+    @Param('id', ParseIntPipe) id: number,
+    @Param('trackingId', ParseIntPipe) trackingId: number,
+    @Body() updateTrackingDto: UpdateTrackingDto,
+  ) {
+    return this.incidentsService.updateTracking(id, trackingId, updateTrackingDto);
   }
 
   @Get(':id')
