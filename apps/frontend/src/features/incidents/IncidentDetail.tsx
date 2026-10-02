@@ -97,11 +97,16 @@ export function IncidentDetail({ incidentId: propIncidentId, onClose }: Incident
     }
 
     try {
+      const submissionData = {
+        ...trackingForm,
+        reporte: trackingForm.reporte.toUpperCase(),
+      };
+
       if (editingTrackingId) {
-        await incidentsService.updateTracking(incidentId, editingTrackingId, trackingForm);
+        await incidentsService.updateTracking(incidentId, editingTrackingId, submissionData);
         toast.success('Seguimiento actualizado exitosamente');
       } else {
-        await incidentsService.createTracking(incidentId, trackingForm);
+        await incidentsService.createTracking(incidentId, submissionData);
         toast.success('Seguimiento registrado exitosamente');
       }
       setTrackingForm({ reporte: '', estadoId: undefined, equipoId: undefined, responsableId: undefined });
@@ -503,7 +508,7 @@ export function IncidentDetail({ incidentId: propIncidentId, onClose }: Incident
                         className="form-control custom-textarea"
                         rows={3}
                         value={trackingForm.reporte}
-                        onChange={(e) => setTrackingForm({ ...trackingForm, reporte: e.target.value.toUpperCase() })}
+                        onChange={(e) => setTrackingForm({ ...trackingForm, reporte: e.target.value })}
                         placeholder="DESCRIBE EL SEGUIMIENTO, ACCIONES TOMADAS, OBSERVACIONES..."
                         style={{ textTransform: 'uppercase' }}
                         required

@@ -72,10 +72,12 @@ export class ReportesService {
         equipo: true,
         reportador: true,
         estado: true,
+        responsable: true,
         seguimientos: {
           include: {
             estado: true,
             responsable: true,
+            equipo: true,
           },
           orderBy: {
             createdAt: 'desc',
@@ -144,21 +146,32 @@ export class ReportesService {
     const workbook = new ExcelJS.Workbook();
     const worksheet = workbook.addWorksheet('Reporte de Incidencias');
 
+    const [todasIncidencias, tiposPlataforma] = await Promise.all([
+      this.prisma.incidencia.findMany(),
+      this.prisma.tipo.findMany({ select: { id: true, name: true } }),
+    ]);
+    const incidenciasMap = new Map(todasIncidencias.map(i => [i.id, i]));
+    const plataformaMap = new Map(tiposPlataforma.map(tp => [tp.id, tp.name]));
+
     // Configurar columnas
     worksheet.columns = [
-      { header: 'Nro', key: 'nro', width: 8 },
-      { header: 'Fecha y Hora', key: 'fechaHora', width: 20 },
+      { header: 'Numero', key: 'nro', width: 8 },
+      { header: 'Numero de ticket', key: 'ticketId', width: 15 },
       { header: 'Incidencia', key: 'incidencia', width: 25 },
       { header: 'Tipo', key: 'tipo', width: 30 },
-      { header: 'Cruce', key: 'cruce', width: 40 },
-      { header: 'Asignado a', key: 'asignado', width: 20 },
-      { header: 'Detalle', key: 'detalle', width: 50 },
-      { header: 'Estado', key: 'estado', width: 20 },
-      { header: 'Día', key: 'dia', width: 12 },
-      { header: 'Mes', key: 'mes', width: 12 },
-      { header: 'Tiempo de Atención', key: 'tiempoAtencion', width: 20 },
-      { header: 'Administrador', key: 'administrador', width: 20 },
+      { header: 'Cruce / Intersección', key: 'cruce', width: 40 },
       { header: 'Distrito', key: 'distrito', width: 20 },
+      { header: 'Administrado por', key: 'administrador', width: 25 },
+      { header: 'Asignado a', key: 'asignado', width: 25 },
+      { header: 'Detalle', key: 'detalle', width: 50 },
+      { header: 'Operador', key: 'operador', width: 25 },
+      { header: 'Estado', key: 'estado', width: 20 },
+      { header: 'Fecha de registro', key: 'fechaRegistro', width: 20 },
+      { header: 'Fecha de ultimo estado', key: 'fechaUltimoEstado', width: 20 },
+      { header: 'Dia', key: 'dia', width: 10 },
+      { header: 'Mes', key: 'mes', width: 15 },
+      { header: 'Año', key: 'anio', width: 10 },
+      { header: 'Plataforma', key: 'plataforma', width: 15 },
     ];
 
     // Estilo del encabezado
@@ -173,25 +186,48 @@ export class ReportesService {
     // Agregar datos
     tickets.forEach((ticket, index) => {
       const fechaCreacion = ticket.createdAt ? new Date(ticket.createdAt) : new Date();
-      const fechaCierre = ticket.updatedAt && ticket.estadoId === 3 ? new Date(ticket.updatedAt) : null;
       const ultimoSeguimiento = ticket.seguimientos && ticket.seguimientos.length > 0 ? ticket.seguimientos[0] : null;
+      
+      let fechaUltimo = ticket.updatedAt ? new Date(ticket.updatedAt) : fechaCreacion;
+      if (ultimoSeguimiento?.createdAt && new Date(ultimoSeguimiento.createdAt) > fechaUltimo) {
+        fechaUltimo = new Date(ultimoSeguimiento.createdAt);
+      }
+
+      let incidenciaPadreNombre = 'Sin tipo';
+      let tipoHijoNombre = 'N/A';
+      if (ticket.incidencia) {
+        if (ticket.incidencia.parentId) {
+          const padre = incidenciasMap.get(ticket.incidencia.parentId);
+          incidenciaPadreNombre = padre?.tipo || 'Sin tipo';
+          tipoHijoNombre = ticket.incidencia.tipo || 'N/A';
+        } else {
+          incidenciaPadreNombre = ticket.incidencia.tipo || 'Sin tipo';
+          tipoHijoNombre = ticket.incidencia.tipo || 'N/A';
+        }
+      }
+
+      const plataformaNombre = ticket.cruce?.plataforma
+        ? (plataformaMap.get(ticket.cruce.plataforma) || 'N/A')
+        : 'N/A';
 
       worksheet.addRow({
         nro: index + 1,
-        fechaHora: fechaCreacion.toLocaleString('es-PE'),
-        incidencia: ticket.incidencia?.tipo || 'Sin tipo',
-        tipo: ticket.incidencia?.tipo || 'N/A',
-        cruce: ticket.cruce ? `${ticket.cruce.codigo} - ${ticket.cruce.nombre}` : 'N/A',
-        asignado: ultimoSeguimiento?.responsable?.nombre || ticket.equipo?.nombre || 'Sin asignar',
-        detalle: ticket.descripcion || 'Sin detalle',
-        estado: ticket.estado?.nombre || ultimoSeguimiento?.estado?.nombre || 'PENDIENTE',
-        dia: fechaCreacion.toLocaleDateString('es-PE', { weekday: 'long' }),
-        mes: fechaCreacion.toLocaleDateString('es-PE', { month: 'long' }),
-        tiempoAtencion: fechaCierre 
-          ? `${(Math.round(((fechaCierre.getTime() - fechaCreacion.getTime()) / (1000 * 60 * 60)) * 10) / 10)}h (${(Math.round(((fechaCierre.getTime() - fechaCreacion.getTime()) / (1000 * 60 * 60 * 24)) * 10) / 10)}d)` 
-          : 'N/A',
-        administrador: ticket.cruce?.administrador?.nombre || 'N/A',
+        ticketId: ticket.id,
+        incidencia: incidenciaPadreNombre,
+        tipo: tipoHijoNombre,
+        cruce: ticket.cruce ? (ticket.cruce.codigo ? `${ticket.cruce.codigo} - ${ticket.cruce.nombre}` : ticket.cruce.nombre) : 'N/A',
         distrito: ticket.cruce?.ubigeo?.distrito || 'N/A',
+        administrador: ticket.cruce?.administrador?.nombre || 'N/A',
+        asignado: ultimoSeguimiento?.equipo?.nombre || ticket.equipo?.nombre || 'Sin asignar',
+        detalle: ticket.descripcion || 'Sin detalle',
+        operador: ticket.usuarioRegistra || ticket.reportadorNombres || 'N/A',
+        estado: ticket.estado?.nombre || ultimoSeguimiento?.estado?.nombre || 'PENDIENTE',
+        fechaRegistro: fechaCreacion.toLocaleString('es-PE'),
+        fechaUltimoEstado: fechaUltimo.toLocaleString('es-PE'),
+        dia: ticket.dia ?? fechaCreacion.getDate(),
+        mes: ticket.mes ?? (fechaCreacion.getMonth() + 1),
+        anio: ticket.anho ?? fechaCreacion.getFullYear(),
+        plataforma: plataformaNombre,
       });
     });
 

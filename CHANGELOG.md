@@ -1,5 +1,14 @@
 # Changelog
 
+## [1.5.2] - 2026-10-02
+### Mejorado
+- Reestructuración de la exportación a Excel en Reporte de Incidencias con los 17 campos del sistema original (Incidencia padre, Tipo hijo, Cruce, Distrito, Administrado por, Asignado a equipo, Detalle, Operador, Estado, Fechas de registro y último estado, Día, Mes, Año y Plataforma semafórica).
+- Inclusión de marca de tiempo (`YYYYMMDD_HHmmss`) en nombres de archivos generados en Excel y PDF para evitar sobreescritura de descargas en el mismo día.
+
+### Corregido
+- Corrección de transformación a mayúsculas en formularios (`IncidentForm`, `IncidentDetail`, `UsersManagement`), eliminando el bloqueo/salto del cursor al final del texto mientras se escribe.
+- Eliminación del archivo temporal `bump.js` en la raíz del repositorio.
+
 ## [1.5.1] - 2026-10-02
 ### Agregado
 - Se agregó el distrito de la ubicación junto a la intersección en la vista de detalle de la incidencia.

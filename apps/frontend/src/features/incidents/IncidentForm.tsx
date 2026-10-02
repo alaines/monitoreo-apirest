@@ -245,10 +245,10 @@ export function IncidentForm({ incidentId, onClose, onSave }: IncidentFormProps)
         incidenciaId: parseInt(formData.incidenciaId),
         prioridadId: formData.prioridadId ? parseInt(formData.prioridadId) : undefined,
         cruceId: parseInt(formData.cruceId),
-        descripcion: formData.descripcion,
+        descripcion: formData.descripcion?.toUpperCase(),
         reportadorId: formData.reportadorId ? parseInt(formData.reportadorId) : undefined,
-        reportadorNombres: formData.reportadorNombres,
-        reportadorDatoContacto: formData.reportadorDatoContacto,
+        reportadorNombres: formData.reportadorNombres?.toUpperCase(),
+        reportadorDatoContacto: formData.reportadorDatoContacto?.toUpperCase(),
         equipoId: formData.equipoId ? parseInt(formData.equipoId) : undefined,
         responsableId: formData.responsableId ? parseInt(formData.responsableId) : undefined,
       };
@@ -442,7 +442,6 @@ export function IncidentForm({ incidentId, onClose, onSave }: IncidentFormProps)
                     rows={4}
                     value={formData.descripcion}
                     onChange={(e) => {
-                      e.target.value = e.target.value.toUpperCase();
                       handleChange(e);
                     }}
                     style={{ textTransform: 'uppercase' }}
@@ -472,7 +471,6 @@ export function IncidentForm({ incidentId, onClose, onSave }: IncidentFormProps)
                       name="reportadorNombres"
                       value={formData.reportadorNombres}
                       onChange={(e) => {
-                        e.target.value = e.target.value.toUpperCase();
                         handleChange(e);
                       }}
                       style={{ textTransform: 'uppercase' }}
@@ -487,7 +485,6 @@ export function IncidentForm({ incidentId, onClose, onSave }: IncidentFormProps)
                       name="reportadorDatoContacto"
                       value={formData.reportadorDatoContacto}
                       onChange={(e) => {
-                        e.target.value = e.target.value.toUpperCase();
                         handleChange(e);
                       }}
                       style={{ textTransform: 'uppercase' }}

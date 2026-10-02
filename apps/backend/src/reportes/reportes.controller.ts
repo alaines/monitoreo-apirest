@@ -36,8 +36,10 @@ export class ReportesController {
     @Res() res: Response,
   ) {
     const buffer = await this.reportesService.generarExcel(filtros);
-    
-    const filename = `reporte_incidencias_${new Date().toISOString().split('T')[0]}.xlsx`;
+    const now = new Date();
+    const pad = (n: number) => n.toString().padStart(2, '0');
+    const timestamp = `${now.getFullYear()}${pad(now.getMonth() + 1)}${pad(now.getDate())}_${pad(now.getHours())}${pad(now.getMinutes())}${pad(now.getSeconds())}`;
+    const filename = `reporte_incidencias_${timestamp}.xlsx`;
     res.set({
       'Content-Disposition': `attachment; filename="${filename}"`,
     });

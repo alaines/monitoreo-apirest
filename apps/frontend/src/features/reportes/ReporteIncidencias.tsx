@@ -338,8 +338,10 @@ export function ReporteIncidencias() {
       // Footer institucional en todas las páginas
       applyPdfFooters(doc);
       
-      const fecha = new Date().toISOString().split('T')[0];
-      doc.save(`reporte_incidencias_${fecha}.pdf`);
+      const now = new Date();
+      const pad = (n: number) => n.toString().padStart(2, '0');
+      const timestamp = `${now.getFullYear()}${pad(now.getMonth() + 1)}${pad(now.getDate())}_${pad(now.getHours())}${pad(now.getMinutes())}${pad(now.getSeconds())}`;
+      doc.save(`reporte_incidencias_${timestamp}.pdf`);
       toast.success('Reporte PDF descargado exitosamente');
     } catch (error: any) {
       console.error('Error exporting to PDF:', error);

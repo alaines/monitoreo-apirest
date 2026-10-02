@@ -292,30 +292,38 @@ export function UsersManagement() {
     setErrors('');
 
     try {
+      const submissionData = {
+        ...formData,
+        nroDoc: formData.nroDoc?.toUpperCase(),
+        nombres: formData.nombres?.toUpperCase(),
+        apellidoP: formData.apellidoP?.toUpperCase(),
+        apellidoM: formData.apellidoM?.toUpperCase(),
+      };
+
       if (editingUser) {
         const updateData: UpdateUserDto = {
-          usuario: formData.usuario,
-          tipoDocId: formData.tipoDocId,
-          nroDoc: formData.nroDoc,
-          nombres: formData.nombres,
-          apellidoP: formData.apellidoP,
-          apellidoM: formData.apellidoM,
-          fechaNacimiento: formData.fechaNacimiento || undefined,
-          genero: formData.genero,
-          estadoCivilId: formData.estadoCivilId,
-          email: formData.email || undefined,
-          telefono: formData.telefono || undefined,
-          grupoId: formData.grupoId,
-          areaId: formData.areaId,
-          estado: formData.estado
+          usuario: submissionData.usuario,
+          tipoDocId: submissionData.tipoDocId,
+          nroDoc: submissionData.nroDoc,
+          nombres: submissionData.nombres,
+          apellidoP: submissionData.apellidoP,
+          apellidoM: submissionData.apellidoM,
+          fechaNacimiento: submissionData.fechaNacimiento || undefined,
+          genero: submissionData.genero,
+          estadoCivilId: submissionData.estadoCivilId,
+          email: submissionData.email || undefined,
+          telefono: submissionData.telefono || undefined,
+          grupoId: submissionData.grupoId,
+          areaId: submissionData.areaId,
+          estado: submissionData.estado
         };
-        if (formData.password) {
-          updateData.password = formData.password;
+        if (submissionData.password) {
+          updateData.password = submissionData.password;
         }
         await usersService.update(editingUser.id, updateData);
         toast.success('Usuario actualizado exitosamente');
       } else {
-        await usersService.create(formData);
+        await usersService.create(submissionData);
         toast.success('Usuario creado exitosamente');
       }
       await loadData();
@@ -742,6 +750,7 @@ export function UsersManagement() {
                         className="form-control custom-input"
                         value={formData.nroDoc}
                         onChange={(e) => setFormData({ ...formData, nroDoc: e.target.value })}
+                        style={{ textTransform: 'uppercase' }}
                         required
                         maxLength={15}
                       />
@@ -765,6 +774,7 @@ export function UsersManagement() {
                         className="form-control custom-input"
                         value={formData.nombres}
                         onChange={(e) => setFormData({ ...formData, nombres: e.target.value })}
+                        style={{ textTransform: 'uppercase' }}
                         required
                       />
                     </div>
@@ -775,6 +785,7 @@ export function UsersManagement() {
                         className="form-control custom-input"
                         value={formData.apellidoP}
                         onChange={(e) => setFormData({ ...formData, apellidoP: e.target.value })}
+                        style={{ textTransform: 'uppercase' }}
                         required
                       />
                     </div>
@@ -785,6 +796,7 @@ export function UsersManagement() {
                         className="form-control custom-input"
                         value={formData.apellidoM}
                         onChange={(e) => setFormData({ ...formData, apellidoM: e.target.value })}
+                        style={{ textTransform: 'uppercase' }}
                         required
                       />
                     </div>
