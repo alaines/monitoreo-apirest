@@ -162,6 +162,11 @@ export class IncidentsService {
                   nombre: true,
                 },
               },
+              ubigeo: {
+                select: {
+                  distrito: true,
+                },
+              },
             },
           },
           equipo: true,
@@ -219,6 +224,11 @@ export class IncidentsService {
               select: {
                 id: true,
                 nombre: true,
+              },
+            },
+            ubigeo: {
+              select: {
+                distrito: true,
               },
             },
           },

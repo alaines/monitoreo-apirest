@@ -1,5 +1,10 @@
 # Changelog
 
+## [1.5.1] - 2026-10-02
+### Agregado
+- Se agregó el distrito de la ubicación junto a la intersección en la vista de detalle de la incidencia.
+
+
 ## [1.5.0] - 2026-10-01
 ### Mejorado
 - Los filtros de búsqueda en la Gestión de Incidencias ahora están visibles por defecto.

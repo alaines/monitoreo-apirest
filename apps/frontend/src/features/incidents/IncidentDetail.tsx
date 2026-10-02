@@ -304,13 +304,22 @@ export function IncidentDetail({ incidentId: propIncidentId, onClose }: Incident
               </div>
 
               <div className="row mb-3">
-                <div className="col-12">
+                <div className="col-md-8">
                   <label className="form-label text-muted small mb-1">
                     <i className="fa-solid fa-location-dot me-1"></i>
                     Intersección / Semáforo
                   </label>
                   <div className="fw-bold">
                     {incident.cruce?.nombre || <span className="text-muted">Sin intersección asignada</span>}
+                  </div>
+                </div>
+                <div className="col-md-4">
+                  <label className="form-label text-muted small mb-1">
+                    <i className="fa-solid fa-map me-1"></i>
+                    Distrito
+                  </label>
+                  <div className="fw-bold">
+                    {incident.cruce?.ubigeo?.distrito || <span className="text-muted">No especificado</span>}
                   </div>
                 </div>
               </div>
