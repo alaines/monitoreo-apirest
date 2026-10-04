@@ -17,10 +17,12 @@ export default defineConfig({
       output: {
         manualChunks: {
           'react-vendor': ['react', 'react-dom', 'react-router-dom'],
-          'ui-vendor': ['bootstrap', 'react-select'],
-          'map-vendor': ['leaflet'],
+          'ui-vendor': ['bootstrap', 'react-select', 'react-hot-toast'],
+          'map-vendor': ['leaflet', 'react-leaflet', 'leaflet.markercluster'],
+          'charts-vendor': ['chart.js', 'react-chartjs-2', 'apexcharts', 'react-apexcharts'],
           'reports-vendor': ['jspdf', 'jspdf-autotable'],
           'utils-vendor': ['axios', 'date-fns', 'zustand'],
+          'socket-vendor': ['socket.io-client'],
         },
       },
     },

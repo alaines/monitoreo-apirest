@@ -3,12 +3,12 @@ import { useEffect, useState, lazy, Suspense } from 'react';
 import { Toaster } from 'react-hot-toast';
 import { useAuthStore } from './features/auth/authStore';
 import { ProtectedRoute } from './components/ProtectedRoute';
-import { LoginPage } from './features/auth/pages/LoginPage';
 import { Layout } from './components/Layout';
-import { Inicio } from './pages/Inicio';
 import { ErrorBoundary } from './components/ErrorBoundary';
 
 // Lazy load de componentes
+const LoginPage = lazy(() => import('./features/auth/pages/LoginPage').then(m => ({ default: m.LoginPage })));
+const Inicio = lazy(() => import('./pages/Inicio').then(m => ({ default: m.Inicio })));
 const IncidentsList = lazy(() => import('./features/incidents/IncidentsList').then(m => ({ default: m.IncidentsList })));
 const IncidentForm = lazy(() => import('./features/incidents/IncidentForm').then(m => ({ default: m.IncidentForm })));
 const IncidentDetail = lazy(() => import('./features/incidents/IncidentDetail').then(m => ({ default: m.IncidentDetail })));
@@ -120,75 +120,77 @@ function App() {
           },
         }}
       />
-      <Routes>
-        <Route
-          path="/login"
-          element={isAuthenticated ? <Navigate to="/" replace /> : <LoginPage />}
-        />
-        
-        {/* Rutas protegidas con Layout compartido */}
-        <Route element={<ProtectedLayout />}>
-          <Route path="/" element={<Inicio />} />
-          <Route path="/incidents" element={<IncidentsList />} />
-          <Route path="/incidents/new" element={<IncidentForm incidentId={null} onClose={() => {}} onSave={() => {}} />} />
-          <Route path="/incidents/:id/edit" element={<IncidentForm incidentId={null} onClose={() => {}} onSave={() => {}} />} />
-          <Route path="/incidents/:id" element={<IncidentDetail />} />
-          <Route path="/cruces" element={<CrucesList />} />
-          <Route path="/cruces/mapa" element={<CrucesMap />} />
-          <Route path="/cruces/new" element={<CruceForm />} />
-          <Route path="/cruces/:id/edit" element={<CruceForm />} />
-          <Route path="/cruces/:id" element={<CruceDetail />} />
-          <Route path="/reportes/incidencias" element={<ReporteIncidencias />} />
-          <Route path="/reportes/grafico" element={<ReporteGrafico />} />
-          <Route path="/reportes/mapa" element={<MapaCalor />} />
-          <Route path="/reportes/bi-dashboard" element={<DashboardBI />} />
-          <Route path="/admin/users" element={<UsersManagement />} />
-          <Route path="/admin/grupos" element={<GruposPermisosManagement />} />
-          <Route path="/admin/menus" element={<MenusManagement />} />
-          <Route path="/admin/catalogos" element={<CatalogosManagement />} />
-          <Route path="/mantenimientos/tipos" element={<CatalogosManagement />} />
-          <Route path="/mantenimientos/areas" element={<AreasManagement />} />
-          <Route path="/mantenimientos/equipos" element={<EquiposManagement />} />
-          <Route path="/mantenimientos/reportadores" element={<ReportadoresManagement />} />
-          <Route path="/mantenimientos/responsables" element={<ResponsablesManagement />} />
-          <Route path="/mantenimientos/administradores" element={<AdministradoresManagement />} />
-          <Route path="/mantenimientos/ejes" element={<EjesManagement />} />
-          <Route path="/mantenimientos/proyectos" element={<ProyectosManagement />} />
-          <Route path="/mantenimientos/incidencias" element={<IncidenciasManagement />} />
-          <Route path="/perfil" element={<MiPerfil />} />
-          <Route path="/configuracion" element={<Configuracion />} />
+        <Suspense fallback={<LoadingFallback />}>
+          <Routes>
+            <Route
+              path="/login"
+              element={isAuthenticated ? <Navigate to="/" replace /> : <LoginPage />}
+            />
+            
+            {/* Rutas protegidas con Layout compartido */}
+            <Route element={<ProtectedLayout />}>
+              <Route path="/" element={<Inicio />} />
+              <Route path="/incidents" element={<IncidentsList />} />
+              <Route path="/incidents/new" element={<IncidentForm incidentId={null} onClose={() => {}} onSave={() => {}} />} />
+              <Route path="/incidents/:id/edit" element={<IncidentForm incidentId={null} onClose={() => {}} onSave={() => {}} />} />
+              <Route path="/incidents/:id" element={<IncidentDetail />} />
+              <Route path="/cruces" element={<CrucesList />} />
+              <Route path="/cruces/mapa" element={<CrucesMap />} />
+              <Route path="/cruces/new" element={<CruceForm />} />
+              <Route path="/cruces/:id/edit" element={<CruceForm />} />
+              <Route path="/cruces/:id" element={<CruceDetail />} />
+              <Route path="/reportes/incidencias" element={<ReporteIncidencias />} />
+              <Route path="/reportes/grafico" element={<ReporteGrafico />} />
+              <Route path="/reportes/mapa" element={<MapaCalor />} />
+              <Route path="/reportes/bi-dashboard" element={<DashboardBI />} />
+              <Route path="/admin/users" element={<UsersManagement />} />
+              <Route path="/admin/grupos" element={<GruposPermisosManagement />} />
+              <Route path="/admin/menus" element={<MenusManagement />} />
+              <Route path="/admin/catalogos" element={<CatalogosManagement />} />
+              <Route path="/mantenimientos/tipos" element={<CatalogosManagement />} />
+              <Route path="/mantenimientos/areas" element={<AreasManagement />} />
+              <Route path="/mantenimientos/equipos" element={<EquiposManagement />} />
+              <Route path="/mantenimientos/reportadores" element={<ReportadoresManagement />} />
+              <Route path="/mantenimientos/responsables" element={<ResponsablesManagement />} />
+              <Route path="/mantenimientos/administradores" element={<AdministradoresManagement />} />
+              <Route path="/mantenimientos/ejes" element={<EjesManagement />} />
+              <Route path="/mantenimientos/proyectos" element={<ProyectosManagement />} />
+              <Route path="/mantenimientos/incidencias" element={<IncidenciasManagement />} />
+              <Route path="/perfil" element={<MiPerfil />} />
+              <Route path="/configuracion" element={<Configuracion />} />
 
-          {/* Rutas heredadas de CakePHP / Redirecciones automáticas */}
-          <Route path="/mapas/red" element={<Navigate to="/cruces/mapa" replace />} />
-          <Route path="/intersecciones/cruces/*" element={<Navigate to="/cruces" replace />} />
-          <Route path="/intersecciones/cruces" element={<Navigate to="/cruces" replace />} />
-          <Route path="/intersecciones/tipos/*" element={<Navigate to="/mantenimientos/tipos" replace />} />
-          <Route path="/intersecciones/administradores/*" element={<Navigate to="/mantenimientos/administradores" replace />} />
-          <Route path="/intersecciones/ejes/*" element={<Navigate to="/mantenimientos/ejes" replace />} />
-          <Route path="/incidencia/tickets/*" element={<Navigate to="/incidents" replace />} />
-          <Route path="/incidencia/tickets" element={<Navigate to="/incidents" replace />} />
-          <Route path="/incidencia/reportes/*" element={<Navigate to="/reportes/incidencias" replace />} />
-          <Route path="/incidencia/reportes" element={<Navigate to="/reportes/incidencias" replace />} />
-          <Route path="/acceso/users/*" element={<Navigate to="/admin/users" replace />} />
-          <Route path="/acceso/users" element={<Navigate to="/admin/users" replace />} />
-          <Route path="/acceso/personas/*" element={<Navigate to="/admin/users" replace />} />
-          <Route path="/acceso/personas" element={<Navigate to="/admin/users" replace />} />
-          <Route path="/acceso/grupos/*" element={<Navigate to="/admin/grupos" replace />} />
-          <Route path="/acceso/grupos" element={<Navigate to="/admin/grupos" replace />} />
-          <Route path="/acceso/menus/*" element={<Navigate to="/admin/menus" replace />} />
-          <Route path="/acceso/menus" element={<Navigate to="/admin/menus" replace />} />
-          <Route path="/conteo/estadisticas/*" element={<Navigate to="/reportes/grafico" replace />} />
-          <Route path="/conteo/estadisticas" element={<Navigate to="/reportes/grafico" replace />} />
-          <Route path="/incidencia/areas/*" element={<Navigate to="/mantenimientos/areas" replace />} />
-          <Route path="/incidencia/equipos/*" element={<Navigate to="/mantenimientos/equipos" replace />} />
-          <Route path="/incidencia/reportadores/*" element={<Navigate to="/mantenimientos/reportadores" replace />} />
-          <Route path="/incidencia/responsables/*" element={<Navigate to="/mantenimientos/responsables" replace />} />
-          <Route path="/incidencia/proyectos/*" element={<Navigate to="/mantenimientos/proyectos" replace />} />
-          <Route path="/incidencia/incidencias/*" element={<Navigate to="/mantenimientos/incidencias" replace />} />
-        </Route>
+              {/* Rutas heredadas de CakePHP / Redirecciones automáticas */}
+              <Route path="/mapas/red" element={<Navigate to="/cruces/mapa" replace />} />
+              <Route path="/intersecciones/cruces/*" element={<Navigate to="/cruces" replace />} />
+              <Route path="/intersecciones/cruces" element={<Navigate to="/cruces" replace />} />
+              <Route path="/intersecciones/tipos/*" element={<Navigate to="/mantenimientos/tipos" replace />} />
+              <Route path="/intersecciones/administradores/*" element={<Navigate to="/mantenimientos/administradores" replace />} />
+              <Route path="/intersecciones/ejes/*" element={<Navigate to="/mantenimientos/ejes" replace />} />
+              <Route path="/incidencia/tickets/*" element={<Navigate to="/incidents" replace />} />
+              <Route path="/incidencia/tickets" element={<Navigate to="/incidents" replace />} />
+              <Route path="/incidencia/reportes/*" element={<Navigate to="/reportes/incidencias" replace />} />
+              <Route path="/incidencia/reportes" element={<Navigate to="/reportes/incidencias" replace />} />
+              <Route path="/acceso/users/*" element={<Navigate to="/admin/users" replace />} />
+              <Route path="/acceso/users" element={<Navigate to="/admin/users" replace />} />
+              <Route path="/acceso/personas/*" element={<Navigate to="/admin/users" replace />} />
+              <Route path="/acceso/personas" element={<Navigate to="/admin/users" replace />} />
+              <Route path="/acceso/grupos/*" element={<Navigate to="/admin/grupos" replace />} />
+              <Route path="/acceso/grupos" element={<Navigate to="/admin/grupos" replace />} />
+              <Route path="/acceso/menus/*" element={<Navigate to="/admin/menus" replace />} />
+              <Route path="/acceso/menus" element={<Navigate to="/admin/menus" replace />} />
+              <Route path="/conteo/estadisticas/*" element={<Navigate to="/reportes/grafico" replace />} />
+              <Route path="/conteo/estadisticas" element={<Navigate to="/reportes/grafico" replace />} />
+              <Route path="/incidencia/areas/*" element={<Navigate to="/mantenimientos/areas" replace />} />
+              <Route path="/incidencia/equipos/*" element={<Navigate to="/mantenimientos/equipos" replace />} />
+              <Route path="/incidencia/reportadores/*" element={<Navigate to="/mantenimientos/reportadores" replace />} />
+              <Route path="/incidencia/responsables/*" element={<Navigate to="/mantenimientos/responsables" replace />} />
+              <Route path="/incidencia/proyectos/*" element={<Navigate to="/mantenimientos/proyectos" replace />} />
+              <Route path="/incidencia/incidencias/*" element={<Navigate to="/mantenimientos/incidencias" replace />} />
+            </Route>
 
-        <Route path="*" element={<Navigate to="/" replace />} />
-      </Routes>
+            <Route path="*" element={<Navigate to="/" replace />} />
+          </Routes>
+        </Suspense>
     </BrowserRouter>
   </ErrorBoundary>
   );

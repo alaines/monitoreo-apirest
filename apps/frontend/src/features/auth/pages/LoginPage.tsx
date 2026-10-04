@@ -196,7 +196,7 @@ export function LoginPage() {
             className="h-100 w-100"
             style={{
               backgroundImage:
-                'url(/images/login/background.jpg), linear-gradient(135deg, #1e293b 0%, #0f172a 100%)',
+                'url(/images/login/background.webp), url(/images/login/background.jpg), linear-gradient(135deg, #1e293b 0%, #0f172a 100%)',
               backgroundSize: 'cover',
               backgroundPosition: 'center center',
               backgroundRepeat: 'no-repeat',

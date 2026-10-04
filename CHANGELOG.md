@@ -1,5 +1,32 @@
 # Changelog
 
+## [1.6.1] - 2026-10-04
+### Mejorado (Changed)
+- **Inicialización Inteligente del Mapa de Calor**: Configuración por defecto de período amplio (todo el año en curso y todas las prioridades) para garantizar visualización inmediata de datos térmicos al ingresar a la vista.
+- **Eliminación del Scroll Vertical (Cero Scroll)**: Ajuste estructural a `h-100 d-flex flex-column overflow-hidden`, eliminando desbordamientos y adaptando mapa + KPIs al 100% de la pantalla.
+- **Barra de Herramientas Compacta**: Integración de selectores de Año, Mes, Prioridad y Característica en una toolbar superior horizontal de 42px con filtros avanzados colapsables.
+- **Tarjeta de Estado Vacío (*Empty State Feedback*)**: Tarjeta informativa cuando un mes o combinación de filtros no tenga registros, con botón de acceso rápido para ver todo el año.
+- **Leyenda y Controles Optimizados**: Leyenda de gradiente de calor compacta en la esquina inferior derecha y botón flotante de centrado en Lima Metropolitana.
+
+## [1.6.0] - 2026-10-04
+### Agregado (Added)
+- **Agrupación Inteligente de Intersecciones (Marker Clustering)**: Implementación de clustering multinivel para las 1,551 intersecciones en red mediante `leaflet.markercluster` con conteos circulares, expansión automática (*spiderfy*) y carga fluida por bloques (*chunked loading*).
+- **Selector Rápido de Distrito**: Filtro instantáneo por distrito en el mapa de intersecciones para aislar zonas geográficas específicas de Lima Metropolitana.
+- **Tarjeta Flotante de Detalle Rápido (Quick Info Card)**: Vista previa flotante en la esquina inferior del mapa al seleccionar cualquier intersección, con botón directo a la ficha técnica completa.
+- **Controles de Mapa Flotantes**: Botón de centrado rápido en Lima Metropolitana y botón de alternancia entre modo agrupado (*clusters*) y visualización de todos los pines individuales.
+
+### Mejorado (Changed)
+- **Eliminación del Scroll Vertical (Cero Scroll)**: Rediseño del contenedor a `h-100 d-flex flex-column overflow-hidden`, ajustando milimétricamente el mapa al 100% de la altura útil del viewport.
+- **Barra de Herramientas Compacta**: Reemplazo del encabezado voluminoso por una toolbar de 42px que integra título, conteo dinámico, buscador rápido, selectores y filtros avanzados colapsables.
+- **Leyenda de Administradores Interactiva**: Leyenda flotante colapsable/minimizada que muestra el conteo de intersecciones por administrador y permite filtrar al hacer clic sobre cada entidad.
+
+## [1.5.3] - 2026-10-04
+### Mejorado (Changed)
+- **Optimización de rendimiento en red (Network & LCP)**: Reducción del tamaño de la imagen de fondo del Login de 3.0 MB a 216 KB con compresión moderna WebP y fallback optimizado (~92.8% de ahorro de ancho de banda).
+- **Eliminación de recursos bloqueantes y duplicados**: Removida la solicitud externa redundante a Leaflet CSS en `index.html` y los iconos remotos por defecto.
+- **Code-Splitting y Lazy Loading en Rutas**: Implementada carga diferida (`React.lazy` + `Suspense`) para `LoginPage`, `Inicio` y módulos principales, evitando descargar librerías de mapas (`leaflet`, `react-leaflet`, `leaflet.markercluster`) y WebSockets (`socket.io-client`) en la pantalla de autenticación.
+- **Optimización de Chunks en Vite**: Segmentación granular de vendors (`map-vendor`, `charts-vendor`, `socket-vendor`, `ui-vendor`, `utils-vendor`) para optimizar el almacenamiento en caché del navegador en entornos de producción.
+
 ## [1.5.2] - 2026-10-02
 ### Mejorado
 - Reestructuración de la exportación a Excel en Reporte de Incidencias con los 17 campos del sistema original (Incidencia padre, Tipo hijo, Cruce, Distrito, Administrado por, Asignado a equipo, Detalle, Operador, Estado, Fechas de registro y último estado, Día, Mes, Año y Plataforma semafórica).
