@@ -1,5 +1,10 @@
 # Changelog
 
+## [1.7.2] - 2026-10-05
+### Mejorado (Changed)
+- **Visualización Destacada de Ticket en Detalle de Incidencia**:
+  - Incorporación del número de ticket (`Ticket #{id}`) de manera visible y limpia en la cabecera del modal (`modal-header`) al lado de "Ver Incidencia" ([`IncidentDetail.tsx`](file:///home/alaines/monitoreo-apirest/apps/frontend/src/features/incidents/IncidentDetail.tsx)).
+
 ## [1.7.1] - 2026-10-05
 ### Agregado (Added)
 - **Aproximación Geográfica Automática de Intersecciones**:

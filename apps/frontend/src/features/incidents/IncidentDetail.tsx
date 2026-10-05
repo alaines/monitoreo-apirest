@@ -245,7 +245,7 @@ export function IncidentDetail({ incidentId: propIncidentId, onClose }: Incident
           {/* Información General */}
           <div className="card mb-3">
             <div className="card-body">
-              <h6 className="card-title mb-3 fw-bold">
+              <h6 className="card-title mb-3 border-bottom pb-2 fw-bold">
                 <i className="fa-solid fa-circle-info me-2 text-primary"></i>
                 Información General
               </h6>
@@ -615,11 +615,16 @@ export function IncidentDetail({ incidentId: propIncidentId, onClose }: Incident
       <div className="modal show d-block" style={{ backgroundColor: 'rgba(0,0,0,0.5)' }} onClick={handleClose}>
         <div className="modal-dialog modal-xl modal-dialog-scrollable" onClick={(e) => e.stopPropagation()}>
           <div className="modal-content">
-            <div className="modal-header bg-primary text-white">
-              <h5 className="modal-title">
-                <i className="fa-solid fa-eye me-2"></i>
-                Ver Incidencia
-              </h5>
+            <div className="modal-header bg-primary text-white d-flex align-items-center justify-content-between">
+              <div className="d-flex align-items-center gap-2">
+                <h5 className="modal-title mb-0">
+                  <i className="fa-solid fa-eye me-2"></i>
+                  Ver Incidencia
+                </h5>
+                <span className="badge bg-white text-primary fs-6 px-3 py-1 fw-bold shadow-sm">
+                  Ticket #{incident.id}
+                </span>
+              </div>
               <button type="button" className="btn-close btn-close-white" onClick={handleClose}></button>
             </div>
             <div className="modal-body">
