@@ -1,5 +1,14 @@
 # Changelog
 
+## [1.6.2] - 2026-10-05
+### Corregido (Fixed)
+- **Reforzamiento de Seguridad en `.gitignore`**: Bloqueo integral para evitar subidas accidentales de archivos de variables de entorno (`.env.*`), cargas de planos técnicos y archivos de usuarios (`uploads/planos/*`), artefactos de build (`*.tsbuildinfo`, `.eslintcache`), backups de base de datos (`*.dump`, `*.backup`, `*.sql` ad-hoc en raíz) y archivos de análisis pesados (`*.pbix`).
+- **Desvinculación Segura de Git Cache**: Removidos del seguimiento de Git los archivos `apps/frontend/.env.production`, `apps/frontend/tsconfig.tsbuildinfo`, archivos binarios de uploads en `apps/backend/uploads/planos/` y el archivo de análisis `archive/GMU - Reportes .pbix`, preservándolos intactos en disco local y servidores.
+- **Plantilla de Producción Segura**: Creación de `apps/frontend/.env.production.example` para guiar la configuración de endpoints sin exponer direcciones IP ni URLs internas de producción.
+
+### Mejorado (Changed)
+- **Documentación Central (`README.md`)**: Reestructuración y actualización integral documentando las nuevas capacidades incorporadas en v1.5.x y v1.6.x (Marker Clustering multinivel en cruces, Mapa de Calor Geoespacial Cero-Scroll, optimización WebP y code-splitting frontend, exportación oficial a Excel de 17 campos y políticas de seguridad).
+
 ## [1.6.1] - 2026-10-04
 ### Mejorado (Changed)
 - **Inicialización Inteligente del Mapa de Calor**: Configuración por defecto de período amplio (todo el año en curso y todas las prioridades) para garantizar visualización inmediata de datos térmicos al ingresar a la vista.

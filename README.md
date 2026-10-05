@@ -1,6 +1,6 @@
 # Sistema de Monitoreo de Semáforos e Incidencias
 
-[![Version](https://img.shields.io/badge/version-1.6.1-blue.svg)](./CHANGELOG.md)
+[![Version](https://img.shields.io/badge/version-1.6.2-blue.svg)](./CHANGELOG.md)
 [![License](https://img.shields.io/badge/license-MIT-green.svg)](./LICENSE)
 
 Sistema integral de gestión y monitoreo de intersecciones semaforizadas e incidencias de tráfico en tiempo real. Monorepo fullstack desarrollado con NestJS, React, PostgreSQL y PostGIS.
@@ -77,38 +77,6 @@ Ver [Manual de Instalación](docs/MANUAL_INSTALACION.md) para instalación manua
 
 Aplicación web profesional para la gestión, seguimiento y análisis de cruces semaforizados, periféricos asociados e incidencias de tráfico. Permite el registro completo de infraestructura vial, gestión de periféricos técnicos, seguimiento de incidencias ciudadanas, visualización geográfica mediante mapas interactivos con clustering por nivel de urgencia y paneles gerenciales de inteligencia de negocios (BI).
 
-## Capturas de Pantalla
-
-### 1. Pantalla de Inicio - Centro de Monitoreo con Clustering Jerárquico por Severidad
-![Inicio](docs/screenshots/inicio.PNG)
-
-### 2. Dashboard Ejecutivo BI (Power BI Style)
-![Dashboard Ejecutivo BI](docs/screenshots/dashboard_bi.PNG)
-
-### 3. Reportes Gráficos Estadísticos y Series Temporales
-![Reportes Gráficos](docs/screenshots/reporte_grafico.PNG)
-
-### 4. Mapa de Calor Geoespacial de Incidencias
-![Mapa de Calor](docs/screenshots/mapa_calor.PNG)
-
-### 5. Gestión y Seguimiento de Incidencias (Filtros Reactivos)
-![Gestión de Incidencias](docs/screenshots/gestion_incidencias.PNG)
-
-### 6. Detalle Técnico y Timeline de Incidencia
-![Detalle de Incidencia](docs/screenshots/detalle_incidencia.PNG)
-
-### 7. Gestión e Inventario de Intersecciones Semafóricas
-![Gestión de Cruces](docs/screenshots/gestion_cruces.PNG)
-
-### 8. Mapa de Red de Intersecciones
-![Mapa de Cruces](docs/screenshots/mapa_cruces.PNG)
-
-### 9. Ficha Técnica y Detalle de Cruce con Periféricos
-![Detalle de Cruce](docs/screenshots/detalle_cruce.PNG)
-
-### 10. Inicio de Sesión Institucional
-![Login](docs/screenshots/login.PNG)
-
 ## Características Principales
 
 ### Dashboard Ejecutivo BI (Power BI Style)
@@ -120,86 +88,60 @@ Aplicación web profesional para la gestión, seguimiento y análisis de cruces 
 - **Segmentación Multidimensional**: Slicers reactivos por Año, Mes, Distrito, Administrador y Equipo.
 - **Exportación Ejecutiva Corporativa**: Exportación a PDF en alta definición con membrete institucional y exportación a CSV.
 
-### Gestion de Cruces Semaforizados
-- Registro completo de intersecciones viales con informacion tecnica
-- Catalogacion jerarquica por tipo de cruce, gestion, operacion, control y comunicacion
-- Ubicacion geografica mediante coordenadas (latitud/longitud)
-- Administracion por entidades responsables (municipalidad, region, etc.)
-- Asociacion con distritos y ejes viales (avenidas, calles)
-- Carga de planos tecnicos en formatos PDF y DWG
-- Visualizacion geografica en mapa interactivo con filtros avanzados
-- Exportacion de fichas tecnicas a PDF
-- Informacion detallada de infraestructura electrica
+### Gestión de Cruces Semaforizados
+- **Inventario Completo de Intersecciones**: Registro técnico de cruces viales, catalogación jerárquica por tipo de cruce, gestión, operación, control y comunicación.
+- **Ubicación Geográfica y Red**: Coordenadas espaciales (latitud/longitud) con integración PostGIS y asociación a distritos y ejes viales.
+- **Clustering Inteligente de Red (v1.6.0)**: Agrupación visual multinivel para 1,551 cruces con `leaflet.markercluster`, expansión animada (*spiderfy*), alternancia dinámica entre modo agrupado y pines individuales, y centrado rápido en Lima Metropolitana.
+- **Selector Rápido de Distrito y Tarjeta Flotante (*Quick Info Card*)**: Filtro instantáneo por distrito y tarjeta flotante interactiva para inspección preliminar con enlace directo a la ficha técnica.
+- **Gestión Documental**: Subida y visualización de planos técnicos en PDF y CAD (DWG), e infraestructura eléctrica detallada.
 
-### Gestion de Perifericos
-- Inventario completo de dispositivos tecnicos asociados a cruces
-- Clasificacion por tipo (controladores, camaras, detectores, GPS, UPS, etc.)
-- Registro de fabricante, modelo y numero de serie
-- Configuracion de red (IP, credenciales de acceso)
-- Control de garantias y estados operacionales
-- Asociacion multiple periferico-cruce
-- Visualizacion de detalles con proteccion de credenciales sensibles
-- Sistema de gestion de passwords con opcion de mostrar/ocultar
+### Gestión de Periféricos
+- Inventario completo de dispositivos técnicos asociados a cruces.
+- Clasificación por tipo (controladores, cámaras, detectores, GPS, UPS, etc.).
+- Registro de fabricante, modelo y número de serie.
+- Configuración de red (IP, credenciales de acceso).
+- Control de garantías y estados operacionales.
+- Asociación múltiple periférico-cruce.
+- Visualización de detalles con protección de credenciales sensibles y alternancia para mostrar/ocultar contraseñas.
 
-### Gestion de Incidencias
-- Registro y catalogacion de incidencias de trafico y fallas en cruces
-- Sistema de prioridades (Alta, Media, Baja)
-- Asignacion a equipos tecnicos especializados
-- Seguimiento del ciclo de vida completo
-- Heredamiento automatico de coordenadas desde cruces
-- Calculo automatico de tiempo transcurrido con alertas visuales
-- Sistema de tracking con timeline visual y historial completo
-- Restriccion de modificaciones en incidencias finalizadas
-- Filtros avanzados con busqueda de tipo y seleccion multiple de estados
-- Monitoreo especial de "Cruces Apagados" en dashboard
-- Notificaciones en tiempo real para incidencias criticas
+### Gestión de Incidencias
+- Registro y catalogación de incidencias de tráfico y fallas operativas en cruces.
+- Sistema de prioridades (Alta, Media, Baja) con cálculo automático de tiempo transcurrido y alertas visuales.
+- Asignación a equipos técnicos especializados y seguimiento del ciclo de vida completo.
+- Heredamiento automático de coordenadas espaciales desde cruces.
+- Sistema de tracking con timeline visual e historial auditable.
+- Restricción de modificaciones en incidencias finalizadas.
+- Monitoreo especial de "Cruces Apagados" con alertas en tiempo real.
 
-### Mapas Interactivos
-- **Clustering Visual Jerárquico por Severidad**: Agrupación inteligente con `leaflet.markercluster` y jerarquía de colores (Rojo para crítico, Ámbar para medio, Azul marino para normal/bajo)
-- **Desagrupación Dinámica por Zoom**: Transiciones suaves entre burbujas consolidadas y marcadores individuales
-- **Marcadores Individuales Temáticos**: Triángulo de advertencia rojo (`fa-triangle-exclamation`) para incidentes críticos y semáforo azul (`fa-traffic-light`) para operativos
-- **Popups Interactivos Bootstrap 5**: Ficha técnica con código de cruce, vías, distrito, severidad, estado y botón de gestión rápida
-- **Filtrado Dinámico en Tiempo Real**: Filtrado SQL optimizado por año, mes (con selección actual por defecto) y administrador
-- **Filtro Estricto de Incidencias Activas**: Exclusión de tickets resueltos y cancelados en el mapa de monitoreo en vivo
-- Capas cartográficas de OpenStreetMap optimizadas para visualización urbana rápida
+### Mapas Interactivos y Análisis Geoespacial
+- **Centro de Monitoreo en Vivo (Inicio)**:
+  * Clustering jerárquico por severidad (`leaflet.markercluster`): Rojo (Crítico), Ámbar (Medio) y Azul marino (Normal/Bajo).
+  * Marcadores temáticos individuales con FontAwesome 6 (`fa-triangle-exclamation` y `fa-traffic-light`).
+  * Popups interactivos Bootstrap 5 con ficha técnica, vías, distrito y botón de gestión rápida.
+- **Mapa de Cruces en Red**:
+  * Visualización integral de los 1,551 cruces de Lima Metropolitana.
+  * Agrupación circular con conteo dinámico, filtrado reactivo por distrito, leyenda interactiva por administrador y controles flotantes.
+- **Mapa de Calor Geoespacial de Incidencias (v1.6.1)**:
+  * Diseño **Cero Scroll** (`h-100 overflow-hidden`) adaptado al 100% de la pantalla para salas de control.
+  * Toolbar compacta de 42px con selectores sincronizados de Año, Mes, Prioridad y Característica.
+  * Retroalimentación visual de estado vacío (*Empty State Feedback*) con botón directo para consultar todo el año.
+  * Leyenda de gradiente de calor compacta y botón de centrado.
 
-### Dashboard Analitico
-- Estadisticas en tiempo real de incidencias
-- Filtros por periodo temporal (Hoy, Semana, Mes, Ano, Todas)
-- Indicadores de rendimiento (KPIs): activas, pendientes, en progreso
-- Metricas de tiempo promedio de resolucion
-- Card especial "Cruces Apagados" con contador en vivo
-- Integracion con mapas para analisis espacial
-- Sistema de notificaciones en tiempo real con WebSockets
-- Campana de notificaciones con contador de alertas no leidas
+### Optimización y Rendimiento Web (v1.5.3)
+- **Code-Splitting y Carga Diferida**: Implementación de `React.lazy` y `Suspense` en rutas secundarias, evitando transferir librerías pesadas en la pantalla de autenticación.
+- **Assets Modernos Comprimidos**: Reducción de imágenes de fondo a formato WebP optimizado (~93% de ahorro de ancho de banda).
+- **Segmentación Granular de Bundles en Vite**: Separación de vendors (`map-vendor`, `charts-vendor`, `socket-vendor`, `ui-vendor`, `reports-vendor`) para máxima eficiencia de caché en producción.
 
-### Sistema de Reportes
-- **Reporte de Incidencias**: Estadisticas detalladas con exportacion a PDF
-- **Reporte Grafico**: Visualizacion con Chart.js (5 graficos interactivos)
-  * Grafico de torta: Incidencias por tipo (filtradas por "PROBLEMA - CRUCE")
-  * Grafico de barras: Top 10 cruces con mas incidencias
-  * Grafico de barras: Distribucion por estado
-  * Grafico de lineas: Evolucion temporal adaptativa (hora/dia/mes segun periodo)
-  * Grafico de barras comparativo: Top 5 averias (atendidas vs por atender)
-- Filtros dinamicos: Dia, Mes, Ano con seleccion intuitiva
-- Exportacion a PDF con graficos visuales (no tablas)
-- Clasificacion de estados: Atendidas (ATENDIDO, CERRADO, FINALIZADO, RESUELTO, COMPLETADO)
-- Exportacion a Excel con formato consolidado (matriz cruces x tipos)
+### Sistema de Reportes y Exportación
+- **Reporte de Incidencias con Estándar Municipal (v1.5.2)**: Exportación a Excel estructurada en 17 columnas idénticas al sistema de control oficial.
+- **Nombres de Archivo con Timestamp**: Inclusión de marca de tiempo (`YYYYMMDD_HHmmss`) en descargas Excel y PDF para evitar sobreescrituras accidentales.
+- **Reporte Gráfico Estadístico**: 5 gráficos analíticos interactivos con Chart.js (distribución por tipo, top 10 cruces con incidencias, estados, evolución temporal y top averías atendidas vs pendientes).
+- **Exportación Ejecutiva a PDF**: Generación de documentos corporativos con encabezado institucional y tablas estilizadas.
 
-### Sistema de Autenticacion
-- Autenticacion JWT segura con tokens de larga duracion
-- Control de acceso basado en roles (RBAC)
-- Gestion de usuarios con permisos granulares
-- Sesiones persistentes y proteccion de rutas
-
-### Interfaz de Usuario
-- Diseno responsive profesional con Bootstrap 5
-- Menu lateral con submenus expandibles (cruces con gestion y mapa)
-- Formularios con validacion en tiempo real
-- Tooltips descriptivos en acciones criticas
-- Modales para visualizacion de contenido detallado
-- Conversion automatica a mayusculas para consistencia
-- Exportacion de documentos PDF con fichas tecnicas
+### Seguridad y Gestión de Repositorio (v1.6.2)
+- **Política Estricta de `.gitignore`**: Exclusión automática de archivos de entorno (`.env.*`), cargas de planos de usuario (`uploads/`), dumps de base de datos (`*.dump`, `*.sql` ad-hoc), artefactos de build (`*.tsbuildinfo`, `dist/`), claves SSH y archivos pesados de análisis (`*.pbix`).
+- **Autenticación JWT y RBAC**: Tokens JWT seguros, sesiones persistentes, control de acceso por roles y permisos granulares.
+- **Protección contra Inyección SQL y Sanitización**: Consultas tipadas y parametrizadas mediante Prisma ORM y validación con `class-validator`.
 
 ## Arquitectura Tecnica
 

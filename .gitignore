@@ -1,74 +1,49 @@
-# Dependencies
+# ==========================================
+# DEPENDENCIAS
+# ==========================================
 node_modules/
 .pnp
 .pnp.js
 
-# Testing
-coverage/
-*.lcov
-
-# Production
+# ==========================================
+# COMPILACIÓN Y PRODUCCIÓN
+# ==========================================
 dist/
 build/
 .next/
 out/
-
-# Environment variables
-.env
-.env.local
-.env.development.local
-.env.test.local
-.env.production.local
-
-# Logs
-logs/
-*.log
-npm-debug.log*
-yarn-debug.log*
-yarn-error.log*
-lerna-debug.log*
-.pnpm-debug.log*
-
-# IDE & Agents
-.vscode/*
-!.vscode/extensions.json
-!.vscode/settings.json
-.idea/
-.agents/
-.antigravity/
-*.swp
-*.swo
-*~
-.DS_Store
 *.tsbuildinfo
+*.buildinfo
+.eslintcache
+.parcel-cache
 
-# Prisma
-prisma/migrations/
-*.db
-*.db-journal
+# ==========================================
+# VARIABLES DE ENTORNO Y SECRETOS
+# ==========================================
+# Ignorar todos los archivos de entorno
+.env
+.env.*
+# Permitir únicamente plantillas de ejemplo
+!.env.example
+!*.env.example
+!**/.env.example
+!**/.env.*.example
 
-# Docker
-.docker/
+# Credenciales y archivos sensibles
+credentials.json
+secrets.json
+*.secret
+*.secrets
+**/secrets/
+**/credentials/
+.htpasswd
+.netrc
+.pgpass
+.my.cnf
+.npmrc
+.pypirc
 
-# Temporary files
-*.tmp
-.cache/
-.turbo/
-
-# Backups
-*.backup
-*.bak
-backups/
-*.sql
-!database/**/*.sql
-!scripts/**/*.sql
-
-
-# OS
-Thumbs.db
-.DS_Store
-
-# Sensitive files - Private keys and credentials
+# Claves privadas, certificados y configuraciones SSH
 *.ppk
 *.pem
 *.key
@@ -84,25 +59,89 @@ id_dsa
 id_dsa.pub
 *.crt
 *.cer
-
-# Credentials and secrets
-credentials.json
-secrets.json
-*.secret
-*.secrets
-**/secrets/
-**/credentials/
-.htpasswd
-.netrc
-.pgpass
-.my.cnf
-.npmrc
-.pypirc
-
-# SSH config with host info
+docker/nginx/ssl/*.crt
+docker/nginx/ssl/*.key
+docker/nginx/ssl/*.pem
+!docker/nginx/ssl/.gitkeep
 ssh_config
 config.ssh
 
-# Database dumps with potential credentials
-*.sql.gz
+# ==========================================
+# UPLOADS Y ARCHIVOS DE USUARIOS
+# ==========================================
+apps/backend/uploads/**/*
+!apps/backend/uploads/**/.gitkeep
+storage/**/*
+!storage/**/.gitkeep
+
+# ==========================================
+# BASE DE DATOS Y BACKUPS
+# ==========================================
 *.dump
+*.backup
+*.bak
+*.sql.gz
+*.sql.tar
+*.sql.tar.gz
+backups/
+backup/
+# Ignorar archivos SQL ad-hoc en la raíz, permitiendo solo database/ y scripts/
+*.sql
+!database/**/*.sql
+!scripts/**/*.sql
+
+# Prisma
+prisma/migrations/
+*.db
+*.db-journal
+*.sqlite
+*.sqlite3
+
+# ==========================================
+# ARCHIVOS BINARIOS Y DISEÑOS PESADOS
+# ==========================================
+*.pbix
+*.pbit
+
+# ==========================================
+# TESTING Y COBERTURA
+# ==========================================
+coverage/
+*.lcov
+
+# ==========================================
+# LOGS
+# ==========================================
+logs/
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+lerna-debug.log*
+.pnpm-debug.log*
+
+# ==========================================
+# HERRAMIENTAS, IDEs Y AGENTES
+# ==========================================
+.vscode/*
+!.vscode/extensions.json
+!.vscode/settings.json
+.idea/
+.agents/
+.antigravity/
+*.swp
+*.swo
+*~
+.docker/
+.cache/
+.turbo/
+
+# ==========================================
+# ARCHIVOS TEMPORALES Y SISTEMA OPERATIVO
+# ==========================================
+*.tmp
+*.temp
+tmp/
+temp/
+.DS_Store
+Thumbs.db
