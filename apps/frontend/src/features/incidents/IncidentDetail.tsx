@@ -11,6 +11,7 @@ import {
   ResponsableCatalog
 } from '../../services/incidents.service';
 import { PageHeader } from '../../components/ui/PageHeader';
+import { usePermissions } from '../../hooks/usePermissions';
 
 interface IncidentDetailProps {
   incidentId?: number;
@@ -19,6 +20,7 @@ interface IncidentDetailProps {
 
 export function IncidentDetail({ incidentId: propIncidentId, onClose }: IncidentDetailProps) {
   const navigate = useNavigate();
+  const { canEdit } = usePermissions();
   const params = useParams<{ id: string }>();
   
   // Usar el ID de las props si existe, sino del parámetro de la URL
@@ -426,7 +428,7 @@ export function IncidentDetail({ incidentId: propIncidentId, onClose }: Incident
                   <i className="fa-solid fa-clock-rotate-left me-2 text-primary"></i>
                   Historial de Seguimientos
                 </h6>
-                {incident.estadoId !== 4 ? (
+                {canEdit && (incident.estadoId !== 4 ? (
                   <button
                     className="btn btn-sm btn-primary"
                     onClick={() => setShowTrackingForm(!showTrackingForm)}
@@ -439,10 +441,16 @@ export function IncidentDetail({ incidentId: propIncidentId, onClose }: Incident
                     <i className="fa-solid fa-circle-check me-1"></i>
                     Incidencia Finalizada
                   </span>
+                ))}
+                {!canEdit && incident.estadoId === 4 && (
+                  <span className="badge bg-success">
+                    <i className="fa-solid fa-circle-check me-1"></i>
+                    Incidencia Finalizada
+                  </span>
                 )}
               </div>
               {/* Formulario de nuevo seguimiento */}
-              {showTrackingForm && incident.estadoId !== 4 && (
+              {canEdit && showTrackingForm && incident.estadoId !== 4 && (
                 <div className="mb-4 p-3 border rounded bg-light">
                   <h6 className="mb-3">
                     <i className={editingTrackingId ? "fa-solid fa-pen-to-square me-2" : "fa-solid fa-circle-plus me-2"}></i>
@@ -571,7 +579,7 @@ export function IncidentDetail({ incidentId: propIncidentId, onClose }: Incident
                                   {getStatusBadge(tracking.estadoId)}
                                 </div>
                               )}
-                              {incident.estadoId !== 4 && (
+                              {canEdit && incident.estadoId !== 4 && (
                                 <button
                                   className="btn btn-sm btn-outline-secondary py-0 px-2"
                                   onClick={() => handleEditTracking(tracking)}

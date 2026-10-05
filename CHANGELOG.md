@@ -1,5 +1,14 @@
 # Changelog
 
+## [1.7.3] - 2026-10-05
+### Corregido (Fixed)
+- **Restricción de Acciones de Edición para Perfil Consultas**:
+  - Creación del hook centralizado [`usePermissions.ts`](file:///home/alaines/monitoreo-apirest/apps/frontend/src/hooks/usePermissions.ts) para validar permisos de mutación de registros (`canEdit`) respetando el atributo `edicion` de la tabla `grupos` y restringiendo usuarios del grupo `CONSULTAS` y `PUBLICO`.
+  - **Ficha Técnica de Intersección ([`CruceDetail.tsx`](file:///home/alaines/monitoreo-apirest/apps/frontend/src/features/cruces/CruceDetail.tsx))**: Se ocultaron el botón de "Editar", el botón de agregar periféricos (`+`) y el botón de eliminar periféricos para perfiles sin privilegios de edición.
+  - **Listado de Intersecciones ([`CrucesList.tsx`](file:///home/alaines/monitoreo-apirest/apps/frontend/src/features/cruces/CrucesList.tsx))**: Se ocultaron los botones "Nueva Intersección" y "Editar" en la tabla.
+  - **Módulo de Incidencias ([`IncidentsList.tsx`](file:///home/alaines/monitoreo-apirest/apps/frontend/src/features/incidents/IncidentsList.tsx), [`IncidentDetail.tsx`](file:///home/alaines/monitoreo-apirest/apps/frontend/src/features/incidents/IncidentDetail.tsx))**: Se condicionaron "Nueva Incidencia", "Editar" y "Agregar/Editar Seguimiento" a perfiles autorizados.
+  - **Backend ([`auth.service.ts`](file:///home/alaines/monitoreo-apirest/apps/backend/src/auth/auth.service.ts))**: Inclusión del campo `edicion` en las consultas de autenticación y perfil de usuario.
+
 ## [1.7.2] - 2026-10-05
 ### Mejorado (Changed)
 - **Visualización Destacada de Ticket en Detalle de Incidencia**:

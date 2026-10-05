@@ -10,6 +10,7 @@ import { useNavigate, useParams } from 'react-router-dom';
 import { crucesService, perifericosService, Cruce, Periferico, CrucePeriferico } from '../../services/cruces.service';
 import { tiposService, Tipo } from '../../services/tipos.service';
 import { drawPdfHeader, applyPdfFooters, getPdfTableStyles, PDF_COLORS } from '../../utils/pdfReportHelper';
+import { usePermissions } from '../../hooks/usePermissions';
 
 interface CruceDetailProps {
   cruceId?: number;
@@ -182,6 +183,7 @@ export function CruceDetail({ cruceId, onClose }: CruceDetailProps) {
     };
   const navigate = useNavigate();
   const params = useParams();
+  const { canEdit } = usePermissions();
   const id = cruceId ?? (params.id ? parseInt(params.id) : undefined);
   const [cruce, setCruce] = useState<Cruce | null>(null);
   const [loading, setLoading] = useState(true);
@@ -481,14 +483,16 @@ export function CruceDetail({ cruceId, onClose }: CruceDetailProps) {
               </div>
             </div>
             <div className="card-footer bg-white border-top-0 pt-3 d-flex gap-2">
-              <button className="btn btn-outline-primary" onClick={() => {
-                if (cruceId && onClose) {
-                  onClose();
-                }
-                navigate(`/cruces/${id}/edit`);
-              }}>
-                <i className="fa-solid fa-pen-to-square me-1"></i> Editar
-              </button>
+              {canEdit && (
+                <button className="btn btn-outline-primary" onClick={() => {
+                  if (cruceId && onClose) {
+                    onClose();
+                  }
+                  navigate(`/cruces/${id}/edit`);
+                }}>
+                  <i className="fa-solid fa-pen-to-square me-1"></i> Editar
+                </button>
+              )}
               <button className="btn btn-outline-secondary" onClick={() => {
                 if (cruceId && onClose) {
                   onClose();
@@ -508,9 +512,11 @@ export function CruceDetail({ cruceId, onClose }: CruceDetailProps) {
                 <i className="fa-solid fa-microchip me-2"></i>
                 Periféricos ({perifericos.length})
               </span>
-              <button className="btn btn-sm btn-outline-primary" onClick={() => setShowAddModal(true)}>
-                <i className="fa-solid fa-plus"></i>
-              </button>
+              {canEdit && (
+                <button className="btn btn-sm btn-outline-primary" onClick={() => setShowAddModal(true)}>
+                  <i className="fa-solid fa-plus"></i>
+                </button>
+              )}
             </div>
             <div className="card-body p-0">
               {perifericos.length === 0 ? (
@@ -537,13 +543,15 @@ export function CruceDetail({ cruceId, onClose }: CruceDetailProps) {
                           >
                             <i className="fa-solid fa-eye"></i>
                           </button>
-                          <button
-                            className="btn btn-sm btn-outline-danger"
-                            onClick={() => handleRemovePeriferico(cp.perifericoId)}
-                            title="Eliminar"
-                          >
-                            <i className="fa-solid fa-xmark"></i>
-                          </button>
+                          {canEdit && (
+                            <button
+                              className="btn btn-sm btn-outline-danger"
+                              onClick={() => handleRemovePeriferico(cp.perifericoId)}
+                              title="Eliminar"
+                            >
+                              <i className="fa-solid fa-xmark"></i>
+                            </button>
+                          )}
                         </div>
                       </div>
                     </li>
@@ -556,7 +564,7 @@ export function CruceDetail({ cruceId, onClose }: CruceDetailProps) {
       </div>
 
       {/* Modal Agregar Periférico */}
-      {showAddModal && (
+      {canEdit && showAddModal && (
         <div className="modal show d-block" tabIndex={-1} style={{ backgroundColor: 'rgba(0,0,0,0.5)' }}>
           <div className="modal-dialog modal-lg">
             <div className="modal-content">

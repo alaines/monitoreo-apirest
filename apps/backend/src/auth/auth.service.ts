@@ -28,6 +28,7 @@ export class AuthService {
           select: {
             id: true,
             nombre: true,
+            edicion: true,
           },
         },
       },
@@ -137,6 +138,7 @@ export class AuthService {
           select: {
             id: true,
             nombre: true,
+            edicion: true,
           },
         },
       },

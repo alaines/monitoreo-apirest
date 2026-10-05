@@ -5,6 +5,7 @@ import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
 import { drawPdfHeader, applyPdfFooters, drawPdfMetadata, drawPdfKpiCards, getPdfTableStyles, PDF_COLORS } from '../../utils/pdfReportHelper';
 import { useAuthStore } from '../auth/authStore';
+import { usePermissions } from '../../hooks/usePermissions';
 import { customSelectStylesSmall } from '../../styles/react-select-custom';
 import { crucesService, Cruce } from '../../services/cruces.service';
 import { CruceDetail } from './CruceDetail';
@@ -15,7 +16,7 @@ type SortField = 'codigo' | 'nombre' | 'distrito' | 'estado';
 type SortOrder = 'asc' | 'desc';
 
 export function CrucesList() {
-  const { user } = useAuthStore();
+  const { user, canEdit } = usePermissions();
   const [cruces, setCruces] = useState<Cruce[]>([]);
   const [loading, setLoading] = useState(true);
   const [page, setPage] = useState(1);
@@ -422,17 +423,19 @@ export function CrucesList() {
               {showFilters ? 'Ocultar Filtros' : 'Filtros'}
             </button>
 
-            <button 
-              className="btn btn-sm btn-primary"
-              onClick={() => {
-                setSelectedCruceId(null);
-                setFormMode('create');
-                setFormModalOpen(true);
-              }}
-            >
-              <i className="fa-solid fa-plus me-1"></i>
-              Nueva Intersección
-            </button>
+            {canEdit && (
+              <button 
+                className="btn btn-sm btn-primary"
+                onClick={() => {
+                  setSelectedCruceId(null);
+                  setFormMode('create');
+                  setFormModalOpen(true);
+                }}
+              >
+                <i className="fa-solid fa-plus me-1"></i>
+                Nueva Intersección
+              </button>
+            )}
           </div>
         }
       />
@@ -628,17 +631,19 @@ export function CrucesList() {
                           >
                             <i className="fa-solid fa-eye"></i>
                           </button>
-                          <button
-                            className="btn btn-sm btn-outline-warning py-0 px-2"
-                            onClick={() => {
-                              setSelectedCruceId(cruce.id);
-                              setFormMode('edit');
-                              setFormModalOpen(true);
-                            }}
-                            title="Editar"
-                          >
-                            <i className="fa-solid fa-pen-to-square"></i>
-                          </button>
+                          {canEdit && (
+                            <button
+                              className="btn btn-sm btn-outline-warning py-0 px-2"
+                              onClick={() => {
+                                setSelectedCruceId(cruce.id);
+                                setFormMode('edit');
+                                setFormModalOpen(true);
+                              }}
+                              title="Editar"
+                            >
+                              <i className="fa-solid fa-pen-to-square"></i>
+                            </button>
+                          )}
                         </td>
                       </tr>
                     ))}

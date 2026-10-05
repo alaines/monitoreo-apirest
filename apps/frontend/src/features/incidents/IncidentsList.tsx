@@ -6,6 +6,7 @@ import { incidentsService, Incident } from '../../services/incidents.service';
 import { IncidentDetail } from './IncidentDetail';
 import { IncidentForm } from './IncidentForm';
 import { PageHeader } from '../../components/ui/PageHeader';
+import { usePermissions } from '../../hooks/usePermissions';
 
 interface Filters {
   incidenciaId?: number;
@@ -20,6 +21,7 @@ type SortOrder = 'asc' | 'desc';
 
 export function IncidentsList() {
   const navigate = useNavigate();
+  const { canEdit } = usePermissions();
   const [searchParams] = useSearchParams();
   const [incidents, setIncidents] = useState<Incident[]>([]);
   const [loading, setLoading] = useState(true);
@@ -310,16 +312,18 @@ export function IncidentsList() {
             >
               <i className="fa-solid fa-arrows-rotate me-1"></i> Actualizar
             </button>
-            <button 
-              className="btn btn-sm btn-primary" 
-              onClick={() => {
-                setSelectedIncidentId(null);
-                setFormMode('create');
-                setFormModalOpen(true);
-              }}
-            >
-              <i className="fa-solid fa-plus me-1"></i> Nueva Incidencia
-            </button>
+            {canEdit && (
+              <button 
+                className="btn btn-sm btn-primary" 
+                onClick={() => {
+                  setSelectedIncidentId(null);
+                  setFormMode('create');
+                  setFormModalOpen(true);
+                }}
+              >
+                <i className="fa-solid fa-plus me-1"></i> Nueva Incidencia
+              </button>
+            )}
           </div>
         }
       />
@@ -557,17 +561,19 @@ export function IncidentsList() {
                         >
                           <i className="fa-solid fa-eye"></i>
                         </button>
-                        <button
-                          className="btn btn-outline-warning btn-sm py-1 px-2"
-                          onClick={() => {
-                            setSelectedIncidentId(incident.id);
-                            setFormMode('edit');
-                            setFormModalOpen(true);
-                          }}
-                          title="Editar"
-                        >
-                          <i className="fa-solid fa-pen-to-square"></i>
-                        </button>
+                        {canEdit && (
+                          <button
+                            className="btn btn-outline-warning btn-sm py-1 px-2"
+                            onClick={() => {
+                              setSelectedIncidentId(incident.id);
+                              setFormMode('edit');
+                              setFormModalOpen(true);
+                            }}
+                            title="Editar"
+                          >
+                            <i className="fa-solid fa-pen-to-square"></i>
+                          </button>
+                        )}
                       </td>
                     </tr>
                   ))

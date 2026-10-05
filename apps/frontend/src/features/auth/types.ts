@@ -16,6 +16,7 @@ export interface User {
   grupo: {
     id: number;
     nombre: string;
+    edicion?: boolean | null;
   };
   menus?: Menu[];
 }
