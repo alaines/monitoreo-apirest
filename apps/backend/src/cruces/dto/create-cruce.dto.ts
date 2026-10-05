@@ -74,6 +74,7 @@ export class CreateCruceDto {
 
   @ApiPropertyOptional({ description: 'Tipo de operación' })
   @IsOptional()
+  @Transform(({ value }) => (value !== undefined && value !== null && value !== '') ? String(value) : undefined)
   @IsString()
   tipoOperacion?: string;
 

@@ -1,5 +1,33 @@
 # Changelog
 
+## [1.7.1] - 2026-10-05
+### Agregado (Added)
+- **Aproximación Geográfica Automática de Intersecciones**:
+  - Cálculo inteligente de coordenadas aproximadas al seleccionar `Vía 1` y `Vía 2` en el formulario de intersección ([`CruceForm.tsx`](file:///home/alaines/monitoreo-apirest/apps/frontend/src/features/cruces/CruceForm.tsx)).
+  - Estrategia jerárquica de resolución espacial en backend:
+    1. *Exacta*: Coincidencia con cruce existente previo en la red.
+    2. *Proximidad Geométrica*: Cálculo en base de datos del par de cruces más cercanos entre ambas vías y punto medio (precisión típica < 100 m).
+    3. *Centroide de Vía o Distrito*: Aproximación al trazado de la vía conocida o centroide del distrito seleccionado (`ubigeoId`).
+  - Nuevo endpoint en backend: `GET /api/cruces/approximate-coords?via1=&via2=&ubigeoId=`.
+  - Integración interactiva con mapa Leaflet: centrado dinámico automático (`panTo`) con zoom de detalle (17) y badge informativo del método y margen de aproximación.
+- **Optimización de Layout en Creación de Intersección**:
+  - Reubicación de Distrito y Código al inicio del formulario (fila superior), con código de solo lectura (`readOnly`) y estilo deshabilitado para evitar ediciones manuales accidentales.
+
+## [1.7.0] - 2026-10-05
+### Agregado (Added)
+- **Generación Automática de Códigos de Intersección (`CXXYYY`)**: 
+  - Cálculo automático del siguiente código disponible en base al distrito seleccionado (estructura `C` + 2 dígitos del ubigeo del distrito `XX` + correlativo secuencial de 3 dígitos `YYY`, ej. Surco `150140` -> `C40112`).
+  - Nuevo endpoint en backend: `GET /api/cruces/next-codigo/:ubigeoId` que consulta los códigos existentes en la base de datos y calcula el siguiente número secuencial.
+  - Integración en formulario de cruces (`CruceForm`): cálculo y autocompletado en tiempo real al seleccionar o cambiar el distrito, con badge visual "Auto-generado" y botón para regenerar o recalcular a demanda.
+  - Fallback en backend: si al crear una intersección el código no es especificado, se auto-genera automáticamente en el servidor antes de persistir.
+
+### Corregido (Fixed)
+- **Corrección de Error 500 al Crear/Editar Intersección (`tipoOperacion`)**:
+  - Solucionado error de incompatibilidad de tipos en Prisma (`Invalid value provided. Expected String or Null, provided Int`) al enviar `tipoOperacion` desde el frontend.
+  - Tipado y transformación garantizada a `string` en `create-cruce.dto.ts`, `cruces.service.ts` y componente `CruceForm`.
+- **Compatibilidad de Navicat con PostgreSQL (`datlastsysoid`)**:
+  - Configuración de vista de compatibilidad en PostgreSQL para permitir navegación remota de catálogos desde clientes como Navicat.
+
 ## [1.6.2] - 2026-10-05
 ### Corregido (Fixed)
 - **Reforzamiento de Seguridad en `.gitignore`**: Bloqueo integral para evitar subidas accidentales de archivos de variables de entorno (`.env.*`), cargas de planos técnicos y archivos de usuarios (`uploads/planos/*`), artefactos de build (`*.tsbuildinfo`, `.eslintcache`), backups de base de datos (`*.dump`, `*.backup`, `*.sql` ad-hoc en raíz) y archivos de análisis pesados (`*.pbix`).

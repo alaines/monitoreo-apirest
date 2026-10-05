@@ -48,13 +48,13 @@ function MapClickHandler({ setPosition }: { setPosition: (pos: [number, number])
   return null;
 }
 
-function MapUpdater({ center }: { center: [number, number] }) {
+function MapUpdater({ center, zoom }: { center: [number, number]; zoom?: number }) {
   const map = useMapEvents({});
   useEffect(() => {
     if (center && !isNaN(center[0]) && !isNaN(center[1])) {
-      map.setView(center, map.getZoom() || 16);
+      map.setView(center, zoom || map.getZoom() || 16);
     }
-  }, [center[0], center[1], map]);
+  }, [center[0], center[1], zoom, map]);
   return null;
 }
 
@@ -109,10 +109,51 @@ export function CruceForm({ cruceId, onClose, onSave }: { cruceId?: number | nul
     ubigeoId: '150101',
     tipoGestion: 1,
     proyectoId: 1,
-    via1: 1,
-    via2: 1,
+    via1: undefined,
+    via2: undefined,
     estado: true,
   });
+
+  const [loadingCodigo, setLoadingCodigo] = useState(false);
+  const [approximatingCoords, setApproximatingCoords] = useState(false);
+  const [approxMessage, setApproxMessage] = useState<string | null>(null);
+  const [mapZoom, setMapZoom] = useState<number>(16);
+
+  const approximateLocation = async (v1?: number, v2?: number, ubigeoId?: string) => {
+    if (isEdit) return;
+    try {
+      setApproximatingCoords(true);
+      const res = await crucesService.approximateCoords(v1, v2, ubigeoId);
+      if (res && res.latitud && res.longitud) {
+        setFormData(prev => ({
+          ...prev,
+          latitud: Number(res.latitud.toFixed(6)),
+          longitud: Number(res.longitud.toFixed(6)),
+        }));
+        setApproxMessage(res.mensaje || 'Ubicación aproximada encontrada');
+        setMapZoom(res.precision === 'EXACTA' || res.precision === 'PROXIMIDAD_VIAS' ? 17 : 15);
+      }
+    } catch (err) {
+      console.error('Error al aproximar coordenadas:', err);
+    } finally {
+      setApproximatingCoords(false);
+    }
+  };
+
+  const fetchNextCodigo = async (ubigeoId: string) => {
+    if (isEdit || !ubigeoId) return;
+    try {
+      setLoadingCodigo(true);
+      const res = await crucesService.getNextCodigo(ubigeoId);
+      if (res && res.codigo) {
+        setFormData(prev => ({ ...prev, codigo: res.codigo }));
+      }
+    } catch (err) {
+      console.error('Error fetching next codigo:', err);
+    } finally {
+      setLoadingCodigo(false);
+    }
+  };
 
   useEffect(() => {
     loadTipos();
@@ -121,8 +162,16 @@ export function CruceForm({ cruceId, onClose, onSave }: { cruceId?: number | nul
     loadEjes();
     if (isEdit && id) {
       loadCruce();
+    } else if (!isEdit) {
+      fetchNextCodigo(formData.ubigeoId || '150101');
     }
   }, [id]);
+
+  useEffect(() => {
+    if (!isEdit && formData.via1 && formData.via2) {
+      approximateLocation(formData.via1, formData.via2, formData.ubigeoId);
+    }
+  }, [formData.via1, formData.via2]);
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
@@ -215,6 +264,14 @@ export function CruceForm({ cruceId, onClose, onSave }: { cruceId?: number | nul
     setFormData(prev => ({ ...prev, ubigeoId: ubigeo.id }));
     setDistritoSearch(`${ubigeo.distrito} - ${ubigeo.provincia}`);
     setShowDistritoDropdown(false);
+    if (!isEdit) {
+      fetchNextCodigo(ubigeo.id);
+      if (formData.via1 && formData.via2) {
+        approximateLocation(formData.via1, formData.via2, ubigeo.id);
+      } else {
+        approximateLocation(undefined, undefined, ubigeo.id);
+      }
+    }
   };
 
   const loadCruce = async () => {
@@ -329,6 +386,10 @@ export function CruceForm({ cruceId, onClose, onSave }: { cruceId?: number | nul
             if (field === 'estado') {
               value = value === true || value === 'true' || value === 1 || value === '1';
             }
+
+            if (field === 'tipoOperacion') {
+              value = String(value);
+            }
             
             cleaned[field] = value;
           }
@@ -402,6 +463,96 @@ export function CruceForm({ cruceId, onClose, onSave }: { cruceId?: number | nul
             {isEdit ? 'Editar Intersección' : 'Nueva Intersección'}
           </h5>
         </div>
+        {/* Distrito y Código como primera sección */}
+        <div className="col-md-6">
+          <label className="form-label fw-semibold small text-secondary">
+            Distrito <span className="text-danger">*</span>
+          </label>
+          <div className="position-relative" ref={distritoRef}>
+            <input
+              type="text"
+              className="form-control custom-input"
+              value={distritoSearch}
+              onChange={(e) => {
+                setDistritoSearch(e.target.value);
+                setShowDistritoDropdown(true);
+              }}
+              onFocus={() => setShowDistritoDropdown(true)}
+              placeholder="Buscar distrito..."
+              autoComplete="off"
+              required
+            />
+            {showDistritoDropdown && getFilteredUbigeos().length > 0 && (
+              <div 
+                className="position-absolute w-100 mt-1 bg-white border rounded shadow-sm" 
+                style={{ 
+                  zIndex: 1000, 
+                  maxHeight: '200px', 
+                  overflowY: 'auto'
+                }}
+              >
+                {getFilteredUbigeos().map(ubigeo => (
+                  <div
+                    key={ubigeo.id}
+                    className="px-3 py-2 border-bottom"
+                    style={{ cursor: 'pointer' }}
+                    onMouseDown={(e) => {
+                      e.preventDefault();
+                      handleDistritoSelect(ubigeo);
+                    }}
+                    onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#f8f9fa'}
+                    onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'white'}
+                  >
+                    <div className="fw-bold" style={{ fontSize: '0.9rem' }}>{ubigeo.distrito}</div>
+                    <small className="text-muted">{ubigeo.provincia} - {ubigeo.region}</small>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+          {formData.ubigeoId && (
+            <small className="text-muted d-block mt-1">Ubigeo: {formData.ubigeoId}</small>
+          )}
+        </div>
+
+        <div className="col-md-6">
+          <label className="form-label fw-semibold small text-secondary d-flex justify-content-between align-items-center">
+            <span>
+              Código de Intersección <span className="badge bg-secondary-subtle text-secondary border ms-1">Auto-generado</span>
+            </span>
+            {!isEdit && (
+              <button
+                type="button"
+                className="btn btn-link btn-sm p-0 text-decoration-none"
+                onClick={() => formData.ubigeoId && fetchNextCodigo(formData.ubigeoId)}
+                disabled={loadingCodigo || !formData.ubigeoId}
+                title="Recalcular siguiente código disponible"
+              >
+                <i className={`fa-solid fa-arrows-rotate me-1 ${loadingCodigo ? 'fa-spin' : ''}`}></i>
+                {loadingCodigo ? 'Consultando...' : 'Regenerar'}
+              </button>
+            )}
+          </label>
+          <div className="input-group">
+            <span className="input-group-text bg-light text-muted">
+              <i className="fa-solid fa-hashtag"></i>
+            </span>
+            <input
+              type="text"
+              className="form-control custom-input"
+              name="codigo"
+              value={formData.codigo || ''}
+              readOnly
+              style={{ backgroundColor: '#f8f9fa', cursor: 'not-allowed' }}
+              placeholder={loadingCodigo ? 'Generando código...' : 'Ej: C40112'}
+            />
+          </div>
+          <small className="text-muted">
+            Estructura: C + distrito (2 dígitos) + correlativo (3 dígitos).
+          </small>
+        </div>
+
+        {/* Vías */}
         <div className="col-md-6">
           <label className="form-label fw-semibold small text-secondary">Vía 1 <span className="text-danger">*</span></label>
           <Select
@@ -445,29 +596,32 @@ export function CruceForm({ cruceId, onClose, onSave }: { cruceId?: number | nul
           />
           <small className="text-muted">El nombre se genera automáticamente como: VÍA 1 CON VÍA 2</small>
         </div>
-        <div className="col-md-12">
-          <label className="form-label fw-semibold small text-secondary">Código</label>
-          <input
-            type="text"
-            className="form-control custom-input"
-            name="codigo"
-            value={formData.codigo || ''}
-            onChange={handleChange}
-            placeholder="Ej: C001"
-          />
-        </div>
         <div className="col-12 mt-3">
           <div className="d-flex align-items-center justify-content-between mb-2">
             <h6 className="fw-bold mb-0 text-dark">
               <i className="fa-solid fa-map-location-dot me-2 text-primary"></i>
               Ubicación Geográfica
             </h6>
-            {!hasOriginalCoords && isEdit && (
-              <span className="badge bg-warning text-dark border">
-                <i className="fa-solid fa-triangle-exclamation me-1"></i>
-                Sin coordenadas previas en BD (Centrado inicial sugerido en Lima)
-              </span>
-            )}
+            <div className="d-flex align-items-center gap-2">
+              {approximatingCoords && (
+                <span className="badge bg-secondary-subtle text-secondary border">
+                  <i className="fa-solid fa-spinner fa-spin me-1"></i>
+                  Aproximando ubicación...
+                </span>
+              )}
+              {approxMessage && !approximatingCoords && (
+                <span className="badge bg-info-subtle text-info-emphasis border border-info-subtle">
+                  <i className="fa-solid fa-crosshairs me-1"></i>
+                  {approxMessage}
+                </span>
+              )}
+              {!hasOriginalCoords && isEdit && (
+                <span className="badge bg-warning text-dark border">
+                  <i className="fa-solid fa-triangle-exclamation me-1"></i>
+                  Sin coordenadas previas en BD (Centrado inicial sugerido en Lima)
+                </span>
+              )}
+            </div>
           </div>
         </div>
         <div className="col-12">
@@ -487,10 +641,16 @@ export function CruceForm({ cruceId, onClose, onSave }: { cruceId?: number | nul
               />
               <DraggableMarker
                 position={currentPos}
-                setPosition={handleMapPositionChange}
+                setPosition={(pos) => {
+                  setApproxMessage(null);
+                  handleMapPositionChange(pos);
+                }}
               />
-              <MapClickHandler setPosition={handleMapPositionChange} />
-              <MapUpdater center={currentPos} />
+              <MapClickHandler setPosition={(pos) => {
+                setApproxMessage(null);
+                handleMapPositionChange(pos);
+              }} />
+              <MapUpdater center={currentPos} zoom={mapZoom} />
               <MapResizer />
             </MapContainer>
           </div>
@@ -544,7 +704,7 @@ export function CruceForm({ cruceId, onClose, onSave }: { cruceId?: number | nul
             Información General
           </h6>
         </div>
-        <div className="col-md-6">
+        <div className="col-md-12">
           <label className="form-label fw-semibold small text-secondary">Código Anterior</label>
           <input
             type="text"
@@ -553,53 +713,6 @@ export function CruceForm({ cruceId, onClose, onSave }: { cruceId?: number | nul
             value={formData.codigoAnterior || ''}
             onChange={handleChange}
           />
-        </div>
-        <div className="col-md-6">
-          <label className="form-label fw-semibold small text-secondary">Distrito</label>
-          <div className="position-relative" ref={distritoRef}>
-            <input
-              type="text"
-              className="form-control custom-input"
-              value={distritoSearch}
-              onChange={(e) => {
-                setDistritoSearch(e.target.value);
-                setShowDistritoDropdown(true);
-              }}
-              onFocus={() => setShowDistritoDropdown(true)}
-              placeholder="Buscar distrito..."
-              autoComplete="off"
-            />
-            {showDistritoDropdown && getFilteredUbigeos().length > 0 && (
-              <div 
-                className="position-absolute w-100 mt-1 bg-white border rounded shadow-sm" 
-                style={{ 
-                  zIndex: 1000, 
-                  maxHeight: '200px', 
-                  overflowY: 'auto'
-                }}
-              >
-                {getFilteredUbigeos().map(ubigeo => (
-                  <div
-                    key={ubigeo.id}
-                    className="px-3 py-2 border-bottom"
-                    style={{ cursor: 'pointer' }}
-                    onMouseDown={(e) => {
-                      e.preventDefault();
-                      handleDistritoSelect(ubigeo);
-                    }}
-                    onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#f8f9fa'}
-                    onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'white'}
-                  >
-                    <div className="fw-bold" style={{ fontSize: '0.9rem' }}>{ubigeo.distrito}</div>
-                    <small className="text-muted">{ubigeo.provincia} - {ubigeo.region}</small>
-                  </div>
-                ))}
-              </div>
-            )}
-          </div>
-          {formData.ubigeoId && (
-            <small className="text-muted d-block mt-1">Código: {formData.ubigeoId}</small>
-          )}
         </div>
         <div className="col-12 mt-3">
           <h6 className="fw-bold mb-2 text-dark">
@@ -677,10 +790,10 @@ export function CruceForm({ cruceId, onClose, onSave }: { cruceId?: number | nul
           <Select
             options={[
               { value: '', label: 'Seleccione...' },
-              ...getTiposByParent(23).map(tipo => ({ value: tipo.id, label: tipo.name }))
+              ...getTiposByParent(23).map(tipo => ({ value: String(tipo.id), label: tipo.name }))
             ]}
-            value={formData.tipoOperacion ? getTiposByParent(23).find(t => t.id === formData.tipoOperacion) ? { value: formData.tipoOperacion, label: getTiposByParent(23).find(t => t.id === formData.tipoOperacion)?.name || '' } : null : null}
-            onChange={(option) => setFormData({ ...formData, tipoOperacion: option?.value as number || undefined })}
+            value={formData.tipoOperacion ? getTiposByParent(23).find(t => String(t.id) === String(formData.tipoOperacion)) ? { value: String(formData.tipoOperacion), label: getTiposByParent(23).find(t => String(t.id) === String(formData.tipoOperacion))?.name || '' } : null : null}
+            onChange={(option) => setFormData({ ...formData, tipoOperacion: option?.value ? String(option.value) : undefined })}
             isClearable
             styles={customSelectStyles}
           />

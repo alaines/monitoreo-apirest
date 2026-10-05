@@ -1,4 +1,4 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { Injectable, NotFoundException, BadRequestException } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { CreateCruceDto } from './dto/create-cruce.dto';
 import { UpdateCruceDto } from './dto/update-cruce.dto';
@@ -12,16 +12,197 @@ import * as ExcelJS from 'exceljs';
 export class CrucesService {
   constructor(private prisma: PrismaService) {}
 
+  async getNextCodigo(ubigeoId: string): Promise<{ codigo: string; prefix: string; nextNumber: number }> {
+    if (!ubigeoId) {
+      throw new BadRequestException('El ubigeoId es requerido');
+    }
+
+    // Extraer los 2 dígitos del distrito (ej: '150140' -> '40', '150101' -> '01')
+    const distritoCode = ubigeoId.length >= 2 ? ubigeoId.slice(-2) : ubigeoId.padStart(2, '0');
+    const prefix = `C${distritoCode}`;
+
+    // Buscar cruces con ese prefijo
+    const cruces = await this.prisma.cruce.findMany({
+      where: {
+        codigo: {
+          startsWith: prefix,
+        },
+      },
+      select: {
+        codigo: true,
+      },
+    });
+
+    let maxNumber = 0;
+    for (const c of cruces) {
+      if (!c.codigo) continue;
+      const numStr = c.codigo.slice(prefix.length);
+      const num = parseInt(numStr, 10);
+      if (!isNaN(num) && num > maxNumber) {
+        maxNumber = num;
+      }
+    }
+
+    const nextNumber = maxNumber + 1;
+    const formattedNumber = String(nextNumber).padStart(3, '0');
+    const codigo = `${prefix}${formattedNumber}`;
+
+    return { codigo, prefix, nextNumber };
+  }
+
+  async approximateCoords(via1: number, via2: number, ubigeoId?: string): Promise<{
+    latitud: number;
+    longitud: number;
+    precision: 'EXACTA' | 'PROXIMIDAD_VIAS' | 'CENTROIDE_VIA' | 'CENTROIDE_DISTRITO';
+    mensaje?: string;
+  } | null> {
+    const v1Id = Number(via1);
+    const v2Id = Number(via2);
+
+    // Si no hay ambas vías pero hay ubigeo, calcular centroide del distrito
+    if ((!v1Id || !v2Id) && ubigeoId) {
+      const distCruces: any[] = await this.prisma.$queryRaw`
+        SELECT AVG(latitud) as latitud, AVG(longitud) as longitud
+        FROM cruces
+        WHERE ubigeo_id = ${ubigeoId}
+          AND latitud IS NOT NULL AND longitud IS NOT NULL
+        HAVING COUNT(*) > 0
+      `;
+      if (distCruces && distCruces.length > 0 && distCruces[0].latitud) {
+        return {
+          latitud: Number(distCruces[0].latitud),
+          longitud: Number(distCruces[0].longitud),
+          precision: 'CENTROIDE_DISTRITO',
+          mensaje: 'Centrado en el distrito seleccionado',
+        };
+      }
+      return null;
+    }
+
+    if (!v1Id || !v2Id) {
+      return null;
+    }
+
+    // 1. Coincidencia exacta de cruce previo entre estas dos vías
+    const exact = await this.prisma.cruce.findFirst({
+      where: {
+        OR: [
+          { via1: v1Id, via2: v2Id },
+          { via1: v2Id, via2: v1Id },
+        ],
+        latitud: { not: null },
+        longitud: { not: null },
+      },
+      select: { latitud: true, longitud: true, nombre: true },
+    });
+
+    if (exact && exact.latitud && exact.longitud) {
+      return {
+        latitud: Number(exact.latitud),
+        longitud: Number(exact.longitud),
+        precision: 'EXACTA',
+        mensaje: `Coincidencia con cruce existente: ${exact.nombre}`,
+      };
+    }
+
+    // 2. Proximidad geométrica entre ambas vías en base a cruces conocidos
+    const proximityResult: any[] = await this.prisma.$queryRaw`
+      WITH v1 AS (
+        SELECT latitud, longitud, nombre FROM cruces 
+        WHERE (via1 = ${v1Id} OR via2 = ${v1Id}) 
+          AND latitud IS NOT NULL AND longitud IS NOT NULL
+      ),
+      v2 AS (
+        SELECT latitud, longitud, nombre FROM cruces 
+        WHERE (via1 = ${v2Id} OR via2 = ${v2Id}) 
+          AND latitud IS NOT NULL AND longitud IS NOT NULL
+      )
+      SELECT 
+        (v1.latitud + v2.latitud)/2.0 as latitud,
+        (v1.longitud + v2.longitud)/2.0 as longitud,
+        SQRT(((v1.latitud - v2.latitud)^2 + (v1.longitud - v2.longitud)^2)) * 111139 as dist_meters
+      FROM v1, v2
+      ORDER BY ((v1.latitud - v2.latitud)^2 + (v1.longitud - v2.longitud)^2) ASC
+      LIMIT 1;
+    `;
+
+    if (proximityResult && proximityResult.length > 0 && proximityResult[0].latitud && proximityResult[0].longitud) {
+      const res = proximityResult[0];
+      const dist = Math.round(Number(res.dist_meters) || 0);
+      if (dist < 5000) {
+        return {
+          latitud: Number(res.latitud),
+          longitud: Number(res.longitud),
+          precision: 'PROXIMIDAD_VIAS',
+          mensaje: `Aproximación por cruce de vías (~${dist} m)`,
+        };
+      }
+    }
+
+    // 3. Si solo una vía tiene cruces registrados
+    const singleViaResult: any[] = await this.prisma.$queryRaw`
+      SELECT AVG(latitud) as latitud, AVG(longitud) as longitud
+      FROM cruces
+      WHERE ((via1 = ${v1Id} OR via2 = ${v1Id}) OR (via1 = ${v2Id} OR via2 = ${v2Id}))
+        AND latitud IS NOT NULL AND longitud IS NOT NULL
+      HAVING COUNT(*) > 0
+    `;
+
+    if (singleViaResult && singleViaResult.length > 0 && singleViaResult[0].latitud) {
+      return {
+        latitud: Number(singleViaResult[0].latitud),
+        longitud: Number(singleViaResult[0].longitud),
+        precision: 'CENTROIDE_VIA',
+        mensaje: 'Aproximación sobre trazado de vía conocida',
+      };
+    }
+
+    // 4. Centroide del distrito si fue provisto
+    if (ubigeoId) {
+      const distCruces: any[] = await this.prisma.$queryRaw`
+        SELECT AVG(latitud) as latitud, AVG(longitud) as longitud
+        FROM cruces
+        WHERE ubigeo_id = ${ubigeoId}
+          AND latitud IS NOT NULL AND longitud IS NOT NULL
+        HAVING COUNT(*) > 0
+      `;
+      if (distCruces && distCruces.length > 0 && distCruces[0].latitud) {
+        return {
+          latitud: Number(distCruces[0].latitud),
+          longitud: Number(distCruces[0].longitud),
+          precision: 'CENTROIDE_DISTRITO',
+          mensaje: 'Centrado en el distrito seleccionado',
+        };
+      }
+    }
+
+    return null;
+  }
+
   async create(createCruceDto: CreateCruceDto, userId?: number) {
-    const { ubigeoId, proyectoId, administradorId, via1, via2, ...resto } = createCruceDto;
+    const { ubigeoId, proyectoId, administradorId, via1, via2, tipoOperacion, codigo, ...resto } = createCruceDto;
     
+    // Auto-generar código si no viene provisto o está vacío
+    let finalCodigo = codigo?.trim();
+    if (!finalCodigo && ubigeoId) {
+      const next = await this.getNextCodigo(ubigeoId);
+      finalCodigo = next.codigo;
+    }
+
     const data: any = {
       ...resto,
+      codigo: finalCodigo,
       ubigeo: { connect: { id: ubigeoId } },
       proyecto: { connect: { id: proyectoId } },
       createdAt: new Date(),
       updatedAt: new Date(),
     };
+
+    if (tipoOperacion !== undefined && tipoOperacion !== null && tipoOperacion !== '') {
+      data.tipoOperacion = String(tipoOperacion);
+    } else {
+      data.tipoOperacion = null;
+    }
 
     // Manejar relaciones opcionales
     if (administradorId) {
@@ -685,12 +866,16 @@ export class CrucesService {
   async update(id: number, updateCruceDto: UpdateCruceDto) {
     await this.findOne(id); // Verificar que existe
 
-    const { ubigeoId, proyectoId, administradorId, via1, via2, ...resto } = updateCruceDto;
+    const { ubigeoId, proyectoId, administradorId, via1, via2, tipoOperacion, ...resto } = updateCruceDto;
     
     const data: any = {
       ...resto,
       updatedAt: new Date(),
     };
+
+    if (tipoOperacion !== undefined) {
+      data.tipoOperacion = (tipoOperacion !== null && tipoOperacion !== '') ? String(tipoOperacion) : null;
+    }
 
     // Manejar relaciones obligatorias
     if (ubigeoId !== undefined) {

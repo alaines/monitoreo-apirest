@@ -161,6 +161,23 @@ export const crucesService = {
     return response.data;
   },
 
+  async getNextCodigo(ubigeoId: string): Promise<{ codigo: string; prefix: string; nextNumber: number }> {
+    const response = await api.get(`/cruces/next-codigo/${ubigeoId}`);
+    return response.data;
+  },
+
+  async approximateCoords(via1?: number, via2?: number, ubigeoId?: string): Promise<{
+    latitud: number;
+    longitud: number;
+    precision: 'EXACTA' | 'PROXIMIDAD_VIAS' | 'CENTROIDE_VIA' | 'CENTROIDE_DISTRITO';
+    mensaje?: string;
+  } | null> {
+    const response = await api.get('/cruces/approximate-coords', {
+      params: { via1, via2, ubigeoId },
+    });
+    return response.data;
+  },
+
   async getPerifericos(cruceId: number) {
     const response = await api.get(`/cruces/${cruceId}/perifericos`);
     return response.data;

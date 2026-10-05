@@ -157,6 +157,26 @@ export class CrucesController {
     return this.crucesService.search(query, limit ? parseInt(limit.toString()) : 20);
   }
 
+  @Get('next-codigo/:ubigeoId')
+  @ApiOperation({ summary: 'Obtener el siguiente código correlativo de intersección según el distrito' })
+  @ApiResponse({ status: 200, description: 'Siguiente código correlativo generado exitosamente' })
+  getNextCodigo(@Param('ubigeoId') ubigeoId: string) {
+    return this.crucesService.getNextCodigo(ubigeoId);
+  }
+
+  @Get('approximate-coords')
+  @ApiOperation({ summary: 'Aproximar coordenadas geográficas a partir de vías y/o distrito' })
+  @ApiResponse({ status: 200, description: 'Coordenadas aproximadas calculadas exitosamente' })
+  approximateCoords(
+    @Query('via1') via1?: string,
+    @Query('via2') via2?: string,
+    @Query('ubigeoId') ubigeoId?: string,
+  ) {
+    const v1 = via1 ? parseInt(via1, 10) : 0;
+    const v2 = via2 ? parseInt(via2, 10) : 0;
+    return this.crucesService.approximateCoords(v1, v2, ubigeoId);
+  }
+
   @Get(':id')
   @ApiOperation({ summary: 'Obtener detalle de un cruce' })
   @ApiResponse({ status: 200, description: 'Cruce encontrado' })
