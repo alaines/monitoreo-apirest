@@ -1,5 +1,24 @@
 # Changelog
 
+## [1.7.4] - 2026-10-05
+### Agregado (Added)
+- **Migración y Sincronización Maestra de Cruces Semafóricos Oficiales**:
+  - Procesamiento e importación de la lista oficial de cruces desde `backups/cruces-complete.xlsx` (hoja `BDrs` con 1,727 registros).
+  - Creación de tabla intermedia de auditoría `cruces_staging` en PostgreSQL con clasificación por estado de verificación (`VERIFICADO_EXCEL`, `RECUPERADO_BD`, `NUEVO_GENERADO`, `BASE_OPERATIVA`).
+  - Creación e inserción de **210 cruces nuevos** en la base de datos (total de cruces aumentó de 1,702 a 1,912).
+  - Incorporación de **2 bases operativas** con prefijo estándar `B`: `BASE CUZCO` (`B01001` - Cercado) y `BASE ACHO` (`B28001` - Rímac).
+  - Normalización y sincronización automática de 628 nuevos ejes viales en la tabla `ejes` para vincular adecuadamente `via1` y `via2`.
+
+### Mejorado (Changed)
+- **Enriquecimiento de Información en Cruces Existentes**:
+  - Actualización de coordenadas geográficas (`latitud`, `longitud`), suministros eléctricos (`electrico_suministro`), plataformas y códigos anteriores para 1,517 cruces coincidentes.
+  - Sincronización de la secuencia PostgreSQL `cruces_id_seq` con el nuevo valor máximo.
+  - Respaldo previo físico y tablas espejo creadas (`cruces_backup_20261005`, `tickets_backup_20261005`, `ejes_backup_20261005`).
+
+### Corregido (Fixed)
+- **Garantía de Integridad Referencial de Tickets (Zero Data Loss)**:
+  - 100% de los 62,856 tickets históricos se mantuvieron vinculados a sus respectivos cruces (0 tickets huérfanos) mediante actualización in-place sin alteración de claves primarias.
+
 ## [1.7.3] - 2026-10-05
 ### Corregido (Fixed)
 - **Restricción de Acciones de Edición para Perfil Consultas**:
